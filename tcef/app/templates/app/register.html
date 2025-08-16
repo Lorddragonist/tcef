@@ -1,0 +1,248 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Registro - TCEF{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'app/css/register.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white text-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Crear Cuenta
+                </h3>
+                <p class="mb-0">Únete a TCEF y comienza tu transformación</p>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- Nombre -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                <i class="fas fa-user me-1"></i>Nombre
+                            </label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.first_name.errors %}
+                                        <small class="text-danger">{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Apellido -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                <i class="fas fa-user me-1"></i>Apellido
+                            </label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.last_name.errors %}
+                                        <small class="text-danger">{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Nombre de usuario -->
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">
+                            <i class="fas fa-at me-1"></i>Nombre de Usuario
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Solo letras, números y guiones bajos. Mínimo 3 caracteres.
+                        </div>
+                    </div>
+                    
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">
+                            <i class="fas fa-envelope me-1"></i>Email
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.email.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Te enviaremos un email de confirmación.
+                        </div>
+                    </div>
+                    
+                    <!-- Contraseña -->
+                    <div class="mb-3">
+                        <label for="{{ form.password1.id_for_label }}" class="form-label">
+                            <i class="fas fa-lock me-1"></i>Contraseña
+                        </label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password1.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Mínimo 8 caracteres. No puede ser muy común.
+                        </div>
+                    </div>
+                    
+                    <!-- Confirmar contraseña -->
+                    <div class="mb-3">
+                        <label for="{{ form.password2.id_for_label }}" class="form-label">
+                            <i class="fas fa-lock me-1"></i>Confirmar Contraseña
+                        </label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password2.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Términos y condiciones -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form.terms_accepted }}
+                            <label class="form-check-label" for="{{ form.terms_accepted.id_for_label }}">
+                                <!-- <i class="fas fa-check-square me-1"></i> -->
+                                Acepto los <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">términos y condiciones</a>
+                            </label>
+                        </div>
+                        {% if form.terms_accepted.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.terms_accepted.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Botón de registro -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>Crear Cuenta
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Enlaces adicionales -->
+                <div class="text-center mt-4">
+                    <p class="mb-0">
+                        ¿Ya tienes una cuenta? 
+                        <a href="{% url 'login' %}" class="text-decoration-none">
+                            <i class="fas fa-sign-in-alt me-1"></i>Inicia Sesión
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Términos y Condiciones -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-contract me-2"></i>Términos y Condiciones
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Aceptación de los Términos</h6>
+                <p>Al registrarte en TCEF, aceptas cumplir con estos términos y condiciones.</p>
+                
+                <h6>2. Uso del Servicio</h6>
+                <p>Te comprometes a usar el servicio de manera responsable y respetuosa.</p>
+                
+                <h6>3. Privacidad</h6>
+                <p>Tu información personal será tratada con confidencialidad según nuestra política de privacidad.</p>
+                
+                <h6>4. Responsabilidades</h6>
+                <p>Eres responsable de mantener la confidencialidad de tu cuenta y contraseña.</p>
+                
+                <h6>5. Modificaciones</h6>
+                <p>Nos reservamos el derecho de modificar estos términos en cualquier momento.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Validación en tiempo real del formulario
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const password1 = document.getElementById('{{ form.password1.id_for_label }}');
+        const password2 = document.getElementById('{{ form.password2.id_for_label }}');
+        
+        // Validar que las contraseñas coincidan
+        function validatePasswords() {
+            if (password1.value && password2.value) {
+                if (password1.value !== password2.value) {
+                    password2.setCustomValidity('Las contraseñas no coinciden');
+                } else {
+                    password2.setCustomValidity('');
+                }
+            }
+        }
+        
+        password1.addEventListener('input', validatePasswords);
+        password2.addEventListener('input', validatePasswords);
+        
+        // Mostrar/ocultar contraseñas
+        const togglePassword = (input) => {
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+        };
+        
+        // Agregar botones para mostrar/ocultar contraseñas
+        [password1, password2].forEach(input => {
+            const wrapper = input.parentElement;
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'btn btn-outline-secondary position-absolute end-0 top-0 h-100';
+            toggleBtn.style.borderTopLeftRadius = '0';
+            toggleBtn.style.borderBottomLeftRadius = '0';
+            toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+            toggleBtn.onclick = () => togglePassword(input);
+            
+            wrapper.style.position = 'relative';
+            input.style.paddingRight = '40px';
+            wrapper.appendChild(toggleBtn);
+        });
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,533 @@
+/* ========================================
+   ESTILOS PARA EL CALENDARIO DE EJERCICIOS
+   ======================================== */
+
+/* Personalización de colores principales */
+:root {
+    --primary-color: #dc6874;
+    --primary-hover: #d13b53;
+    --secondary-color: #989595;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --border-color: #dee2e6;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    
+    /* Colores de dificultad */
+    --difficulty-facil: #28a745;
+    --difficulty-medio: #ffc107;
+    --difficulty-dificil: #dc3545;
+}
+
+/* Contenedor principal del calendario */
+.calendar-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+/* Header del calendario */
+.calendar-header {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    margin-bottom: 2rem;
+}
+
+.calendar-title {
+    color: var(--primary-color);
+    font-weight: 700;
+    margin: 0;
+}
+
+.month-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.current-month {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    min-width: 200px;
+}
+
+/* Estadísticas rápidas */
+.stats-summary {
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px var(--shadow-color);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    line-height: 1;
+}
+
+.stat-label {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+/* Calendario principal */
+.calendar-main {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    overflow: hidden;
+}
+
+.calendar-grid {
+    width: 100%;
+}
+
+/* Días de la semana */
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: white;
+}
+
+.weekday {
+    padding: 1rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Días del mes */
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-day {
+    min-height: 120px;
+    border: 1px solid var(--border-color);
+    padding: 0.5rem;
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.calendar-day:hover {
+    background-color: var(--light-color);
+    transform: scale(1.02);
+    z-index: 10;
+    box-shadow: 0 4px 15px var(--shadow-color);
+}
+
+.calendar-day.empty {
+    background-color: #f8f9fa;
+    cursor: default;
+}
+
+.calendar-day.empty:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, rgba(220, 104, 116, 0.1) 0%, rgba(209, 59, 83, 0.1) 100%);
+    border-color: var(--primary-color);
+}
+
+.day-number {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+}
+
+/* Indicadores de ejercicio */
+.exercise-indicator {
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.exercise-indicator:hover {
+    transform: scale(1.1);
+}
+
+.exercise-indicator i {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.difficulty-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.difficulty-facil {
+    background-color: var(--difficulty-facil);
+}
+
+.difficulty-medio {
+    background-color: var(--difficulty-medio);
+    color: var(--dark-color);
+}
+
+.difficulty-dificil {
+    background-color: var(--difficulty-dificil);
+}
+
+/* Botón para agregar ejercicio */
+.add-exercise-btn {
+    text-align: center;
+    color: var(--secondary-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+
+.add-exercise-btn:hover {
+    color: var(--primary-color);
+    background-color: rgba(220, 104, 116, 0.1);
+    transform: scale(1.1);
+}
+
+.add-exercise-btn i {
+    font-size: 1.2rem;
+}
+
+/* Días con ejercicios */
+.calendar-day.has-exercise {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(32, 201, 151, 0.1) 100%);
+}
+
+/* Modales */
+.modal-content {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px var(--shadow-color);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: white;
+    border-bottom: none;
+    border-radius: 15px 15px 0 0;
+}
+
+.modal-title {
+    font-weight: 700;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+    padding: 1.5rem 2rem;
+}
+
+/* Formularios en modales */
+.form-label {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(220, 104, 116, 0.25);
+}
+
+/* Botones */
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(220, 104, 116, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 104, 116, 0.4);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, var(--info-color) 0%, #6f42c1 100%);
+    color: white;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger-color) 0%, #e83e8c 100%);
+    color: white;
+}
+
+/* Alertas */
+.alert {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-left: 4px solid var(--success-color);
+    color: #155724;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border-left: 4px solid var(--danger-color);
+    color: #721c24;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .calendar-header {
+        padding: 1.5rem;
+    }
+    
+    .calendar-title {
+        font-size: 1.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .month-navigation {
+        margin-bottom: 1rem;
+    }
+    
+    .current-month {
+        font-size: 1.2rem;
+        min-width: 150px;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .calendar-day {
+        min-height: 100px;
+        padding: 0.25rem;
+    }
+    
+    .day-number {
+        font-size: 1rem;
+    }
+    
+    .exercise-indicator i {
+        font-size: 1.2rem;
+    }
+    
+    .difficulty-badge {
+        font-size: 0.6rem;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .calendar-container {
+        padding: 1rem 0;
+    }
+    
+    .calendar-header {
+        padding: 1rem;
+    }
+    
+    .calendar-title {
+        font-size: 1.3rem;
+    }
+    
+    .current-month {
+        font-size: 1rem;
+        min-width: 120px;
+    }
+    
+    .stat-card {
+        padding: 0.875rem;
+    }
+    
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 1.3rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+    }
+    
+    .calendar-day {
+        min-height: 80px;
+        padding: 0.2rem;
+    }
+    
+    .day-number {
+        font-size: 0.9rem;
+    }
+    
+    .exercise-indicator i {
+        font-size: 1rem;
+    }
+    
+    .difficulty-badge {
+        font-size: 0.5rem;
+        padding: 0.15rem 0.3rem;
+    }
+    
+    .weekday {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        padding: 0.875rem 1rem;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.calendar-header, .stats-summary, .calendar-main {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Estados de carga */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--primary-color);
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Efectos hover mejorados */
+.calendar-day.has-exercise:hover {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(32, 201, 151, 0.2) 100%);
+}
+
+.calendar-day.today:hover {
+    background: linear-gradient(135deg, rgba(220, 104, 116, 0.2) 0%, rgba(209, 59, 83, 0.2) 100%);
+} 

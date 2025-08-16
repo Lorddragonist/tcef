@@ -1,0 +1,26 @@
+¡Bienvenido a TCEF!
+
+Hola {{ user.first_name }} {{ user.last_name }},
+
+Gracias por registrarte en TCEF - Tu Cuerpo en Formación.
+
+Para completar tu registro y acceder a tu cuenta, necesitamos que confirmes tu dirección de email.
+
+Confirma tu email visitando este enlace:
+{{ confirmation_url }}
+
+Si el enlace no funciona, copia y pega la URL en tu navegador.
+
+INFORMACIÓN DE SEGURIDAD:
+- Este enlace es válido por 24 horas por motivos de seguridad
+- Si no confirmas tu email en este tiempo, deberás solicitar un nuevo enlace
+- Si no solicitaste esta cuenta, puedes ignorar este email de forma segura
+
+¿Necesitas ayuda? Contacta a nuestro equipo de soporte.
+
+Saludos,
+El equipo de TCEF
+
+---
+© 2024 TCEF - Tu Cuerpo en Formación
+Este es un email automático, por favor no respondas a este mensaje. 

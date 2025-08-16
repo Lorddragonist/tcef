@@ -1,0 +1,145 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Cerrar Sesión - TCEF{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'app/css/logout.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="logout-container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning text-dark text-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                    </h3>
+                    <p class="mb-0">¿Estás seguro de que quieres salir?</p>
+                </div>
+                
+                <div class="card-body p-4 text-center">
+                    <div class="logout-icon mb-4">
+                        <i class="fas fa-user-times"></i>
+                    </div>
+                    
+                    <h5 class="text-dark mb-3">
+                        ¡Hola {{ user.first_name|default:user.username }}!
+                    </h5>
+                    
+                    <p class="text-muted mb-4">
+                        Estás a punto de cerrar tu sesión en TCEF. 
+                        ¿Estás seguro de que quieres continuar?
+                    </p>
+                    
+                    <div class="logout-options mb-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="option-card">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Calendario</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="option-card">
+                                    <i class="fas fa-user"></i>
+                                    <span>Perfil</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="logout-actions">
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-lg me-3">
+                                <i class="fas fa-sign-out-alt me-2"></i>Sí, Cerrar Sesión
+                            </button>
+                        </form>
+                        
+                        <a href="{% url 'app:exercise_calendar' %}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Información adicional -->
+            <div class="text-center mt-4">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-info-circle me-2"></i>¿Sabías que...?
+                    </h6>
+                    <p class="mb-0">
+                        Puedes volver a iniciar sesión en cualquier momento para continuar 
+                        con tu progreso de ejercicios y ver tu calendario personal.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Enlaces rápidos -->
+            <div class="quick-links mt-4">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="{% url 'app:exercise_calendar' %}" class="quick-link-card">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Ver Calendario</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{% url 'app:profile' %}" class="quick-link-card">
+                            <i class="fas fa-user"></i>
+                            <span>Mi Perfil</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{% url 'app:exercise_stats' %}" class="quick-link-card">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Estadísticas</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Confirmar antes de cerrar sesión
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoutForm = document.querySelector('form');
+        const logoutButton = logoutForm.querySelector('button[type="submit"]');
+        
+        logoutButton.addEventListener('click', function(e) {
+            if (!confirm('¿Estás completamente seguro de que quieres cerrar sesión?')) {
+                e.preventDefault();
+            }
+        });
+        
+        // Efecto hover en las opciones
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+        
+        // Efecto hover en los enlaces rápidos
+        document.querySelectorAll('.quick-link-card').forEach(link => {
+            link.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+            
+            link.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    });
+</script>
+{% endblock %} 

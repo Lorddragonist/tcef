@@ -1,0 +1,231 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Iniciar Sesión - TCEF{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'app/css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white text-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                </h3>
+                <p class="mb-0">Accede a tu cuenta de TCEF</p>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Nombre de usuario -->
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">
+                            <i class="fas fa-user me-1"></i>Nombre de Usuario o Email
+                        </label>
+                        <input type="text" 
+                               name="username" 
+                               id="id_username" 
+                               class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                               placeholder="Tu nombre de usuario o email"
+                               required>
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Contraseña -->
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">
+                            <i class="fas fa-lock me-1"></i>Contraseña
+                        </label>
+                        <div class="position-relative">
+                            <input type="password" 
+                                   name="password" 
+                                   id="id_password" 
+                                   class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                                   placeholder="Tu contraseña"
+                                   required>
+                            <button type="button" 
+                                    class="btn btn-outline-secondary position-absolute end-0 top-0 h-100"
+                                    style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                                    onclick="togglePassword('id_password')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Opciones adicionales -->
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+                                <label class="form-check-label" for="remember_me">
+                                    <small>Recordarme</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <a href="#" class="text-decoration-none" onclick="showForgotPassword()">
+                                <small>¿Olvidaste tu contraseña?</small>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Botón de login -->
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                        </button>
+                    </div>
+                    
+                    <!-- Enlaces adicionales -->
+                    <div class="text-center">
+                        <p class="mb-0">
+                            ¿No tienes una cuenta? 
+                            <a href="{% url 'app:register' %}" class="text-decoration-none fw-bold">
+                                <i class="fas fa-user-plus me-1"></i>Regístrate aquí
+                            </a>
+                        </p>
+                    </div>
+                </form>
+                
+
+            </div>
+        </div>
+        
+        <!-- Información adicional -->
+        <div class="text-center mt-4">
+            <div class="alert alert-info">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>¿Problemas para acceder?
+                </h6>
+                <p class="mb-0">
+                    Si tienes problemas para iniciar sesión, verifica que tu email esté confirmado 
+                    o contacta a nuestro equipo de soporte.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de contraseña olvidada -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-key me-2"></i>Recuperar Contraseña
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.</p>
+                <div class="mb-3">
+                    <label for="recovery_email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="recovery_email" placeholder="tu@email.com">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="sendRecoveryEmail()">
+                    <i class="fas fa-paper-plane me-2"></i>Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Función para mostrar/ocultar contraseña
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye';
+        }
+    }
+    
+    // Función para mostrar modal de contraseña olvidada
+    function showForgotPassword() {
+        const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+        modal.show();
+    }
+    
+    // Función para enviar email de recuperación
+    function sendRecoveryEmail() {
+        const email = document.getElementById('recovery_email').value;
+        if (email) {
+            // Aquí implementarías la lógica para enviar el email
+            alert('Email de recuperación enviado a: ' + email);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+            modal.hide();
+        } else {
+            alert('Por favor, ingresa un email válido.');
+        }
+    }
+    
+
+    
+    // Validación del formulario en tiempo real
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const usernameInput = document.getElementById('id_username');
+        const passwordInput = document.getElementById('id_password');
+        
+        // Validar que los campos no estén vacíos
+        function validateField(input) {
+            if (input.value.trim() === '') {
+                input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        }
+        
+        usernameInput.addEventListener('blur', () => validateField(usernameInput));
+        passwordInput.addEventListener('blur', () => validateField(passwordInput));
+        
+        // Validar al enviar el formulario
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            if (usernameInput.value.trim() === '') {
+                usernameInput.classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            if (passwordInput.value.trim() === '') {
+                passwordInput.classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Por favor, completa todos los campos requeridos.');
+            }
+        });
+    });
+</script>
+{% endblock %} 

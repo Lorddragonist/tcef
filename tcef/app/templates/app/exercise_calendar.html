@@ -1,0 +1,367 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load app_extras %}
+
+{% block title %}Calendario de Ejercicios - TCEF{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'app/css/exercise_calendar.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="calendar-container">
+    <!-- Header del calendario con navegación -->
+    <div class="calendar-header">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <h2 class="calendar-title">
+                    <i class="fas fa-calendar-alt me-2"></i>Calendario de Ejercicios
+                </h2>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="month-navigation">
+                    <a href="{% url 'app:exercise_calendar_month' prev_year prev_month %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <span class="current-month">{{ month_name }} {{ year }}</span>
+                    <a href="{% url 'app:exercise_calendar_month' next_year next_month %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'app:exercise_calendar' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-calendar-day me-1"></i>Hoy
+                </a>
+                <a href="{% url 'app:exercise_stats' %}" class="btn btn-info btn-sm">
+                    <i class="fas fa-chart-bar me-1"></i>Estadísticas
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="stats-summary mb-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalExercises">{{ user_stats.total_exercises }}</div>
+                        <div class="stat-label">Total Ejercicios</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="currentStreak">{{ user_stats.current_streak }}</div>
+                        <div class="stat-label">Racha Actual</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="longestStreak">{{ user_stats.longest_streak }}</div>
+                        <div class="stat-label">Mejor Racha</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="monthProgress">
+                            {% if user_stats.total_exercises > 0 %}
+                                {{ user_stats.total_exercises|floatformat:0 }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">Progreso del Mes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendario principal -->
+    <div class="calendar-main">
+        <div class="calendar-grid">
+            <!-- Días de la semana -->
+            <div class="calendar-weekdays">
+                <div class="weekday">Lun</div>
+                <div class="weekday">Mar</div>
+                <div class="weekday">Mié</div>
+                <div class="weekday">Jue</div>
+                <div class="weekday">Vie</div>
+                <div class="weekday">Sáb</div>
+                <div class="weekday">Dom</div>
+            </div>
+
+            <!-- Días del mes -->
+            <div class="calendar-days">
+                {% for week in calendar %}
+                    {% for day in week %}
+                        {% if day == 0 %}
+                            <div class="calendar-day empty"></div>
+                        {% else %}
+                            {% with exercise=exercise_dates|get_item:day %}
+                                <div class="calendar-day {% if exercise %}has-exercise{% endif %} {% if year == today.year and month == today.month and day == today.day %}today{% endif %}"
+                                     data-date="{{ year }}-{{ month|stringformat:'02d' }}-{{ day|stringformat:'02d' }}"
+                                     data-day="{{ day }}">
+                                    
+                                    <div class="day-number">{{ day }}</div>
+                                    
+                                    {% if exercise %}
+                                        <div class="exercise-indicator" 
+                                             data-exercise-id="{{ exercise.id }}"
+                                             data-difficulty="{{ exercise.difficulty }}"
+                                             data-notes="{{ exercise.notes|default:'' }}">
+                                            <i class="fas fa-check-circle text-success"></i>
+                                            <div class="difficulty-badge difficulty-{{ exercise.difficulty }}">
+                                                {{ exercise.get_difficulty_display }}
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="add-exercise-btn" onclick="showAddExerciseModal('{{ year }}-{{ month|stringformat:'02d' }}-{{ day|stringformat:'02d' }}', {{ day }})">
+                                            <i class="fas fa-plus"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar ejercicio -->
+<div class="modal fade" id="addExerciseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Agregar Ejercicio Completado
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addExerciseForm">
+                    <input type="hidden" id="exerciseDate" name="exercise_date">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-calendar me-1"></i>Fecha
+                        </label>
+                        <input type="text" class="form-control" id="exerciseDateDisplay" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="exerciseDifficulty" class="form-label">
+                            <i class="fas fa-level-up-alt me-1"></i>Nivel de Dificultad
+                        </label>
+                        <select class="form-select" id="exerciseDifficulty" name="difficulty" required>
+                            <option value="facil">Fácil</option>
+                            <option value="medio" selected>Medio</option>
+                            <option value="dificil">Difícil</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="exerciseNotes" class="form-label">
+                            <i class="fas fa-sticky-note me-1"></i>Notas (opcional)
+                        </label>
+                        <textarea class="form-control" id="exerciseNotes" name="notes" rows="3" 
+                                  placeholder="Describe tu rutina, ejercicios realizados, etc."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addExercise()">
+                    <i class="fas fa-save me-2"></i>Guardar Ejercicio
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar eliminación -->
+<div class="modal fade" id="removeExerciseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar el ejercicio del día <strong id="removeDateDisplay"></strong>?</p>
+                <p class="text-muted">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="removeExercise()">
+                    <i class="fas fa-trash me-2"></i>Eliminar Ejercicio
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentExerciseDate = '';
+    let currentExerciseDay = 0;
+
+    // Función para mostrar modal de agregar ejercicio
+    function showAddExerciseModal(date, day) {
+        currentExerciseDate = date;
+        currentExerciseDay = day;
+        
+        // Formatear fecha para mostrar
+        const dateObj = new Date(date);
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('exerciseDateDisplay').value = dateObj.toLocaleDateString('es-ES', options);
+        document.getElementById('exerciseDate').value = date;
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('addExerciseModal'));
+        modal.show();
+    }
+
+    // Función para agregar ejercicio
+    function addExercise() {
+        const formData = new FormData();
+        formData.append('exercise_date', currentExerciseDate);
+        formData.append('difficulty', document.getElementById('exerciseDifficulty').value);
+        formData.append('notes', document.getElementById('exerciseNotes').value);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch('{% url "app:add_exercise" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addExerciseModal'));
+                modal.hide();
+                
+                // Actualizar calendario
+                location.reload();
+                
+                // Mostrar mensaje de éxito
+                showAlert('¡Ejercicio agregado exitosamente!', 'success');
+            } else {
+                showAlert('Error: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error al agregar ejercicio: ' + error, 'danger');
+        });
+    }
+
+    // Función para mostrar modal de eliminación
+    function showRemoveExerciseModal(date, day) {
+        currentExerciseDate = date;
+        currentExerciseDay = day;
+        
+        // Formatear fecha para mostrar
+        const dateObj = new Date(date);
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('removeDateDisplay').textContent = dateObj.toLocaleDateString('es-ES', options);
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('removeExerciseModal'));
+        modal.show();
+    }
+
+    // Función para eliminar ejercicio
+    function removeExercise() {
+        const formData = new FormData();
+        formData.append('exercise_date', currentExerciseDate);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch('{% url "app:remove_exercise" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('removeExerciseModal'));
+                modal.hide();
+                
+                // Actualizar calendario
+                location.reload();
+                
+                // Mostrar mensaje de éxito
+                showAlert('¡Ejercicio eliminado exitosamente!', 'success');
+            } else {
+                showAlert('Error: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error al eliminar ejercicio: ' + error, 'danger');
+        });
+    }
+
+    // Función para mostrar alertas
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.querySelector('.calendar-container').insertBefore(alertDiv, document.querySelector('.calendar-header'));
+        
+        // Auto-ocultar después de 5 segundos
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+
+    // Event listeners para clicks en días con ejercicios
+    document.addEventListener('DOMContentLoaded', function() {
+        // Agregar click a días con ejercicios para mostrar opciones
+        document.querySelectorAll('.exercise-indicator').forEach(indicator => {
+            indicator.addEventListener('click', function() {
+                const dayElement = this.closest('.calendar-day');
+                const date = dayElement.dataset.date;
+                const day = dayElement.dataset.day;
+                
+                // Mostrar opciones (editar/eliminar)
+                if (confirm('¿Qué quieres hacer?\n\n1. Ver detalles\n2. Eliminar ejercicio\n\nPresiona OK para ver detalles o Cancelar para eliminar.')) {
+                    // Mostrar detalles del ejercicio
+                    const exercise = this.dataset;
+                    alert(`Ejercicio del ${day}/${month}/${year}\n\nDificultad: ${exercise.difficulty}\nNotas: ${exercise.notes || 'Sin notas'}`);
+                } else {
+                    // Eliminar ejercicio
+                    showRemoveExerciseModal(date, day);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 
