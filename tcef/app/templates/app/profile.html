@@ -8,156 +8,147 @@
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10 col-lg-8">
-        <div class="card shadow-lg">
-            <div class="card-header bg-primary text-white text-center">
-                <h3 class="mb-0">
-                    <i class="fas fa-user-circle me-2"></i>Mi Perfil
-                </h3>
-                <p class="mb-0">Información de tu cuenta</p>
-            </div>
-            
-            <div class="card-body p-4">
-                <div class="row">
-                    <!-- Información del usuario -->
-                    <div class="col-md-6">
-                        <h5 class="text-primary mb-3">
-                            <i class="fas fa-user me-2"></i>Información Personal
-                        </h5>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-circle me-2"></i>Mi Perfil
+                    </h3>
+                    <p class="mb-0">Información de tu cuenta</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="row">
+                        <!-- Información del usuario -->
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-user me-2"></i>Información Personal
+                            </h5>
+                            
+                            <div class="profile-info">
+                                <div class="info-item">
+                                    <label class="fw-bold">Nombre completo:</label>
+                                    <p>{{ user.first_name }} {{ user.last_name }}</p>
+                                </div>
+                                
+                                <div class="info-item">
+                                    <label class="fw-bold">Nombre de usuario:</label>
+                                    <p>{{ user.username }}</p>
+                                </div>
+                                
+                                <div class="info-item">
+                                    <label class="fw-bold">Email:</label>
+                                    <p>{{ user.email }}</p>
+                                </div>
+                                
+                                <div class="info-item">
+                                    <label class="fw-bold">Fecha de registro:</label>
+                                    <p>{{ user.date_joined|date:"d/m/Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
                         
-                        <div class="profile-info">
-                            <div class="info-item">
-                                <label class="fw-bold">Nombre completo:</label>
-                                <p>{{ user.first_name }} {{ user.last_name }}</p>
-                            </div>
+                        <!-- Estado de la cuenta -->
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-shield-alt me-2"></i>Estado de la Cuenta
+                            </h5>
                             
-                            <div class="info-item">
-                                <label class="fw-bold">Nombre de usuario:</label>
-                                <p>{{ user.username }}</p>
-                            </div>
-                            
-                            <div class="info-item">
-                                <label class="fw-bold">Email:</label>
-                                <p>{{ user.email }}</p>
-                            </div>
-                            
-                            <div class="info-item">
-                                <label class="fw-bold">Fecha de registro:</label>
-                                <p>{{ user.date_joined|date:"d/m/Y H:i" }}</p>
+                            <div class="account-status">
+                                <!-- Estado de confirmación de email -->
+                                <div class="status-item">
+                                    <div class="status-header">
+                                        <i class="fas fa-envelope me-2"></i>
+                                        <span>Confirmación de Email</span>
+                                    </div>
+                                    <div class="status-value">
+                                        {% if profile.email_confirmed %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Confirmado
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>Pendiente
+                                            </span>
+                                            <div class="mt-2">
+                                                <small class="text-muted">
+                                                    Revisa tu email para confirmar tu cuenta
+                                                </small>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Estado de términos y condiciones -->
+                                <div class="status-item">
+                                    <div class="status-header">
+                                        <i class="fas fa-file-contract me-2"></i>
+                                        <span>Términos y Condiciones</span>
+                                    </div>
+                                    <div class="status-value">
+                                        {% if profile.terms_accepted %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Aceptados
+                                            </span>
+                                            <div class="mt-2">
+                                                <small class="text-muted">
+                                                    Aceptados el {{ profile.terms_accepted_date|date:"d/m/Y H:i" }}
+                                                </small>
+                                            </div>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>No Aceptados
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Última actividad -->
+                                <div class="status-item">
+                                    <div class="status-header">
+                                        <i class="fas fa-clock me-2"></i>
+                                        <span>Última Actividad</span>
+                                    </div>
+                                    <div class="status-value">
+                                        <span class="text-muted">
+                                            {{ profile.updated_at|date:"d/m/Y H:i" }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Estado de la cuenta -->
-                    <div class="col-md-6">
-                        <h5 class="text-primary mb-3">
-                            <i class="fas fa-shield-alt me-2"></i>Estado de la Cuenta
-                        </h5>
-                        
-                        <div class="account-status">
-                            <!-- Estado de confirmación de email -->
-                            <div class="status-item">
-                                <div class="status-header">
-                                    <i class="fas fa-envelope me-2"></i>
-                                    <span>Confirmación de Email</span>
-                                </div>
-                                <div class="status-value">
-                                    {% if profile.email_confirmed %}
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-check me-1"></i>Confirmado
-                                        </span>
-                                    {% else %}
-                                        <span class="badge bg-warning">
-                                            <i class="fas fa-exclamation-triangle me-1"></i>Pendiente
-                                        </span>
-                                        <div class="mt-2">
-                                            <small class="text-muted">
-                                                Revisa tu email para confirmar tu cuenta
-                                            </small>
-                                        </div>
-                                    {% endif %}
-                                </div>
+                    <!-- Acciones del usuario -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-cogs me-2"></i>Acciones
+                            </h5>
+                            
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{% url 'app:weekly_routines' %}" class="btn btn-success">
+                                    <i class="fas fa-play-circle me-2"></i>Ver Rutinas Semanales
+                                </a>
+                                
+                                <a href="{% url 'app:exercise_calendar' %}" class="btn btn-primary">
+                                    <i class="fas fa-calendar-alt me-2"></i>Mi Calendario
+                                </a>
+                                
+                                <a href="{% url 'app:exercise_stats' %}" class="btn btn-info">
+                                    <i class="fas fa-chart-bar me-2"></i>Estadísticas
+                                </a>
+                                
+                                <a href="{% url 'password_change' %}" class="btn btn-warning">
+                                    <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                                </a>
+                                
+                                <a href="{% url 'app:custom_logout' %}" class="btn btn-outline-danger">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                </a>
                             </div>
-                            
-                            <!-- Estado de términos y condiciones -->
-                            <div class="status-item">
-                                <div class="status-header">
-                                    <i class="fas fa-file-contract me-2"></i>
-                                    <span>Términos y Condiciones</span>
-                                </div>
-                                <div class="status-value">
-                                    {% if profile.terms_accepted %}
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-check me-1"></i>Aceptados
-                                        </span>
-                                        <div class="mt-2">
-                                            <small class="text-muted">
-                                                Aceptados el {{ profile.terms_accepted_date|date:"d/m/Y H:i" }}
-                                            </small>
-                                        </div>
-                                    {% else %}
-                                        <span class="badge bg-danger">
-                                            <i class="fas fa-times me-1"></i>No Aceptados
-                                        </span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <!-- Última actividad -->
-                            <div class="status-item">
-                                <div class="status-header">
-                                    <i class="fas fa-clock me-2"></i>
-                                    <span>Última Actividad</span>
-                                </div>
-                                <div class="status-value">
-                                    <span class="text-muted">
-                                        {{ profile.updated_at|date:"d/m/Y H:i" }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Acciones del usuario -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <h5 class="text-primary mb-3">
-                            <i class="fas fa-cogs me-2"></i>Acciones
-                        </h5>
-                        
-                        <div class="d-flex flex-wrap gap-2">
-                            {% if not profile.email_confirmed %}
-                                <button class="btn btn-warning" onclick="resendConfirmation()">
-                                    <i class="fas fa-paper-plane me-2"></i>Reenviar Email de Confirmación
-                                </button>
-                            {% endif %}
-                            
-                            <a href="{% url 'password_change' %}" class="btn btn-info">
-                                <i class="fas fa-key me-2"></i>Cambiar Contraseña
-                            </a>
-                            
-                            <a href="{% url 'logout' %}" class="btn btn-outline-danger">
-                                <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Información adicional -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            <h6 class="alert-heading">
-                                <i class="fas fa-info-circle me-2"></i>Información Importante
-                            </h6>
-                            <ul class="mb-0">
-                                <li>Tu cuenta está segura con encriptación de contraseñas</li>
-                                <li>Los datos personales se manejan con confidencialidad</li>
-                                <li>Puedes actualizar tu información en cualquier momento</li>
-                                <li>Para dudas o problemas, contacta al soporte técnico</li>
-                            </ul>
                         </div>
                     </div>
                 </div>

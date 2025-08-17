@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, date, timedelta
 import calendar
 from .forms import UserRegistrationForm
-from .models import UserProfile, ExerciseLog
+from .models import UserProfile, ExerciseLog, WeeklyRoutine
 
 def register(request):
     """Vista para el registro de usuarios"""
@@ -278,3 +278,108 @@ def custom_logout(request):
     
     # Mostrar página de confirmación
     return render(request, 'app/logout.html')
+
+@login_required
+def weekly_routines(request, day=None):
+    """Vista principal de las rutinas semanales con carrusel"""
+    
+    # Si no se especifica día, usar el día actual
+    if day is None:
+        current_routine = WeeklyRoutine.get_today_routine()
+        if current_routine:
+            day = current_routine.day
+        else:
+            # Si no hay rutina para hoy, usar lunes por defecto
+            day = 'lunes'
+    else:
+        # Validar que el día sea válido
+        valid_days = [choice[0] for choice in WeeklyRoutine.DAY_CHOICES]
+        if day not in valid_days:
+            day = 'lunes'
+    
+    # Obtener la rutina del día especificado
+    try:
+        current_routine = WeeklyRoutine.objects.get(day=day, is_active=True)
+    except WeeklyRoutine.DoesNotExist:
+        current_routine = None
+    
+    # Obtener todas las rutinas activas para la navegación
+    all_routines = WeeklyRoutine.get_all_active_routines()
+    
+    # Obtener información de navegación
+    if current_routine:
+        next_day = current_routine.get_next_day()
+        previous_day = current_routine.get_previous_day()
+        
+        # Buscar las rutinas siguiente y anterior
+        try:
+            next_routine = WeeklyRoutine.objects.get(day=next_day, is_active=True)
+        except WeeklyRoutine.DoesNotExist:
+            next_routine = None
+            
+        try:
+            previous_routine = WeeklyRoutine.objects.get(day=previous_day, is_active=True)
+        except WeeklyRoutine.DoesNotExist:
+            previous_routine = None
+    else:
+        next_routine = None
+        previous_routine = None
+    
+    # Verificar si el usuario ya completó la rutina de hoy
+    today = date.today()
+    today_exercise = None
+    if current_routine:
+        try:
+            today_exercise = ExerciseLog.objects.get(user=request.user, exercise_date=today)
+        except ExerciseLog.DoesNotExist:
+            pass
+    
+    context = {
+        'current_routine': current_routine,
+        'all_routines': all_routines,
+        'next_routine': next_routine,
+        'previous_routine': previous_routine,
+        'current_day': day,
+        'today_exercise': today_exercise,
+        'today': today,
+    }
+    
+    return render(request, 'app/weekly_routines.html', context)
+
+@login_required
+@require_POST
+def complete_routine(request):
+    """Vista para marcar una rutina como completada"""
+    try:
+        routine_day = request.POST.get('routine_day')
+        
+        if not routine_day:
+            return JsonResponse({'success': False, 'error': 'Día de rutina requerido'})
+        
+        # Obtener la fecha actual
+        today = date.today()
+        
+        # Verificar que no exista ya un ejercicio para hoy
+        if ExerciseLog.objects.filter(user=request.user, exercise_date=today).exists():
+            return JsonResponse({'success': False, 'error': 'Ya tienes un ejercicio registrado para hoy'})
+        
+        # Crear el registro de ejercicio
+        exercise = ExerciseLog.objects.create(
+            user=request.user,
+            exercise_date=today,
+            notes=f"Rutina completada: {routine_day}",
+            difficulty='medio'  # Por defecto medio, se puede personalizar después
+        )
+        
+        # Obtener estadísticas actualizadas
+        user_stats = ExerciseLog.get_user_stats(request.user)
+        
+        return JsonResponse({
+            'success': True,
+            'exercise_id': exercise.id,
+            'user_stats': user_stats,
+            'message': '¡Rutina marcada como completada!'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

@@ -30,6 +30,9 @@
                 </div>
             </div>
             <div class="col-md-4 text-end">
+                <a href="{% url 'app:weekly_routines' %}" class="btn btn-success btn-sm me-2">
+                    <i class="fas fa-play-circle me-1"></i>Ver Rutinas
+                </a>
                 <a href="{% url 'app:exercise_calendar' %}" class="btn btn-primary btn-sm">
                     <i class="fas fa-calendar-day me-1"></i>Hoy
                 </a>
@@ -109,7 +112,7 @@
                 <div class="weekday">Sáb</div>
                 <div class="weekday">Dom</div>
             </div>
-
+            
             <!-- Días del mes -->
             <div class="calendar-days">
                 {% for week in calendar %}
@@ -223,6 +226,7 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -239,7 +243,6 @@
         const dateObj = new Date(date);
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('exerciseDateDisplay').value = dateObj.toLocaleDateString('es-ES', options);
-        document.getElementById('exerciseDate').value = date;
         
         // Mostrar modal
         const modal = new bootstrap.Modal(document.getElementById('addExerciseModal'));
