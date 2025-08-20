@@ -24,6 +24,11 @@
         .navbar-brand {
             font-weight: bold;
             color: #dc6874 !important;
+            justify-content: space-between;
+            align-items: center;
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
         }
         
         .main-content {
@@ -75,7 +80,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="fas fa-dumbbell me-2"></i>TCEF
+                <i class="fas fa-dumbbell me-2"></i>
+                <span>TCEF</span>
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -100,6 +106,21 @@
                                 <i class="fas fa-user me-1"></i>Mi Perfil
                             </a>
                         </li>
+                        {% if user.is_staff %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-shield-alt me-1"></i>Admin
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'admin_panel:dashboard' %}">Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'admin_panel:user_management' %}">Usuarios</a></li>
+                                <li><a class="nav-link" href="{% url 'admin_panel:group_management' %}">Grupos</a></li>
+                                <li><a class="nav-link" href="{% url 'admin_panel:routine_management' %}">Rutinas</a></li>
+                                <li><a class="nav-link" href="{% url 'admin_panel:video_upload' %}">Subir Videos</a></li>
+                                <li><a class="nav-link" href="{% url 'admin_panel:user_monitoring' %}">Monitoreo</a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'app:custom_logout' %}">
                                 <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión

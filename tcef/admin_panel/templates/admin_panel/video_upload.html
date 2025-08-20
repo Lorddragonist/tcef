@@ -1,0 +1,394 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Subir Videos - Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-upload me-2"></i>
+                Subir Videos a GCP
+            </h1>
+            <a href="{% url 'admin_panel:routine_management' %}" class="btn btn-outline-primary">
+                <i class="fas fa-dumbbell me-2"></i>
+                Gestionar Rutinas
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Área de subida -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>
+                    Subir Nuevo Video
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Área de drag & drop -->
+                <div id="dropZone" class="upload-drop-zone text-center p-5 border-2 border-dashed border-secondary rounded">
+                    <div class="upload-icon mb-3">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="mb-3">Arrastra y suelta tu video aquí</h5>
+                    <p class="text-muted mb-3">O haz clic para seleccionar archivo</p>
+                    <input type="file" id="fileInput" class="d-none" accept="video/*">
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-folder-open me-2"></i>
+                        Seleccionar Video
+                    </button>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            Formatos soportados: MP4, AVI, MOV, WMV<br>
+                            Tamaño máximo: 500 MB
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Barra de progreso -->
+                <div id="progressContainer" class="mt-4" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">Progreso de subida</span>
+                        <span id="progressText">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="mt-2">
+                        <small id="uploadStatus" class="text-muted">Preparando subida...</small>
+                    </div>
+                </div>
+
+                <!-- Información del archivo -->
+                <div id="fileInfo" class="mt-4" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Información del Archivo</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Nombre:</strong> <span id="fileName"></span></li>
+                                <li><strong>Tamaño:</strong> <span id="fileSize"></span></li>
+                                <li><strong>Tipo:</strong> <span id="fileType"></span></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Configuración de Subida</h6>
+                            <div class="mb-3">
+                                <label for="bucketName" class="form-label">Bucket de GCP</label>
+                                <input type="text" class="form-control" id="bucketName" value="tcef-videos" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="blobName" class="form-label">Nombre en GCP</label>
+                                <input type="text" class="form-control" id="blobName" placeholder="ej: lunes_rutina.mp4">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <button type="button" id="startUpload" class="btn btn-success btn-lg">
+                            <i class="fas fa-play me-2"></i>
+                            Iniciar Subida
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historial de subidas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-history me-2"></i>
+                    Historial de Subidas Recientes
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if recent_uploads %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Archivo</th>
+                                    <th>Tamaño</th>
+                                    <th>Estado</th>
+                                    <th>Progreso</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for upload in recent_uploads %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ upload.filename }}</strong>
+                                        {% if upload.gcp_blob_name %}
+                                            <br><small class="text-muted">{{ upload.gcp_blob_name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ upload.file_size|filesizeformat }}</td>
+                                    <td>
+                                        {% if upload.status == 'completed' %}
+                                            <span class="badge bg-success">Completado</span>
+                                        {% elif upload.status == 'uploading' %}
+                                            <span class="badge bg-primary">Subiendo</span>
+                                        {% elif upload.status == 'processing' %}
+                                            <span class="badge bg-info">Procesando</span>
+                                        {% elif upload.status == 'failed' %}
+                                            <span class="badge bg-danger">Fallido</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ upload.progress }}%">
+                                                {{ upload.progress }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ upload.started_at|date:"d/m/Y H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if upload.status == 'failed' %}
+                                            <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                    title="Ver error" onclick="showError('{{ upload.error_message }}')">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </button>
+                                        {% endif %}
+                                        {% if upload.status == 'completed' %}
+                                            <a href="{{ upload.gcp_blob_name }}" class="btn btn-sm btn-outline-success" 
+                                               title="Ver video" target="_blank">
+                                                <i class="fas fa-play"></i>
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-upload fa-3x mb-3"></i>
+                        <p>No hay subidas recientes</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar errores -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error en la Subida
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentFile = null;
+let uploadSessionId = null;
+
+// Configuración del área de drag & drop
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+// Eventos de drag & drop
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('border-primary', 'bg-light');
+});
+
+dropZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('border-primary', 'bg-light');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('border-primary', 'bg-light');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFile(files[0]);
+    }
+});
+
+dropZone.addEventListener('click', () => {
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+    }
+});
+
+function handleFile(file) {
+    // Validar tipo de archivo
+    if (!file.type.startsWith('video/')) {
+        alert('Por favor selecciona un archivo de video válido.');
+        return;
+    }
+    
+    // Validar tamaño (500 MB)
+    if (file.size > 500 * 1024 * 1024) {
+        alert('El archivo es demasiado grande. Tamaño máximo: 500 MB');
+        return;
+    }
+    
+    currentFile = file;
+    
+    // Mostrar información del archivo
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    document.getElementById('fileType').textContent = file.type;
+    document.getElementById('blobName').value = file.name;
+    
+    // Mostrar sección de información
+    document.getElementById('fileInfo').style.display = 'block';
+    
+    // Ocultar área de drop
+    dropZone.style.display = 'none';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+document.getElementById('startUpload').addEventListener('click', async () => {
+    if (!currentFile) return;
+    
+    const blobName = document.getElementById('blobName').value;
+    if (!blobName) {
+        alert('Por favor especifica un nombre para el archivo en GCP.');
+        return;
+    }
+    
+    // Mostrar progreso
+    document.getElementById('progressContainer').style.display = 'block';
+    document.getElementById('startUpload').disabled = true;
+    
+    try {
+        // Crear sesión de subida
+        const formData = new FormData();
+        formData.append('filename', currentFile.name);
+        formData.append('file_size', currentFile.size);
+        
+        const response = await fetch('{% url "admin_panel:video_upload" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            uploadSessionId = result.session_id;
+            simulateUpload();
+        } else {
+            throw new Error(result.message || 'Error al crear sesión de subida');
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('uploadStatus').textContent = 'Error: ' + error.message;
+        document.getElementById('uploadStatus').classList.add('text-danger');
+        document.getElementById('startUpload').disabled = false;
+    }
+});
+
+function simulateUpload() {
+    let progress = 0;
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const uploadStatus = document.getElementById('uploadStatus');
+    
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 100) progress = 100;
+        
+        progressBar.style.width = progress + '%';
+        progressText.textContent = Math.round(progress) + '%';
+        
+        if (progress < 30) {
+            uploadStatus.textContent = 'Subiendo archivo...';
+        } else if (progress < 70) {
+            uploadStatus.textContent = 'Procesando en GCP...';
+        } else if (progress < 100) {
+            uploadStatus.textContent = 'Finalizando...';
+        } else {
+            uploadStatus.textContent = '¡Subida completada!';
+            uploadStatus.classList.add('text-success');
+            clearInterval(interval);
+            
+            // Recargar página después de 2 segundos
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        }
+    }, 500);
+}
+
+function showError(errorMessage) {
+    document.getElementById('errorMessage').textContent = errorMessage;
+    const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.upload-drop-zone {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-drop-zone:hover {
+    border-color: #007bff !important;
+    background-color: #f8f9fa;
+}
+
+.upload-drop-zone.border-primary {
+    border-color: #007bff !important;
+    background-color: #f8f9fa;
+}
+
+.progress {
+    height: 25px;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+}
+</style>
+{% endblock %} 

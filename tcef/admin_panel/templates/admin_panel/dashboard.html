@@ -1,0 +1,298 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Dashboard - Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Título de la página -->
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-tachometer-alt me-2"></i>
+                Dashboard de Administración
+            </h1>
+            <div class="text-muted">
+                <i class="fas fa-clock me-1"></i>
+                {{ user.username }} - {{ user.date_joined|date:"d/m/Y H:i" }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tarjetas de estadísticas -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total de Usuarios
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Usuarios Activos
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_users }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Grupos Activos
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_groups }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-layer-group fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Rutinas Activas
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_routines }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dumbbell fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido principal -->
+<div class="row">
+    <!-- Actividad reciente -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-history me-2"></i>
+                    Actividad Administrativa Reciente
+                </h6>
+                <a href="{% url 'admin_panel:activity_log' %}" class="btn btn-sm btn-outline-primary">
+                    Ver Todas
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_activities %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Admin</th>
+                                    <th>Acción</th>
+                                    <th>Detalles</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activities %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ activity.admin_user.username }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ activity.get_action_display }}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ activity.details|truncatechars:50 }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ activity.created_at|date:"d/m H:i" }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-info-circle fa-3x mb-3"></i>
+                        <p>No hay actividad reciente</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Usuarios recientes -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Usuarios Recientes
+                </h6>
+                <a href="{% url 'admin_panel:user_management' %}" class="btn btn-sm btn-outline-primary">
+                    Ver Todos
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_users %}
+                    {% for user in recent_users %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ user.get_full_name|default:user.username }}</h6>
+                            <small class="text-muted">{{ user.email }}</small>
+                            <br>
+                            <small class="text-muted">Registrado: {{ user.date_joined|date:"d/m/Y" }}</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            {% if user.userprofile.email_confirmed %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-warning">Pendiente</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-users fa-3x mb-3"></i>
+                        <p>No hay usuarios recientes</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rutinas de hoy -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    Rutinas de Hoy ({{ today_routines.count }})
+                </h6>
+                <a href="{% url 'admin_panel:routine_management' %}" class="btn btn-sm btn-outline-primary">
+                    Gestionar Rutinas
+                </a>
+            </div>
+            <div class="card-body">
+                {% if today_routines %}
+                    <div class="row">
+                        {% for routine in today_routines %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ routine.title }}</h6>
+                                    <p class="card-text small">{{ routine.description|truncatechars:100 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge" style="background-color: {{ routine.group.color }}; color: white;">
+                                            {{ routine.group.name }}
+                                        </span>
+                                        <small class="text-muted">{{ routine.duration }} min</small>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <div class="btn-group w-100" role="group">
+                                        <a href="{% url 'admin_panel:edit_routine' routine.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit me-1"></i> Editar
+                                        </a>
+                                        <a href="{% url 'admin_panel:delete_routine' routine.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash me-1"></i> Eliminar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                        <p>No hay rutinas programadas para hoy</p>
+                        <a href="{% url 'admin_panel:create_routine' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i> Crear Rutina
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Acciones rápidas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-bolt me-2"></i>
+                    Acciones Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'admin_panel:create_user' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Crear Usuario
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'admin_panel:create_routine' %}" class="btn btn-success w-100">
+                            <i class="fas fa-dumbbell me-2"></i>
+                            Crear Rutina
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'admin_panel:video_upload' %}" class="btn btn-info w-100">
+                            <i class="fas fa-upload me-2"></i>
+                            Subir Video
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'admin_panel:user_monitoring' %}" class="btn btn-warning w-100">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Ver Estadísticas
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

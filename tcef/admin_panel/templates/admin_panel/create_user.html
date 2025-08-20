@@ -1,0 +1,117 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Crear Usuario - Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Crear Nuevo Usuario
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Nombre de Usuario *</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                            <div class="form-text">Requerido. 150 caracteres o menos. Solo letras, dígitos y @/./+/-/_</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Apellido</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password1" class="form-label">Contraseña *</label>
+                            <input type="password" class="form-control" id="password1" name="password1" required>
+                            <div class="form-text">
+                                <ul class="mb-0">
+                                    <li>Tu contraseña no puede ser muy similar a tu información personal.</li>
+                                    <li>Tu contraseña debe contener al menos 8 caracteres.</li>
+                                    <li>Tu contraseña no puede ser una contraseña común.</li>
+                                    <li>Tu contraseña no puede ser completamente numérica.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="password2" class="form-label">Confirmar Contraseña *</label>
+                            <input type="password" class="form-control" id="password2" name="password2" required>
+                            <div class="form-text">Ingresa la misma contraseña que antes, para verificación.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Grupos de Usuario</label>
+                        <div class="row">
+                            {% for group in groups %}
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="groups" value="{{ group.id }}" id="group_{{ group.id }}">
+                                    <label class="form-check-label" for="group_{{ group.id }}">
+                                        <span class="badge me-2" style="background-color: {{ group.color }}; color: white;">
+                                            {{ group.name }}
+                                        </span>
+                                        <small class="text-muted">{{ group.description }}</small>
+                                    </label>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    No hay grupos disponibles. 
+                                    <a href="{% url 'admin_panel:group_management' %}" class="alert-link">Crear un grupo primero</a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Nota:</strong> Los usuarios creados desde el panel de administración tendrán automáticamente:
+                        <ul class="mb-0 mt-2">
+                            <li>Email confirmado</li>
+                            <li>Términos y condiciones aceptados</li>
+                            <li>Cuenta activa</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'admin_panel:user_management' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Volver
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            Crear Usuario
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
