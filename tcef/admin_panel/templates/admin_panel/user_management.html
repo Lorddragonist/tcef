@@ -116,7 +116,7 @@
                                     </td>
                                     <td>
                                         {% if user.is_active %}
-                                            {% if user.userprofile.email_confirmed %}
+                                            {% if user.userprofile.is_approved %}
                                                 <span class="badge bg-success">Activo</span>
                                             {% else %}
                                                 <span class="badge bg-warning">Pendiente</span>

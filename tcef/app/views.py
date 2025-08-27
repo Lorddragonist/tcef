@@ -15,28 +15,32 @@ import calendar
 from .forms import UserRegistrationForm
 from .models import UserProfile, ExerciseLog, WeeklyRoutine
 
+def home(request):
+    """Vista principal de la landing page tipo blog"""
+    return render(request, 'app/home.html')
+
 def register(request):
     """Vista para el registro de usuarios"""
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save(commit=False)
+            # Crear usuario inactivo por defecto (debe ser aprobado por admin)
+            user.is_active = False
+            user.save()
             
-            # Enviar email de confirmación
-            try:
-                send_confirmation_email(user)
-                messages.success(
-                    request, 
-                    '¡Registro exitoso! Por favor, revisa tu email para confirmar tu cuenta.'
-                )
-                return redirect('login')
-            except Exception as e:
-                # Si falla el envío de email, aún creamos el usuario
-                messages.warning(
-                    request, 
-                    'Usuario creado pero hubo un problema enviando el email de confirmación. Contacta al administrador.'
-                )
-                return redirect('login')
+            # Crear perfil de usuario
+            profile = UserProfile.objects.create(user=user)
+            
+            # Crear solicitud de aprobación
+            from admin_panel.models import UserApprovalRequest
+            UserApprovalRequest.objects.create(user=user)
+            
+            messages.success(
+                request, 
+                '¡Registro exitoso! Tu cuenta está pendiente de aprobación por parte del administrador. Te notificaremos cuando sea aprobada.'
+            )
+            return redirect('login')
         else:
             messages.error(request, 'Por favor, corrige los errores en el formulario.')
     else:
@@ -44,51 +48,68 @@ def register(request):
     
     return render(request, 'app/register.html', {'form': form})
 
-def confirm_email(request, token):
-    """Vista para confirmar el email del usuario"""
-    try:
-        profile = get_object_or_404(UserProfile, email_confirmation_token=token)
-        
-        if profile.email_confirmed:
-            messages.info(request, 'Tu email ya ha sido confirmado.')
-        else:
-            profile.confirm_email()
-            messages.success(request, '¡Email confirmado exitosamente! Ya puedes iniciar sesión.')
-        
-        return redirect('login')
+def request_password_reset(request):
+    """Vista para solicitar reseteo de contraseña"""
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        try:
+            user = User.objects.get(email=email)
+            # Verificar si ya existe una solicitud pendiente
+            existing_request = PasswordResetRequest.objects.filter(
+                user=user, 
+                status='pending'
+            ).first()
+            
+            if existing_request:
+                messages.info(request, 'Ya tienes una solicitud de reseteo pendiente. El administrador la revisará pronto.')
+            else:
+                # Crear nueva solicitud
+                reset_request = PasswordResetRequest.objects.create(user=user)
+                
+                # Crear solicitud de aprobación
+                from admin_panel.models import PasswordResetApproval
+                PasswordResetApproval.objects.create(reset_request=reset_request)
+                
+                messages.success(request, 'Solicitud de reseteo enviada. El administrador la revisará y te notificará.')
+            
+            return redirect('login')
+            
+        except User.DoesNotExist:
+            messages.error(request, 'No se encontró un usuario con ese email.')
     
-    except UserProfile.DoesNotExist:
-        messages.error(request, 'El enlace de confirmación no es válido o ha expirado.')
-        return redirect('login')
+    return render(request, 'app/request_password_reset.html')
 
-def send_confirmation_email(user):
-    """Envía email de confirmación al usuario"""
-    profile = user.userprofile
-    
-    # Construir la URL de confirmación
-    confirmation_url = reverse('confirm_email', kwargs={'token': profile.email_confirmation_token})
-    full_url = request.build_absolute_uri(confirmation_url)
-    
-    # Renderizar el template del email
-    email_html = render_to_string('app/email/confirmation_email.html', {
-        'user': user,
-        'confirmation_url': full_url
-    })
-    
-    email_text = render_to_string('app/email/confirmation_email.txt', {
-        'user': user,
-        'confirmation_url': full_url
-    })
-    
-    # Enviar el email
-    send_mail(
-        subject='Confirma tu cuenta - TCEF',
-        message=email_text,
-        html_message=email_html,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=False,
-    )
+def reset_password_with_token(request, token):
+    """Vista para cambiar contraseña usando el token aprobado por admin"""
+    try:
+        reset_request = get_object_or_404(PasswordResetRequest, reset_token=token)
+        
+        if not reset_request.is_token_valid():
+            messages.error(request, 'El enlace de reseteo no es válido o ha expirado.')
+            return redirect('login')
+        
+        if request.method == 'POST':
+            password1 = request.POST.get('password1')
+            password2 = request.POST.get('password2')
+            
+            if password1 == password2:
+                user = reset_request.user
+                user.set_password(password1)
+                user.save()
+                
+                # Marcar el reseteo como completado
+                reset_request.complete_reset()
+                
+                messages.success(request, 'Contraseña cambiada exitosamente. Ya puedes iniciar sesión.')
+                return redirect('login')
+            else:
+                messages.error(request, 'Las contraseñas no coinciden.')
+        
+        return render(request, 'app/reset_password.html', {'token': token})
+        
+    except PasswordResetRequest.DoesNotExist:
+        messages.error(request, 'El enlace de reseteo no es válido.')
+        return redirect('login')
 
 @login_required
 def profile(request):
@@ -128,12 +149,49 @@ def exercise_calendar(request, year=None, month=None):
         year = today.year
         month = today.month
     
-    # Obtener el calendario del mes
-    cal = calendar.monthcalendar(year, month)
+    # Obtener el primer día del mes
+    first_day = date(year, month, 1)
     
-    # Obtener ejercicios del mes para el usuario
-    month_exercises = ExerciseLog.get_month_exercises(request.user, year, month)
-    exercise_dates = {ex.exercise_date.day: ex for ex in month_exercises}
+    # Obtener el lunes de la semana que contiene el primer día del mes
+    days_since_monday = first_day.weekday()
+    calendar_start = first_day - timedelta(days=days_since_monday)
+    
+    # Obtener el último día del mes
+    if month == 12:
+        last_day = date(year + 1, 1, 1) - timedelta(days=1)
+    else:
+        last_day = date(year, month + 1, 1) - timedelta(days=1)
+    
+    # Obtener el domingo de la semana que contiene el último día del mes
+    days_until_sunday = 6 - last_day.weekday()
+    calendar_end = last_day + timedelta(days=days_until_sunday)
+    
+    # Crear el calendario extendido semana por semana
+    extended_calendar = []
+    current_date = calendar_start
+    
+    while current_date <= calendar_end:
+        week = []
+        for i in range(7):  # 7 días por semana (Lunes a Domingo)
+            day_info = {
+                'day': current_date.day,
+                'month': current_date.month,
+                'year': current_date.year,
+                'is_current_month': current_date.month == month and current_date.year == year,
+                'is_today': current_date == date.today(),
+                'date': current_date,
+            }
+            week.append(day_info)
+            current_date += timedelta(days=1)
+        extended_calendar.append(week)
+    
+    # Obtener ejercicios del rango extendido para el usuario
+    extended_exercises = ExerciseLog.objects.filter(
+        user=request.user,
+        exercise_date__gte=calendar_start,
+        exercise_date__lte=calendar_end
+    )
+    exercise_dates = {ex.exercise_date: ex for ex in extended_exercises}
     
     # Obtener estadísticas del usuario
     user_stats = ExerciseLog.get_user_stats(request.user)
@@ -156,7 +214,7 @@ def exercise_calendar(request, year=None, month=None):
     ]
     
     context = {
-        'calendar': cal,
+        'calendar': extended_calendar,
         'year': year,
         'month': month,
         'month_name': month_names[month - 1],

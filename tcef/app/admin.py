@@ -7,21 +7,22 @@ class UserProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
     verbose_name_plural = 'Perfil de Usuario'
-    fields = ('email_confirmed', 'email_confirmation_token', 'terms_accepted', 'terms_accepted_date')
+    fk_name = 'user'  # Especificar cuál ForeignKey usar
+    fields = ('is_approved', 'approval_date', 'approved_by', 'terms_accepted', 'terms_accepted_date')
 
 class UserAdmin(BaseUserAdmin):
     inlines = (UserProfileInline,)
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_email_confirmed', 'get_terms_accepted')
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'userprofile__email_confirmed', 'userprofile__terms_accepted')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_is_approved', 'get_terms_accepted')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'userprofile__is_approved', 'userprofile__terms_accepted')
     search_fields = ('username', 'first_name', 'last_name', 'email')
     
-    def get_email_confirmed(self, obj):
+    def get_is_approved(self, obj):
         try:
-            return obj.userprofile.email_confirmed
+            return obj.userprofile.is_approved
         except UserProfile.DoesNotExist:
             return False
-    get_email_confirmed.boolean = True
-    get_email_confirmed.short_description = 'Email Confirmado'
+    get_is_approved.boolean = True
+    get_is_approved.short_description = 'Usuario Aprobado'
     
     def get_terms_accepted(self, obj):
         try:

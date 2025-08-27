@@ -135,17 +135,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.</p>
-                <div class="mb-3">
-                    <label for="recovery_email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="recovery_email" placeholder="tu@email.com">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="sendRecoveryEmail()">
-                    <i class="fas fa-paper-plane me-2"></i>Enviar
-                </button>
+                <p>Ingresa tu email y enviaremos una solicitud de reseteo al administrador. Te notificaremos cuando sea aprobada.</p>
+                <form method="post" action="{% url 'app:request_password_reset' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="recovery_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="recovery_email" name="email" placeholder="tu@email.com" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -174,18 +177,7 @@
         modal.show();
     }
     
-    // Función para enviar email de recuperación
-    function sendRecoveryEmail() {
-        const email = document.getElementById('recovery_email').value;
-        if (email) {
-            // Aquí implementarías la lógica para enviar el email
-            alert('Email de recuperación enviado a: ' + email);
-            const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
-            modal.hide();
-        } else {
-            alert('Por favor, ingresa un email válido.');
-        }
-    }
+
     
 
     

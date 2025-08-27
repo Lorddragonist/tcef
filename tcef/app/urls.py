@@ -4,8 +4,10 @@ from . import views
 app_name = 'app'
 
 urlpatterns = [
+    path('', views.home, name='home'),
     path('register/', views.register, name='register'),
-    path('confirm-email/<str:token>/', views.confirm_email, name='confirm_email'),
+    path('request-password-reset/', views.request_password_reset, name='request_password_reset'),
+    path('reset-password/<str:token>/', views.reset_password_with_token, name='reset_password_with_token'),
     path('profile/', views.profile, name='profile'),
     
     # URLs del calendario de ejercicios

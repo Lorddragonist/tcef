@@ -116,35 +116,36 @@
             <!-- Días del mes -->
             <div class="calendar-days">
                 {% for week in calendar %}
-                    {% for day in week %}
-                        {% if day == 0 %}
-                            <div class="calendar-day empty"></div>
-                        {% else %}
-                            {% with exercise=exercise_dates|get_item:day %}
-                                <div class="calendar-day {% if exercise %}has-exercise{% endif %} {% if year == today.year and month == today.month and day == today.day %}today{% endif %}"
-                                     data-date="{{ year }}-{{ month|stringformat:'02d' }}-{{ day|stringformat:'02d' }}"
-                                     data-day="{{ day }}">
-                                    
-                                    <div class="day-number">{{ day }}</div>
-                                    
-                                    {% if exercise %}
-                                        <div class="exercise-indicator" 
-                                             data-exercise-id="{{ exercise.id }}"
-                                             data-difficulty="{{ exercise.difficulty }}"
-                                             data-notes="{{ exercise.notes|default:'' }}">
-                                            <i class="fas fa-check-circle text-success"></i>
-                                            <div class="difficulty-badge difficulty-{{ exercise.difficulty }}">
-                                                {{ exercise.get_difficulty_display }}
-                                            </div>
+                    {% for day_info in week %}
+                        <div class="calendar-day {% if exercise_dates|get_item:day_info.date %}has-exercise{% endif %} {% if day_info.is_today %}today{% endif %} {% if not day_info.is_current_month %}other-month{% endif %}"
+                             data-date="{{ day_info.year }}-{{ day_info.month|stringformat:'02d' }}-{{ day_info.day|stringformat:'02d' }}"
+                             data-day="{{ day_info.day }}">
+                            
+                            <div class="day-number">
+                                {{ day_info.day }}
+                                {% if not day_info.is_current_month %}
+                                    <small class="month-indicator">{{ day_info.month|month_name_short }}</small>
+                                {% endif %}
+                            </div>
+                            
+                            {% with exercise=exercise_dates|get_item:day_info.date %}
+                                {% if exercise %}
+                                    <div class="exercise-indicator" 
+                                         data-exercise-id="{{ exercise.id }}"
+                                         data-difficulty="{{ exercise.difficulty }}"
+                                         data-notes="{{ exercise.notes|default:'' }}">
+                                        <i class="fas fa-check-circle text-success"></i>
+                                        <div class="difficulty-badge difficulty-{{ exercise.difficulty }}">
+                                            {{ exercise.get_difficulty_display }}
                                         </div>
-                                    {% else %}
-                                        <div class="add-exercise-btn" onclick="showAddExerciseModal('{{ year }}-{{ month|stringformat:'02d' }}-{{ day|stringformat:'02d' }}', {{ day }})">
-                                            <i class="fas fa-plus"></i>
-                                        </div>
-                                    {% endif %}
-                                </div>
+                                    </div>
+                                {% else %}
+                                    <div class="add-exercise-btn" onclick="showAddExerciseModal('{{ day_info.year }}-{{ day_info.month|stringformat:'02d' }}-{{ day_info.day|stringformat:'02d' }}', {{ day_info.day }})">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                {% endif %}
                             {% endwith %}
-                        {% endif %}
+                        </div>
                     {% endfor %}
                 {% endfor %}
             </div>

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserGroup, UserGroupMembership, CustomRoutine, AdminActivity, VideoUploadSession
+from .models import UserGroup, UserGroupMembership, CustomRoutine, AdminActivity, VideoUploadSession, UserApprovalRequest, PasswordResetApproval
 
 
 @admin.register(UserGroup)
@@ -91,3 +91,55 @@ class VideoUploadSessionAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(UserApprovalRequest)
+class UserApprovalRequestAdmin(admin.ModelAdmin):
+    list_display = ['user', 'status', 'requested_at', 'reviewed_at', 'reviewed_by']
+    list_filter = ['status', 'requested_at', 'reviewed_at']
+    search_fields = ['user__username', 'user__email', 'user__first_name', 'user__last_name']
+    readonly_fields = ['user', 'requested_at']
+    ordering = ['-requested_at']
+    
+    fieldsets = (
+        ('Información del Usuario', {
+            'fields': ('user', 'status', 'requested_at')
+        }),
+        ('Revisión', {
+            'fields': ('reviewed_at', 'reviewed_by', 'notes')
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        if change and 'status' in form.changed_data:
+            if obj.status == 'approved':
+                obj.approve(request.user, obj.notes)
+            elif obj.status == 'rejected':
+                obj.reject(request.user, obj.notes)
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(PasswordResetApproval)
+class PasswordResetApprovalAdmin(admin.ModelAdmin):
+    list_display = ['reset_request', 'status', 'reviewed_at', 'reviewed_by']
+    list_filter = ['status', 'reviewed_at']
+    search_fields = ['reset_request__user__username', 'reset_request__user__email']
+    readonly_fields = ['reset_request', 'reviewed_at']
+    ordering = ['-reviewed_at']
+    
+    fieldsets = (
+        ('Solicitud de Reseteo', {
+            'fields': ('reset_request', 'status')
+        }),
+        ('Revisión', {
+            'fields': ('reviewed_at', 'reviewed_by', 'notes')
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        if change and 'status' in form.changed_data:
+            if obj.status == 'approved':
+                obj.approve(request.user, obj.notes)
+            elif obj.status == 'rejected':
+                obj.reject(request.user, obj.notes)
+        super().save_model(request, obj, form, change)

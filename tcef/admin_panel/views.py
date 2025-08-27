@@ -26,7 +26,7 @@ def admin_dashboard(request):
     """Dashboard principal del panel de administración"""
     # Estadísticas generales
     total_users = User.objects.count()
-    active_users = UserProfile.objects.filter(email_confirmed=True).count()
+    active_users = UserProfile.objects.filter(is_approved=True).count()
     total_groups = UserGroup.objects.filter(is_active=True).count()
     total_routines = CustomRoutine.objects.filter(is_active=True).count()
     
@@ -77,9 +77,9 @@ def user_management(request):
         users = users.filter(group_memberships__group_id=group_filter)
     
     if status_filter == 'active':
-        users = users.filter(userprofile__email_confirmed=True)
+        users = users.filter(userprofile__is_approved=True)
     elif status_filter == 'inactive':
-        users = users.filter(userprofile__email_confirmed=False)
+        users = users.filter(userprofile__is_approved=False)
     
     # Paginación
     paginator = Paginator(users, 20)
@@ -112,13 +112,10 @@ def create_user(request):
             # Crear perfil de usuario
             profile = UserProfile.objects.create(
                 user=user,
-                email_confirmed=True,  # Los usuarios creados por admin están confirmados
+                is_approved=True,  # Los usuarios creados por admin están aprobados
                 terms_accepted=True,
                 terms_accepted_date=timezone.now()
             )
-            
-            # Generar token de confirmación (requerido por el modelo)
-            profile.generate_confirmation_token()
             
             # Asignar grupos si se especificaron
             group_ids = request.POST.getlist('groups')
@@ -166,7 +163,7 @@ def edit_user(request, user_id):
         
         # Actualizar perfil
         profile = user.userprofile
-        profile.email_confirmed = request.POST.get('email_confirmed') == 'on'
+        profile.is_approved = request.POST.get('is_approved') == 'on'
         profile.save()
         
         # Actualizar grupos

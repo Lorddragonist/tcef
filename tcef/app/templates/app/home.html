@@ -1,0 +1,341 @@
+{% extends 'app/base.html' %}
+
+{% block title %}TCEF - Tu Cuerpo en Formación{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para la landing page */
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 100px 0;
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+    
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .hero-section p {
+        font-size: 1.3rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+    
+    .cta-button {
+        background: #dc6874;
+        border: none;
+        padding: 15px 40px;
+        font-size: 1.2rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: white;
+        display: inline-block;
+    }
+    
+    .cta-button:hover {
+        background: #c55a66;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(220, 104, 116, 0.3);
+        color: white;
+    }
+    
+    .section {
+        padding: 4rem 0;
+    }
+    
+    .section:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+    
+    .feature-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        text-align: center;
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        color: #dc6874;
+        margin-bottom: 1rem;
+    }
+    
+    .blog-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .blog-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .blog-image {
+        height: 200px;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+    }
+    
+    .blog-content {
+        padding: 1.5rem;
+    }
+    
+    .stats-section {
+        background: #343a40;
+        color: white;
+        padding: 3rem 0;
+        text-align: center;
+    }
+    
+    .stat-item {
+        margin-bottom: 2rem;
+    }
+    
+    .stat-number {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #dc6874;
+        display: block;
+    }
+    
+    .testimonial-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        position: relative;
+    }
+    
+    .testimonial-card::before {
+        content: '"';
+        font-size: 4rem;
+        color: #dc6874;
+        position: absolute;
+        top: -10px;
+        left: 20px;
+        font-family: serif;
+    }
+    
+    .testimonial-text {
+        font-style: italic;
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+    }
+    
+    .testimonial-author {
+        font-weight: bold;
+        color: #dc6874;
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1>Tu Cuerpo en Formación</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'app:register' %}" class="cta-button">Comenzar Ahora</a>
+        {% else %}
+            <a href="{% url 'app:weekly_routines' %}" class="cta-button">Ver Mis Rutinas</a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="mb-4">Acerca de TCEF</h2>
+                <p class="lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="section">
+    <div class="container">
+        <h2 class="text-center mb-5">Características Principales</h2>
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    <h4>Rutinas Personalizadas</h4>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h4>Seguimiento de Progreso</h4>
+                    <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h4>Estadísticas Detalladas</h4>
+                    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <span class="stat-number">1000+</span>
+                    <p>Usuarios Activos</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <span class="stat-number">50+</span>
+                    <p>Rutinas Disponibles</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <span class="stat-number">95%</span>
+                    <p>Satisfacción</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <span class="stat-number">24/7</span>
+                    <p>Soporte</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Section -->
+<section class="section">
+    <div class="container">
+        <h2 class="text-center mb-5">Últimos Artículos</h2>
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="blog-card">
+                    <div class="blog-image">
+                        <i class="fas fa-running"></i>
+                    </div>
+                    <div class="blog-content">
+                        <h5>Lorem Ipsum Dolor Sit</h5>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                        <small class="text-muted">Publicado hace 2 días</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="blog-card">
+                    <div class="blog-image">
+                        <i class="fas fa-apple-alt"></i>
+                    </div>
+                    <div class="blog-content">
+                        <h5>Consectetur Adipiscing Elit</h5>
+                        <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                        <small class="text-muted">Publicado hace 5 días</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="blog-card">
+                    <div class="blog-image">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="blog-content">
+                        <h5>Sed Do Eiusmod Tempor</h5>
+                        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                        <small class="text-muted">Publicado hace 1 semana</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="section">
+    <div class="container">
+        <h2 class="text-center mb-5">Lo Que Dicen Nuestros Usuarios</h2>
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    </div>
+                    <div class="testimonial-author">- María González</div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    </div>
+                    <div class="testimonial-author">- Carlos Rodríguez</div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-text">
+                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                    </div>
+                    <div class="testimonial-author">- Ana Martínez</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Final CTA Section -->
+<section class="section text-center">
+    <div class="container">
+        <h2 class="mb-4">¿Listo para Transformar tu Vida?</h2>
+        <p class="lead mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'app:register' %}" class="cta-button me-3">Registrarse Gratis</a>
+            <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">Iniciar Sesión</a>
+        {% else %}
+            <a href="{% url 'app:weekly_routines' %}" class="cta-button me-3">Ver Mis Rutinas</a>
+            <a href="{% url 'app:profile' %}" class="btn btn-outline-primary btn-lg">Mi Perfil</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %} 
