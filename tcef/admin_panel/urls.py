@@ -24,6 +24,7 @@ urlpatterns = [
     
     # Subida de videos
     path('videos/upload/', views.video_upload, name='video_upload'),
+    path('videos/delete/<int:video_id>/', views.delete_video, name='delete_video'),
     
     # Monitoreo de usuarios
     path('monitoring/', views.user_monitoring, name='user_monitoring'),

@@ -29,6 +29,7 @@
                 </h6>
             </div>
             <div class="card-body">
+                {% csrf_token %}
                 <!-- Área de drag & drop -->
                 <div id="dropZone" class="upload-drop-zone text-center p-5 border-2 border-dashed border-secondary rounded">
                     <div class="upload-icon mb-3">
@@ -77,11 +78,11 @@
                         <div class="col-md-6">
                             <h6>Configuración de Subida</h6>
                             <div class="mb-3">
-                                <label for="bucketName" class="form-label">Bucket de GCP</label>
+                                <label for="bucketName" class="form-label">Bucket de S3</label>
                                 <input type="text" class="form-control" id="bucketName" value="tcef-videos" readonly>
                             </div>
                             <div class="mb-3">
-                                <label for="blobName" class="form-label">Nombre en GCP</label>
+                                <label for="blobName" class="form-label">Nombre en S3</label>
                                 <input type="text" class="form-control" id="blobName" placeholder="ej: lunes_rutina.mp4">
                             </div>
                         </div>
@@ -114,6 +115,7 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
+                                    <th>Preview</th>
                                     <th>Archivo</th>
                                     <th>Tamaño</th>
                                     <th>Estado</th>
@@ -125,10 +127,28 @@
                             <tbody>
                                 {% for upload in recent_uploads %}
                                 <tr>
+                                    <td class="text-center">
+                                        {% if upload.status == 'completed' %}
+                                            <div class="video-thumbnail" onclick="showVideoPreview('{{ upload.s3_key }}', '{{ upload.filename }}')" style="cursor: pointer;">
+                                                <div class="video-poster" style="width: 80px; height: 60px; background: linear-gradient(45deg, #007bff, #0056b3); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+                                                    <i class="fas fa-play"></i>
+                                                </div>
+                                                <div class="mt-1">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-play-circle"></i> Preview
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="text-muted">
+                                                <i class="fas fa-clock fa-2x"></i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         <strong>{{ upload.filename }}</strong>
-                                        {% if upload.gcp_blob_name %}
-                                            <br><small class="text-muted">{{ upload.gcp_blob_name }}</small>
+                                        {% if upload.s3_key %}
+                                            <br><small class="text-muted">{{ upload.s3_key }}</small>
                                         {% endif %}
                                     </td>
                                     <td>{{ upload.file_size|filesizeformat }}</td>
@@ -162,10 +182,18 @@
                                             </button>
                                         {% endif %}
                                         {% if upload.status == 'completed' %}
-                                            <a href="{{ upload.gcp_blob_name }}" class="btn btn-sm btn-outline-success" 
-                                               title="Ver video" target="_blank">
-                                                <i class="fas fa-play"></i>
+                                            <button type="button" class="btn btn-sm btn-outline-primary me-1" 
+                                                    title="Preview del video" onclick="showVideoPreview('{{ upload.s3_key }}', '{{ upload.filename }}')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a href="{{ upload.s3_key }}" class="btn btn-sm btn-outline-success me-1" 
+                                               title="Descargar video" target="_blank">
+                                                <i class="fas fa-download"></i>
                                             </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    title="Eliminar video" onclick="confirmDeleteVideo('{{ upload.id }}', '{{ upload.filename }}', '{{ upload.s3_key }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -199,6 +227,60 @@
                 <p id="errorMessage"></p>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar eliminación de video -->
+<div class="modal fade" id="deleteVideoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar el video <strong id="deleteVideoName"></strong>?</p>
+                <p class="text-muted small">Esta acción no se puede deshacer. El video se eliminará permanentemente de S3 y de la base de datos.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-2"></i>
+                    Eliminar Video
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para preview del video -->
+<div class="modal fade" id="videoPreviewModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-play-circle me-2"></i>
+                    <span id="videoTitle">Preview del Video</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <video id="videoPlayer" controls class="w-100" style="max-height: 70vh;">
+                    <source id="videoSource" src="" type="video/mp4">
+                    Tu navegador no soporta el elemento de video.
+                </video>
+            </div>
+            <div class="modal-footer">
+                <a href="" id="downloadLink" class="btn btn-success" target="_blank">
+                    <i class="fas fa-download me-2"></i>
+                    Descargar Video
+                </a>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
@@ -285,77 +367,167 @@ function formatFileSize(bytes) {
 document.getElementById('startUpload').addEventListener('click', async () => {
     if (!currentFile) return;
     
-    const blobName = document.getElementById('blobName').value;
-    if (!blobName) {
-        alert('Por favor especifica un nombre para el archivo en GCP.');
+    const blobName = document.getElementById('blobName');
+    if (!blobName || !blobName.value) {
+        alert('Por favor especifica un nombre para el archivo en S3.');
         return;
     }
     
     // Mostrar progreso
-    document.getElementById('progressContainer').style.display = 'block';
-    document.getElementById('startUpload').disabled = true;
+    const progressContainer = document.getElementById('progressContainer');
+    const startUpload = document.getElementById('startUpload');
+    const uploadStatus = document.getElementById('uploadStatus');
+    
+    if (progressContainer) progressContainer.style.display = 'block';
+    if (startUpload) startUpload.disabled = true;
     
     try {
-        // Crear sesión de subida
+        // Crear FormData con el archivo real
         const formData = new FormData();
-        formData.append('filename', currentFile.name);
-        formData.append('file_size', currentFile.size);
+        formData.append('video', currentFile);
+        
+        // Obtener token CSRF
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (!csrfToken) {
+            throw new Error('Token CSRF no encontrado');
+        }
+        formData.append('csrfmiddlewaretoken', csrfToken.value);
         
         const response = await fetch('{% url "admin_panel:video_upload" %}', {
             method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            }
+            body: formData
         });
         
         const result = await response.json();
         
         if (result.success) {
-            uploadSessionId = result.session_id;
-            simulateUpload();
-        } else {
-            throw new Error(result.message || 'Error al crear sesión de subida');
-        }
-        
-    } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('uploadStatus').textContent = 'Error: ' + error.message;
-        document.getElementById('uploadStatus').classList.add('text-danger');
-        document.getElementById('startUpload').disabled = false;
-    }
-});
-
-function simulateUpload() {
-    let progress = 0;
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    const uploadStatus = document.getElementById('uploadStatus');
-    
-    const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 100) progress = 100;
-        
-        progressBar.style.width = progress + '%';
-        progressText.textContent = Math.round(progress) + '%';
-        
-        if (progress < 30) {
-            uploadStatus.textContent = 'Subiendo archivo...';
-        } else if (progress < 70) {
-            uploadStatus.textContent = 'Procesando en GCP...';
-        } else if (progress < 100) {
-            uploadStatus.textContent = 'Finalizando...';
-        } else {
-            uploadStatus.textContent = '¡Subida completada!';
-            uploadStatus.classList.add('text-success');
-            clearInterval(interval);
-            
+            if (uploadStatus) {
+                uploadStatus.textContent = '¡Subida completada exitosamente!';
+                uploadStatus.classList.add('text-success');
+                uploadStatus.classList.remove('text-danger');
+            }
             // Recargar página después de 2 segundos
             setTimeout(() => {
                 window.location.reload();
             }, 2000);
+        } else {
+            throw new Error(result.error || 'Error en la subida');
         }
-    }, 500);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        if (uploadStatus) {
+            uploadStatus.textContent = 'Error: ' + error.message;
+            uploadStatus.classList.add('text-danger');
+            uploadStatus.classList.remove('text-success');
+        }
+        if (startUpload) startUpload.disabled = false;
+    }
+});
+
+function showSuccess(message) {
+    const uploadStatus = document.getElementById('uploadStatus');
+    if (uploadStatus) {
+        uploadStatus.textContent = message;
+        uploadStatus.classList.add('text-success');
+        uploadStatus.classList.remove('text-danger');
+    }
+}
+
+function showVideoPreview(videoUrl, filename) {
+    // Construir URL completa de S3 con la configuración correcta
+    const s3BaseUrl = 'https://tcefbucket.s3.us-east-2.amazonaws.com/';
+    const fullVideoUrl = s3BaseUrl + videoUrl;
+    
+    console.log('Video URL:', videoUrl);
+    console.log('Full Video URL:', fullVideoUrl);
+    
+    // Configurar el modal
+    document.getElementById('videoTitle').textContent = filename;
+    document.getElementById('videoSource').src = fullVideoUrl;
+    document.getElementById('downloadLink').href = fullVideoUrl;
+    
+    // Cargar el video
+    const videoPlayer = document.getElementById('videoPlayer');
+    videoPlayer.load();
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('videoPreviewModal'));
+    modal.show();
+    
+    // Agregar event listener para detener el video cuando se cierre el modal
+    const videoModal = document.getElementById('videoPreviewModal');
+    videoModal.addEventListener('hidden.bs.modal', function () {
+        // Detener y resetear el video
+        videoPlayer.pause();
+        videoPlayer.currentTime = 0;
+        videoPlayer.src = '';
+        console.log('Video detenido y reseteado');
+    });
+}
+
+function confirmDeleteVideo(videoId, filename, s3Key) {
+    // Configurar el modal de confirmación
+    document.getElementById('deleteVideoName').textContent = filename;
+    
+    // Configurar el botón de confirmación
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.onclick = () => deleteVideo(videoId, s3Key);
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteVideoModal'));
+    modal.show();
+}
+
+async function deleteVideo(videoId, s3Key) {
+    try {
+        // Mostrar estado de carga
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        const originalText = confirmBtn.innerHTML;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Eliminando...';
+        confirmBtn.disabled = true;
+        
+        // Enviar solicitud de eliminación
+        const response = await fetch(`/admin-panel/videos/delete/${videoId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                s3_key: s3Key
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Cerrar modal y mostrar mensaje de éxito
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteVideoModal'));
+            modal.hide();
+            
+            // Mostrar mensaje de éxito
+            showSuccess('Video eliminado exitosamente');
+            
+            // Recargar página después de 1 segundo
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            throw new Error(result.error || 'Error al eliminar el video');
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        
+        // Restaurar botón
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        confirmBtn.innerHTML = originalText;
+        confirmBtn.disabled = false;
+        
+        // Mostrar error
+        showError('Error al eliminar el video: ' + error.message);
+    }
 }
 
 function showError(errorMessage) {
@@ -389,6 +561,52 @@ function showError(errorMessage) {
 
 .progress-bar {
     transition: width 0.3s ease;
+}
+
+.video-thumbnail {
+    transition: transform 0.2s ease;
+}
+
+.video-thumbnail:hover {
+    transform: scale(1.05);
+}
+
+.video-poster {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.video-poster:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transform: scale(1.05);
+}
+
+#videoPreviewModal .modal-dialog {
+    max-width: 90%;
+    margin: 5vh auto;
+    transform: none !important;
+}
+
+#videoPreviewModal .modal-content {
+    max-height: 90vh;
+    overflow: hidden;
+}
+
+#videoPreviewModal .modal-body {
+    padding: 1rem;
+    text-align: center;
+}
+
+#videoPlayer {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#videoPlayer {
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 </style>
 {% endblock %} 

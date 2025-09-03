@@ -76,12 +76,12 @@ class VideoUploadSessionAdmin(admin.ModelAdmin):
     list_display = ['filename', 'admin_user', 'status', 'progress', 'file_size', 'started_at']
     list_filter = ['status', 'started_at', 'admin_user']
     search_fields = ['filename', 'admin_user__username']
-    readonly_fields = ['admin_user', 'filename', 'file_size', 'gcp_bucket', 'gcp_blob_name', 'started_at']
+    readonly_fields = ['admin_user', 'filename', 'file_size', 's3_bucket', 's3_key', 'started_at']
     ordering = ['-started_at']
     
     fieldsets = (
         ('Información del Archivo', {
-            'fields': ('filename', 'file_size', 'gcp_bucket', 'gcp_blob_name')
+            'fields': ('filename', 'file_size', 's3_bucket', 's3_key')
         }),
         ('Estado de la Subida', {
             'fields': ('status', 'progress', 'error_message')

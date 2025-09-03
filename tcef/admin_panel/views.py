@@ -15,6 +15,10 @@ from datetime import datetime, timedelta
 from .models import UserGroup, UserGroupMembership, CustomRoutine, AdminActivity, VideoUploadSession
 from app.models import UserProfile, ExerciseLog
 
+import boto3
+from botocore.exceptions import ClientError
+from django.conf import settings
+
 
 def is_staff_user(user):
     """Verifica si el usuario es staff"""
@@ -461,33 +465,57 @@ def delete_routine(request, routine_id):
 def video_upload(request):
     """Página para subir videos a GCP"""
     if request.method == 'POST':
-        # Aquí se implementará la lógica de subida a GCP
-        # Por ahora solo registramos la sesión
-        filename = request.POST.get('filename', '')
-        file_size = request.POST.get('file_size', 0)
+        # Obtener archivo del request
+        video_file = request.FILES.get('video')
         
-        upload_session = VideoUploadSession.objects.create(
-            admin_user=request.user,
-            filename=filename,
-            file_size=file_size,
-            gcp_bucket='tcef-videos',  # Bucket por defecto
-            status='uploading'
-        )
-        
-        # Registrar actividad
-        AdminActivity.objects.create(
-            admin_user=request.user,
-            action='video_uploaded',
-            target_model='VideoUploadSession',
-            target_id=upload_session.id,
-            details=f'Inicio de subida: {filename}'
-        )
-        
-        return JsonResponse({
-            'success': True,
-            'session_id': upload_session.id,
-            'message': 'Sesión de subida creada'
-        })
+        if video_file:
+            # Crear sesión
+            upload_session = VideoUploadSession.objects.create(
+                admin_user=request.user,
+                filename=video_file.name,
+                file_size=video_file.size,
+                s3_bucket=settings.AWS_STORAGE_BUCKET_NAME,  # Bucket desde settings
+                status='uploading'
+            )
+            
+            try:
+                # Subir a S3
+                s3_client = boto3.client(
+                    's3',
+                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                    region_name=settings.AWS_S3_REGION_NAME
+                )
+                
+                s3_key = f"videos/{upload_session.id}/{video_file.name}"
+                
+                s3_client.upload_fileobj(
+                    video_file,
+                    settings.AWS_STORAGE_BUCKET_NAME,
+                    s3_key,
+                    ExtraArgs={'ACL': 'public-read'}
+                )
+                
+                # Actualizar sesión
+                upload_session.s3_key = s3_key
+                upload_session.status = 'completed'
+                upload_session.completed_at = timezone.now()
+                upload_session.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    's3_url': f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{s3_key}"
+                })
+                
+            except ClientError as e:
+                upload_session.status = 'failed'
+                upload_session.error_message = str(e)
+                upload_session.save()
+                
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                })
     
     # Obtener sesiones de subida recientes
     recent_uploads = VideoUploadSession.objects.filter(
@@ -619,3 +647,60 @@ def admin_activity_log(request):
     }
     
     return render(request, 'admin_panel/activity_log.html', context)
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def delete_video(request, video_id):
+    """Eliminar video de S3 y de la base de datos"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    
+    try:
+        # Obtener la sesión de video
+        upload_session = get_object_or_404(VideoUploadSession, id=video_id, admin_user=request.user)
+        
+        # Verificar que el video esté completado
+        if upload_session.status != 'completed':
+            return JsonResponse({'success': False, 'error': 'Solo se pueden eliminar videos completados'})
+        
+        # Eliminar archivo de S3
+        try:
+            s3_client = boto3.client(
+                's3',
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_S3_REGION_NAME
+            )
+            
+            # Eliminar archivo de S3
+            s3_client.delete_object(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=upload_session.s3_key
+            )
+            
+        except ClientError as e:
+            # Si falla la eliminación de S3, continuar con la eliminación de la BD
+            print(f"Error eliminando de S3: {e}")
+        
+        # Eliminar registro de la base de datos
+        filename = upload_session.filename
+        upload_session.delete()
+        
+        # Registrar actividad
+        AdminActivity.objects.create(
+            admin_user=request.user,
+            action='video_deleted',
+            target_model='VideoUploadSession',
+            target_id=video_id,
+            details=f'Video eliminado: {filename}'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Video {filename} eliminado exitosamente'
+        })
+        
+    except VideoUploadSession.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Video no encontrado'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Error interno: {str(e)}'})
