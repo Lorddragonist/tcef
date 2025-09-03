@@ -2,13 +2,19 @@
 
 .routines-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #dc6874 0%, #d13b53 100%);
+    background: linear-gradient(135deg, #e1cfc6 0%, #b3a5a5 100%);
     padding: 2rem 0;
 }
 
 /* Header de la página */
 .routines-header {
     margin-bottom: 3rem;
+}
+
+.text-primary{
+    color: var(--dark-color) !important;
+    display: flex;
+    gap: 10px;
 }
 
 .routines-header h1 {
@@ -40,7 +46,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #dc6874, #d13b53);
+    background: linear-gradient(90deg, #737170, #696767);
 }
 
 /* Indicador del día */
@@ -113,7 +119,7 @@
     background: #f8f9fa;
     padding: 1.5rem;
     border-radius: 15px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #e1cfc6;
     margin: 2rem 0;
 }
 
@@ -425,12 +431,12 @@
 /* ===== MEJORAS DE ACCESIBILIDAD ===== */
 
 .routine-video:focus {
-    outline: 3px solid #667eea;
+    outline: 3px solid #e1cfc6;
     outline-offset: 2px;
 }
 
 .navigation-btn:focus {
-    outline: 3px solid #667eea;
+    outline: 3px solid #e1cfc6;
     outline-offset: 2px;
 }
 

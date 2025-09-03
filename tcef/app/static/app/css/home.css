@@ -1,0 +1,147 @@
+/* Estilos específicos para la landing page */
+.hero-section {
+    background: linear-gradient(135deg, #e1cfc6 0%, #696767 100%);
+    color: white;
+    padding: 100px 0;
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.hero-section h1 {
+    font-size: 3.5rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-section p {
+    font-size: 1.3rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.cta-button {
+    background: #737170;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: rgb(231, 222, 222);
+    display: inline-block;
+}
+
+.cta-button:hover {
+    background: #908f8f;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(228, 211, 213, 0.3);
+    color: rgb(245, 238, 238);
+}
+
+.section {
+    padding: 4rem 0;
+}
+
+.section:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.feature-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    text-align: center;
+    margin-bottom: 2rem;
+    transition: transform 0.3s ease;
+    min-height: 450px;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: #e1cfc6;
+    margin-bottom: 1rem;
+}
+
+.blog-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    transition: transform 0.3s ease;
+    min-height: 520px;
+}
+
+.blog-card:hover {
+    transform: translateY(-5px);
+}
+
+.blog-image {
+    height: 200px;
+    background: linear-gradient(45deg, #e1cfc6, #696767);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+}
+
+.blog-content {
+    padding: 1.5rem;
+}
+
+.stats-section {
+    background: #343a40;
+    color: white;
+    padding: 3rem 0;
+    text-align: center;
+}
+
+.stat-item {
+    margin-bottom: 2rem;
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #e1cfc6;
+    display: block;
+}
+
+.testimonial-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    position: relative;
+    min-height: 350px;
+}
+
+.testimonial-card::before {
+    content: '"';
+    font-size: 4rem;
+    color: #e1cfc6;
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    font-family: serif;
+}
+
+.testimonial-text {
+    font-style: italic;
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.testimonial-author {
+    font-weight: bold;
+    color: #b3a5a5;
+    text-align: right;
+} 

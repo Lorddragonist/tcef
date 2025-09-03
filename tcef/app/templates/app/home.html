@@ -1,154 +1,10 @@
 {% extends 'app/base.html' %}
+{% load static %}
 
 {% block title %}TCEF - Tu Cuerpo en Formación{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* Estilos específicos para la landing page */
-    .hero-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 100px 0;
-        text-align: center;
-        margin-bottom: 4rem;
-    }
-    
-    .hero-section h1 {
-        font-size: 3.5rem;
-        font-weight: bold;
-        margin-bottom: 1.5rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    .hero-section p {
-        font-size: 1.3rem;
-        margin-bottom: 2rem;
-        opacity: 0.9;
-    }
-    
-    .cta-button {
-        background: #dc6874;
-        border: none;
-        padding: 15px 40px;
-        font-size: 1.2rem;
-        border-radius: 50px;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        color: white;
-        display: inline-block;
-    }
-    
-    .cta-button:hover {
-        background: #c55a66;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(220, 104, 116, 0.3);
-        color: white;
-    }
-    
-    .section {
-        padding: 4rem 0;
-    }
-    
-    .section:nth-child(even) {
-        background-color: #f8f9fa;
-    }
-    
-    .feature-card {
-        background: white;
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        text-align: center;
-        margin-bottom: 2rem;
-        transition: transform 0.3s ease;
-    }
-    
-    .feature-card:hover {
-        transform: translateY(-5px);
-    }
-    
-    .feature-icon {
-        font-size: 3rem;
-        color: #dc6874;
-        margin-bottom: 1rem;
-    }
-    
-    .blog-card {
-        background: white;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
-        transition: transform 0.3s ease;
-    }
-    
-    .blog-card:hover {
-        transform: translateY(-5px);
-    }
-    
-    .blog-image {
-        height: 200px;
-        background: linear-gradient(45deg, #667eea, #764ba2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 2rem;
-    }
-    
-    .blog-content {
-        padding: 1.5rem;
-    }
-    
-    .stats-section {
-        background: #343a40;
-        color: white;
-        padding: 3rem 0;
-        text-align: center;
-    }
-    
-    .stat-item {
-        margin-bottom: 2rem;
-    }
-    
-    .stat-number {
-        font-size: 3rem;
-        font-weight: bold;
-        color: #dc6874;
-        display: block;
-    }
-    
-    .testimonial-card {
-        background: white;
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
-        position: relative;
-    }
-    
-    .testimonial-card::before {
-        content: '"';
-        font-size: 4rem;
-        color: #dc6874;
-        position: absolute;
-        top: -10px;
-        left: 20px;
-        font-family: serif;
-    }
-    
-    .testimonial-text {
-        font-style: italic;
-        margin-bottom: 1rem;
-        padding-left: 2rem;
-    }
-    
-    .testimonial-author {
-        font-weight: bold;
-        color: #dc6874;
-        text-align: right;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'app/css/home.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -156,7 +12,9 @@
 <section class="hero-section">
     <div class="container">
         <h1>Tu Cuerpo en Formación</h1>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        <p>Es un programa de entrenamiento diseñado para ayudarte a crear el hábito del ejercicio de una forma práctica, motivadora y progresiva.
+
+            Mientras entrenas y construyes ese hábito, tu cuerpo se va acondicionando: ganarás fuerza, estabilidad, equilibrio y salud. 💪💖</p>
         {% if not user.is_authenticated %}
             <a href="{% url 'app:register' %}" class="cta-button">Comenzar Ahora</a>
         {% else %}
@@ -170,9 +28,13 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-8 mx-auto text-center">
-                <h2 class="mb-4">Acerca de TCEF</h2>
-                <p class="lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <h2 class="mb-4">Acerca de mí</h2>
+                <img src="https://tcefbucket.s3.us-east-2.amazonaws.com/Static+Images/Derly.png" alt="Derly González - Fisioterapeuta y Entrenadora Personal" class="img-fluid rounded-circle mb-4" style="max-width: 200px; height: auto;">
+                <p class="lead">Hola, soy
+                    DERLY GONZÁLEZ,
+                    fisioterapeuta, entrenadora personal y coach en cambio de hábitos.
+                    
+                    Después de más de 5 años acompañando a personas en su proceso de transformar su salud, descubrí que el verdadero cambio no empieza en el cuerpo… empieza en la disciplina diaria y en el amor propio.</p>
             </div>
         </div>
     </div>
@@ -188,8 +50,8 @@
                     <div class="feature-icon">
                         <i class="fas fa-dumbbell"></i>
                     </div>
-                    <h4>Rutinas Personalizadas</h4>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                    <h4>Plan de entrenamiento</h4>
+                    <p>Sigue un plan de entrenamiento diseñado para ayudarte a crear el hábito del ejercicio, ganar fuerza y sentirte con más energía cada día.</p>
                 </div>
             </div>
             <div class="col-lg-4">
@@ -198,7 +60,7 @@
                         <i class="fas fa-calendar-alt"></i>
                     </div>
                     <h4>Seguimiento de Progreso</h4>
-                    <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                    <p>Suma tus entrenamientos, rompe tus propias rachas y celebra cada logro con el calendario y las estadísticas de progreso.</p>
                 </div>
             </div>
             <div class="col-lg-4">
@@ -206,8 +68,8 @@
                     <div class="feature-icon">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <h4>Estadísticas Detalladas</h4>
-                    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                    <h4>Seguimiento composición corporal</h4>
+                    <p>Registra tus medidas para evaluar de manera objetiva tus progresos: asegúrate de mantener o aumentar tu masa muscular mientras avanzas hacia un mejor equilibrio corporal.</p>
                 </div>
             </div>
         </div>
@@ -328,10 +190,10 @@
 <section class="section text-center">
     <div class="container">
         <h2 class="mb-4">¿Listo para Transformar tu Vida?</h2>
-        <p class="lead mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        <p class="lead mb-4">No busques la perfección: hacer ejercicio es un regalo para ti mism@. 💖</p>
         {% if not user.is_authenticated %}
-            <a href="{% url 'app:register' %}" class="cta-button me-3">Registrarse Gratis</a>
-            <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">Iniciar Sesión</a>
+            <a href="{% url 'app:register' %}" class="cta-button me-3 mb-3 mb-md-0 d-block d-md-inline-block mx-auto mx-md-0">Registrarse Gratis</a>
+            <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg d-block d-md-inline-block mx-auto mx-md-0">Iniciar Sesión</a>
         {% else %}
             <a href="{% url 'app:weekly_routines' %}" class="cta-button me-3">Ver Mis Rutinas</a>
             <a href="{% url 'app:profile' %}" class="btn btn-outline-primary btn-lg">Mi Perfil</a>

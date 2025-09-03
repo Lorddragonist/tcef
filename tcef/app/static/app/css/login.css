@@ -4,8 +4,8 @@
 
 /* Personalización de colores principales */
 :root {
-    --primary-color: #dc6874;
-    --primary-hover: #d13b53;
+    --primary-color: #e1cfc6;
+    --primary-hover: #b3a5a5;
     --secondary-color: #989595;
     --success-color: #28a745;
     --danger-color: #dc3545;
@@ -20,7 +20,7 @@
 
 /* Estilos del formulario principal */
 .login-container {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #e1cfc6 0%, #696767 100%);
     min-height: 100vh;
     padding: 2rem 0;
 }
