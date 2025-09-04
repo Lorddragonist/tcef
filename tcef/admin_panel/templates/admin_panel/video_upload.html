@@ -8,7 +8,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0">
                 <i class="fas fa-upload me-2"></i>
-                Subir Videos a GCP
+                Subir Videos a AWS
             </h1>
             <a href="{% url 'admin_panel:routine_management' %}" class="btn btn-outline-primary">
                 <i class="fas fa-dumbbell me-2"></i>
@@ -38,7 +38,7 @@
                     <h5 class="mb-3">Arrastra y suelta tu video aquí</h5>
                     <p class="text-muted mb-3">O haz clic para seleccionar archivo</p>
                     <input type="file" id="fileInput" class="d-none" accept="video/*">
-                    <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    <button type="button" class="btn btn-primary" id="selectVideoBtn">
                         <i class="fas fa-folder-open me-2"></i>
                         Seleccionar Video
                     </button>
@@ -296,6 +296,7 @@ let uploadSessionId = null;
 // Configuración del área de drag & drop
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
+const selectVideoBtn = document.getElementById('selectVideoBtn'); // Nuevo botón
 
 // Eventos de drag & drop
 dropZone.addEventListener('dragover', (e) => {
@@ -319,6 +320,12 @@ dropZone.addEventListener('drop', (e) => {
 });
 
 dropZone.addEventListener('click', () => {
+    fileInput.click();
+});
+
+// Agregar event listener para el botón con stopPropagation
+document.getElementById('selectVideoBtn').addEventListener('click', (e) => {
+    e.stopPropagation(); // Esto evita que el evento se propague al dropZone
     fileInput.click();
 });
 
