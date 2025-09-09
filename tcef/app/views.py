@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.core.mail import send_mail
@@ -12,12 +12,60 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, date, timedelta
 import calendar
-from .forms import UserRegistrationForm
-from .models import UserProfile, ExerciseLog, WeeklyRoutine
+from .forms import UserRegistrationForm, CustomLoginForm
+from .models import UserProfile, ExerciseLog, WeeklyRoutine, PasswordResetRequest
 
 def home(request):
     """Vista principal de la landing page tipo blog"""
     return render(request, 'app/home.html')
+
+def custom_login(request):
+    """Vista personalizada de login que permite username o email"""
+    if request.user.is_authenticated:
+        return redirect('app:profile')
+    
+    if request.method == 'POST':
+        form = CustomLoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            remember_me = form.cleaned_data.get('remember_me', False)
+            
+            # Autenticar usuario usando nuestro backend personalizado
+            user = authenticate(request, username=username, password=password)
+            
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+                    
+                    # Configurar sesión persistente si "Recordarme" está marcado
+                    if not remember_me:
+                        request.session.set_expiry(0)  # Sesión se cierra al cerrar el navegador
+                    
+                    # Verificar si el usuario está aprobado
+                    try:
+                        profile = user.userprofile
+                        if not profile.is_approved:
+                            messages.warning(
+                                request, 
+                                'Tu cuenta está pendiente de aprobación por parte del administrador.'
+                            )
+                            logout(request)
+                            return render(request, 'app/login.html', {'form': form})
+                    except UserProfile.DoesNotExist:
+                        # Si no existe el perfil, crear uno
+                        UserProfile.objects.create(user=user)
+                    
+                    messages.success(request, f'¡Bienvenido, {user.first_name or user.username}!')
+                    return redirect('app:profile')
+                else:
+                    messages.error(request, 'Tu cuenta está desactivada.')
+            else:
+                messages.error(request, 'Credenciales inválidas. Verifica tu nombre de usuario/email y contraseña.')
+    else:
+        form = CustomLoginForm()
+    
+    return render(request, 'app/login.html', {'form': form})
 
 def register(request):
     """Vista para el registro de usuarios"""

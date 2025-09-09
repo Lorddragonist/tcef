@@ -240,8 +240,9 @@
         currentExerciseDate = date;
         currentExerciseDay = day;
         
-        // Formatear fecha para mostrar
-        const dateObj = new Date(date);
+        // Formatear fecha para mostrar - Corregir el problema de zona horaria
+        const [year, month, dayNum] = date.split('-');
+        const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(dayNum));
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('exerciseDateDisplay').value = dateObj.toLocaleDateString('es-ES', options);
         
@@ -288,8 +289,9 @@
         currentExerciseDate = date;
         currentExerciseDay = day;
         
-        // Formatear fecha para mostrar
-        const dateObj = new Date(date);
+        // Formatear fecha para mostrar - Corregir el problema de zona horaria
+        const [year, month, dayNum] = date.split('-');
+        const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(dayNum));
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('removeDateDisplay').textContent = dateObj.toLocaleDateString('es-ES', options);
         

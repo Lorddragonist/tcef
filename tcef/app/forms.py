@@ -96,3 +96,41 @@ class UserRegistrationForm(UserCreationForm):
             profile.generate_confirmation_token()
         
         return user 
+
+class CustomLoginForm(forms.Form):
+    """Formulario personalizado de login que acepta username o email"""
+    username = forms.CharField(
+        max_length=254,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Tu nombre de usuario o email',
+            'autofocus': True
+        }),
+        label='Nombre de Usuario o Email'
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Tu contraseña'
+        }),
+        label='Contraseña'
+    )
+    remember_me = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        }),
+        label='Recordarme'
+    )
+    
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if not username:
+            raise forms.ValidationError('Este campo es requerido.')
+        return username
+    
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if not password:
+            raise forms.ValidationError('Este campo es requerido.')
+        return password 

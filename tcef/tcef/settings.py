@@ -177,3 +177,9 @@ AWS_S3_OBJECT_PARAMETERS = {
 }
 AWS_DEFAULT_ACL = 'public-read'
 AWS_QUERYSTRING_AUTH = False
+
+# Backend de autenticación personalizado
+AUTHENTICATION_BACKENDS = [
+    'app.backends.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',  # Mantener el backend por defecto como fallback
+]

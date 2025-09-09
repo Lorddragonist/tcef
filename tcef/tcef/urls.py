@@ -17,14 +17,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
+from app.views import custom_login
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('app.urls')),
     path('admin-panel/', include('admin_panel.urls')),
     
-    # URLs de autenticación de Django
-    path('login/', auth_views.LoginView.as_view(template_name='app/login.html'), name='login'),
+    # URLs de autenticación personalizadas
+    path('login/', custom_login, name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('password_change/', auth_views.PasswordChangeView.as_view(
         template_name='app/password_change.html',
