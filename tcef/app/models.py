@@ -43,7 +43,7 @@ class ExerciseLog(models.Model):
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exercise_logs')
-    exercise_date = models.DateField(unique=True)  # Un check por día por usuario
+    exercise_date = models.DateField()  # Removido unique=True
     completed_at = models.DateTimeField(auto_now_add=True)  # Timestamp del check
     notes = models.TextField(blank=True, null=True, help_text="Notas sobre la rutina completada")
     difficulty = models.CharField(
