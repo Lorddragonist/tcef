@@ -26,14 +26,13 @@ class UserGroup(models.Model):
 
 
 class UserGroupMembership(models.Model):
-    """Relación muchos a muchos entre usuarios y grupos"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_memberships')
+    """Relación entre usuarios y grupos - Un usuario solo puede estar en un grupo"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='group_membership')
     group = models.ForeignKey(UserGroup, on_delete=models.CASCADE, related_name='members')
     joined_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        unique_together = ['user', 'group']
         verbose_name = 'Membresía de Grupo'
         verbose_name_plural = 'Membresías de Grupos'
 
@@ -45,9 +44,6 @@ class CustomRoutine(models.Model):
     """Rutina personalizada asignada a un grupo en una fecha específica"""
     title = models.CharField(max_length=200)
     description = models.TextField()
-    video_url = models.URLField(help_text='URL del video en GCP Blob Storage')
-    thumbnail_url = models.URLField(blank=True, null=True, help_text='URL de la imagen miniatura')
-    duration = models.PositiveIntegerField(help_text='Duración en segundos')
     group = models.ForeignKey(UserGroup, on_delete=models.CASCADE, related_name='routines')
     assigned_date = models.DateField(help_text='Fecha específica para esta rutina')
     is_active = models.BooleanField(default=True)
@@ -72,6 +68,21 @@ class CustomRoutine(models.Model):
 
     def is_future(self):
         return self.assigned_date > date.today()
+
+    def get_total_duration(self):
+        """Retorna la duración total de todos los videos de la rutina"""
+        total_seconds = sum(rv.video.duration for rv in self.routine_videos.all())
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
+        return f"{minutes}:{seconds:02d}"
+
+    def get_videos_count(self):
+        """Retorna el número de videos en la rutina"""
+        return self.routine_videos.count()
+
+    def get_videos_ordered(self):
+        """Retorna los videos ordenados por el campo order"""
+        return self.routine_videos.select_related('video').order_by('order')
 
 
 class AdminActivity(models.Model):
@@ -236,3 +247,61 @@ class PasswordResetApproval(models.Model):
         
         # Rechazar la solicitud de reseteo
         self.reset_request.reject_request(admin_user, notes)
+
+
+class Video(models.Model):
+    """Modelo para almacenar información de videos subidos a S3"""
+    title = models.CharField(max_length=200, help_text='Título del video')
+    description = models.TextField(blank=True, help_text='Descripción del video')
+    filename = models.CharField(max_length=255, help_text='Nombre original del archivo')
+    s3_key = models.CharField(max_length=500, help_text='Clave S3 del video')
+    s3_url = models.URLField(help_text='URL pública del video en S3')
+    thumbnail_url = models.URLField(blank=True, null=True, help_text='URL de la imagen miniatura')
+    duration = models.PositiveIntegerField(help_text='Duración en segundos')
+    file_size = models.BigIntegerField(help_text='Tamaño del archivo en bytes')
+    upload_session = models.OneToOneField(VideoUploadSession, on_delete=models.CASCADE, related_name='video')
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_videos')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Video'
+        verbose_name_plural = 'Videos'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.filename})"
+
+    def get_duration_formatted(self):
+        """Retorna la duración formateada en minutos:segundos"""
+        minutes = self.duration // 60
+        seconds = self.duration % 60
+        return f"{minutes}:{seconds:02d}"
+
+    def get_file_size_formatted(self):
+        """Retorna el tamaño del archivo formateado"""
+        size = self.file_size
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size < 1024.0:
+                return f"{size:.1f} {unit}"
+            size /= 1024.0
+        return f"{size:.1f} TB"
+
+
+class RoutineVideo(models.Model):
+    """Relación entre rutinas y videos con orden específico"""
+    routine = models.ForeignKey(CustomRoutine, on_delete=models.CASCADE, related_name='routine_videos')
+    video = models.ForeignKey(Video, on_delete=models.CASCADE, related_name='routine_assignments')
+    order = models.PositiveIntegerField(help_text='Orden del video en la rutina (1, 2, 3, etc.)')
+    notes = models.TextField(blank=True, help_text='Notas específicas para este video en la rutina')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Video de Rutina'
+        verbose_name_plural = 'Videos de Rutina'
+        unique_together = ['routine', 'order']
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.routine.title} - Video {self.order}: {self.video.title}"

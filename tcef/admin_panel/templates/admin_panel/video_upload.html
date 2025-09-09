@@ -78,8 +78,16 @@
                         <div class="col-md-6">
                             <h6>Configuración de Subida</h6>
                             <div class="mb-3">
+                                <label for="title" class="form-label">Título del Video *</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
                                 <label for="bucketName" class="form-label">Bucket de S3</label>
-                                <input type="text" class="form-control" id="bucketName" value="tcef-videos" readonly>
+                                <input type="text" class="form-control" id="bucketName" value="tcefbucket" readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="blobName" class="form-label">Nombre en S3</label>
@@ -110,91 +118,43 @@
                 </h6>
             </div>
             <div class="card-body">
-                {% if recent_uploads %}
+                {% if recent_videos %}
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead>
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>Preview</th>
+                                    <th>Título</th>
                                     <th>Archivo</th>
                                     <th>Tamaño</th>
-                                    <th>Estado</th>
-                                    <th>Progreso</th>
-                                    <th>Fecha</th>
+                                    <th>Duración</th>
+                                    <th>Subido</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for upload in recent_uploads %}
+                                {% for video in recent_videos %}
                                 <tr>
-                                    <td class="text-center">
-                                        {% if upload.status == 'completed' %}
-                                            <div class="video-thumbnail" onclick="showVideoPreview('{{ upload.s3_key }}', '{{ upload.filename }}')" style="cursor: pointer;">
-                                                <div class="video-poster" style="width: 80px; height: 60px; background: linear-gradient(45deg, #007bff, #0056b3); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
-                                                    <i class="fas fa-play"></i>
-                                                </div>
-                                                <div class="mt-1">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-play-circle"></i> Preview
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        {% else %}
-                                            <div class="text-muted">
-                                                <i class="fas fa-clock fa-2x"></i>
-                                            </div>
+                                    <td>
+                                        <strong>{{ video.title }}</strong>
+                                        {% if video.description %}
+                                            <br><small class="text-muted">{{ video.description|truncatechars:50 }}</small>
                                         {% endif %}
                                     </td>
+                                    <td>{{ video.filename }}</td>
+                                    <td>{{ video.get_file_size_formatted }}</td>
+                                    <td>{{ video.get_duration_formatted }}</td>
+                                    <td>{{ video.created_at|date:"d/m/Y H:i" }}</td>
                                     <td>
-                                        <strong>{{ upload.filename }}</strong>
-                                        {% if upload.s3_key %}
-                                            <br><small class="text-muted">{{ upload.s3_key }}</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ upload.file_size|filesizeformat }}</td>
-                                    <td>
-                                        {% if upload.status == 'completed' %}
-                                            <span class="badge bg-success">Completado</span>
-                                        {% elif upload.status == 'uploading' %}
-                                            <span class="badge bg-primary">Subiendo</span>
-                                        {% elif upload.status == 'processing' %}
-                                            <span class="badge bg-info">Procesando</span>
-                                        {% elif upload.status == 'failed' %}
-                                            <span class="badge bg-danger">Fallido</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="progress" style="height: 20px;">
-                                            <div class="progress-bar" role="progressbar" 
-                                                 style="width: {{ upload.progress }}%">
-                                                {{ upload.progress }}%
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <small class="text-muted">{{ upload.started_at|date:"d/m/Y H:i" }}</small>
-                                    </td>
-                                    <td>
-                                        {% if upload.status == 'failed' %}
-                                            <button type="button" class="btn btn-sm btn-outline-warning" 
-                                                    title="Ver error" onclick="showError('{{ upload.error_message }}')">
-                                                <i class="fas fa-exclamation-triangle"></i>
-                                            </button>
-                                        {% endif %}
-                                        {% if upload.status == 'completed' %}
-                                            <button type="button" class="btn btn-sm btn-outline-primary me-1" 
-                                                    title="Preview del video" onclick="showVideoPreview('{{ upload.s3_key }}', '{{ upload.filename }}')">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-info" 
+                                                    onclick="showVideoPreview('{{ video.s3_key }}', '{{ video.title }}')" title="Ver">
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            <a href="{{ upload.s3_key }}" class="btn btn-sm btn-outline-success me-1" 
-                                               title="Descargar video" target="_blank">
-                                                <i class="fas fa-download"></i>
-                                            </a>
                                             <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                    title="Eliminar video" onclick="confirmDeleteVideo('{{ upload.id }}', '{{ upload.filename }}', '{{ upload.s3_key }}')">
+                                                    onclick="confirmDeleteVideo({{ video.id }}, '{{ video.title }}', '{{ video.s3_key }}')" title="Eliminar">
                                                 <i class="fas fa-trash"></i>
                                             </button>
-                                        {% endif %}
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -204,7 +164,7 @@
                 {% else %}
                     <div class="text-center text-muted py-4">
                         <i class="fas fa-upload fa-3x mb-3"></i>
-                        <p>No hay subidas recientes</p>
+                        <p>No hay videos subidos</p>
                     </div>
                 {% endif %}
             </div>
@@ -379,6 +339,9 @@ document.getElementById('startUpload').addEventListener('click', async () => {
         alert('Por favor especifica un nombre para el archivo en S3.');
         return;
     }
+
+    const title = document.getElementById('title').value;
+    const description = document.getElementById('description').value;
     
     // Mostrar progreso
     const progressContainer = document.getElementById('progressContainer');
@@ -392,6 +355,8 @@ document.getElementById('startUpload').addEventListener('click', async () => {
         // Crear FormData con el archivo real
         const formData = new FormData();
         formData.append('video', currentFile);
+        formData.append('title', document.getElementById('title').value);
+        formData.append('description', document.getElementById('description').value);
         
         // Obtener token CSRF
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');

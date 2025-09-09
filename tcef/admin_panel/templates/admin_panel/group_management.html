@@ -57,7 +57,7 @@
                                         </small>
                                         <div class="btn-group" role="group">
                                             <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                    onclick="editGroup({{ group.id }}, '{{ group.name }}', '{{ group.description }}', '{{ group.color }}')">
+                                                    onclick="editGroup({{ group.id }}, '{{ group.name }}', '{{ group.description }}', '{{ group.color }}', {{ group.is_active|yesno:"true,false" }})">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button type="button" class="btn btn-sm btn-outline-danger" 
@@ -215,11 +215,12 @@
 
 {% block extra_js %}
 <script>
-function editGroup(id, name, description, color) {
+function editGroup(id, name, description, color, isActive) {
     document.getElementById('editGroupId').value = id;
     document.getElementById('editGroupName').value = name;
     document.getElementById('editGroupDescription').value = description;
     document.getElementById('editGroupColor').value = color;
+    document.getElementById('editGroupActive').checked = isActive; // Set checkbox state
     
     const modal = new bootstrap.Modal(document.getElementById('editGroupModal'));
     modal.show();
@@ -234,9 +235,54 @@ function deleteGroup(id, name) {
 }
 
 function toggleGroupStatus(groupId, isActive) {
-    // Aquí podrías implementar un toggle AJAX si quieres
-    // Por ahora solo cambia visualmente
-    console.log(`Grupo ${groupId} - Activo: ${isActive}`);
+    // Enviar petición AJAX para actualizar el estado
+    fetch('{% url "admin_panel:group_management" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `action=toggle&group_id=${groupId}&is_active=${isActive}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mostrar mensaje de éxito
+            showAlert(data.message, 'success');
+        } else {
+            // Revertir el toggle si falló
+            const checkbox = event.target;
+            checkbox.checked = !isActive;
+            showAlert(data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        // Revertir el toggle si falló
+        const checkbox = event.target;
+        checkbox.checked = !isActive;
+        showAlert('Error al actualizar el estado del grupo', 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    // Crear alerta Bootstrap
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insertar al inicio del contenido
+    const content = document.querySelector('.container-fluid');
+    content.insertBefore(alertDiv, content.firstChild);
+    
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
 }
 </script>
 {% endblock %} 

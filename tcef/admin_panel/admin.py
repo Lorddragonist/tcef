@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserGroup, UserGroupMembership, CustomRoutine, AdminActivity, VideoUploadSession, UserApprovalRequest, PasswordResetApproval
+from .models import UserGroup, UserGroupMembership, CustomRoutine, AdminActivity, VideoUploadSession, UserApprovalRequest, PasswordResetApproval, Video, RoutineVideo
 
 
 @admin.register(UserGroup)
@@ -32,7 +32,7 @@ class UserGroupMembershipAdmin(admin.ModelAdmin):
 
 @admin.register(CustomRoutine)
 class CustomRoutineAdmin(admin.ModelAdmin):
-    list_display = ['title', 'group', 'assigned_date', 'duration', 'is_active', 'created_by', 'created_at']
+    list_display = ['title', 'group', 'assigned_date', 'get_videos_count', 'get_total_duration', 'is_active', 'created_by', 'created_at']
     list_filter = ['is_active', 'assigned_date', 'group', 'created_at']
     search_fields = ['title', 'description', 'group__name']
     readonly_fields = ['created_at', 'updated_at']
@@ -40,13 +40,60 @@ class CustomRoutineAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Información de la Rutina', {
-            'fields': ('title', 'description', 'video_url', 'thumbnail_url', 'duration')
+            'fields': ('title', 'description')
         }),
         ('Asignación', {
             'fields': ('group', 'assigned_date', 'is_active')
         }),
         ('Metadatos', {
             'fields': ('created_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(Video)
+class VideoAdmin(admin.ModelAdmin):
+    list_display = ['title', 'filename', 'get_duration_formatted', 'get_file_size_formatted', 'is_active', 'created_by', 'created_at']
+    list_filter = ['is_active', 'created_at', 'created_by']
+    search_fields = ['title', 'description', 'filename']
+    readonly_fields = ['filename', 's3_key', 's3_url', 'file_size', 'upload_session', 'created_at', 'updated_at']
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Información del Video', {
+            'fields': ('title', 'description', 'filename', 'duration')
+        }),
+        ('Archivo', {
+            'fields': ('s3_key', 's3_url', 'file_size', 'upload_session')
+        }),
+        ('Configuración', {
+            'fields': ('thumbnail_url', 'is_active')
+        }),
+        ('Metadatos', {
+            'fields': ('created_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(RoutineVideo)
+class RoutineVideoAdmin(admin.ModelAdmin):
+    list_display = ['routine', 'video', 'order', 'created_at']
+    list_filter = ['routine__group', 'routine__assigned_date', 'created_at']
+    search_fields = ['routine__title', 'video__title', 'notes']
+    readonly_fields = ['created_at']
+    ordering = ['routine', 'order']
+    
+    fieldsets = (
+        ('Asignación', {
+            'fields': ('routine', 'video', 'order')
+        }),
+        ('Notas', {
+            'fields': ('notes',)
+        }),
+        ('Metadatos', {
+            'fields': ('created_at',),
             'classes': ('collapse',)
         }),
     )

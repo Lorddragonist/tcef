@@ -63,12 +63,25 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Grupos de Usuario</label>
+                        <label class="form-label">Grupo de Usuario</label>
                         <div class="row">
+                            <!-- Opción Sin grupo -->
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="group" value="" id="group_none" checked>
+                                    <label class="form-check-label" for="group_none">
+                                        <span class="badge me-2 bg-secondary">
+                                            Sin grupo
+                                        </span>
+                                        <small class="text-muted">Usuario sin asignar a ningún grupo</small>
+                                    </label>
+                                </div>
+                            </div>
+                            
                             {% for group in groups %}
                             <div class="col-md-6 mb-2">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="groups" value="{{ group.id }}" id="group_{{ group.id }}">
+                                    <input class="form-check-input" type="radio" name="group" value="{{ group.id }}" id="group_{{ group.id }}">
                                     <label class="form-check-label" for="group_{{ group.id }}">
                                         <span class="badge me-2" style="background-color: {{ group.color }}; color: white;">
                                             {{ group.name }}

@@ -12,7 +12,7 @@ from django.views.decorators.http import require_http_methods
 import json
 from datetime import datetime, timedelta
 
-from .models import UserGroup, UserGroupMembership, CustomRoutine, AdminActivity, VideoUploadSession
+from .models import UserGroup, UserGroupMembership, CustomRoutine, AdminActivity, VideoUploadSession, Video, RoutineVideo
 from app.models import UserProfile, ExerciseLog
 
 import boto3
@@ -66,7 +66,7 @@ def user_management(request):
     group_filter = request.GET.get('group', '')
     status_filter = request.GET.get('status', '')
     
-    users = User.objects.select_related('userprofile').prefetch_related('group_memberships__group')
+    users = User.objects.select_related('userprofile').prefetch_related('group_membership__group')
     
     # Filtros
     if search_query:
@@ -78,7 +78,7 @@ def user_management(request):
         )
     
     if group_filter:
-        users = users.filter(group_memberships__group_id=group_filter)
+        users = users.filter(group_membership__group_id=group_filter)
     
     if status_filter == 'active':
         users = users.filter(userprofile__is_approved=True)
@@ -107,45 +107,84 @@ def user_management(request):
 def create_user(request):
     """Crear usuario desde el panel admin"""
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = True
-            user.save()
+        # Obtener datos del formulario
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        
+        # Validaciones básicas
+        errors = []
+        
+        if not username:
+            errors.append('El nombre de usuario es requerido.')
+        elif User.objects.filter(username=username).exists():
+            errors.append('Este nombre de usuario ya existe.')
             
-            # Crear perfil de usuario
-            profile = UserProfile.objects.create(
-                user=user,
-                is_approved=True,  # Los usuarios creados por admin están aprobados
-                terms_accepted=True,
-                terms_accepted_date=timezone.now()
-            )
+        if not email:
+            errors.append('El email es requerido.')
+        elif User.objects.filter(email=email).exists():
+            errors.append('Este email ya está registrado.')
             
-            # Asignar grupos si se especificaron
-            group_ids = request.POST.getlist('groups')
-            for group_id in group_ids:
+        if not password1:
+            errors.append('La contraseña es requerida.')
+        elif len(password1) < 8:
+            errors.append('La contraseña debe tener al menos 8 caracteres.')
+        elif password1 != password2:
+            errors.append('Las contraseñas no coinciden.')
+        
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+        else:
+            try:
+                # Crear usuario
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password1,
+                    first_name=first_name,
+                    last_name=last_name,
+                    is_active=True
+                )
+                
+                # Crear perfil de usuario
+                profile = UserProfile.objects.create(
+                    user=user,
+                    is_approved=True,  # Los usuarios creados por admin están aprobados
+                    terms_accepted=True,
+                    terms_accepted_date=timezone.now()
+                )
+                
+                # Asignar grupo si se especificó
+                group_id = request.POST.get('group')
                 if group_id:
-                    group = UserGroup.objects.get(id=group_id)
-                    UserGroupMembership.objects.create(user=user, group=group)
-            
-            # Registrar actividad
-            AdminActivity.objects.create(
-                admin_user=request.user,
-                action='user_created',
-                target_model='User',
-                target_id=user.id,
-                details=f'Usuario creado: {user.username}'
-            )
-            
-            messages.success(request, f'Usuario {user.username} creado exitosamente.')
-            return redirect('admin_panel:user_management')
-    else:
-        form = UserCreationForm()
+                    try:
+                        group = UserGroup.objects.get(id=group_id)
+                        UserGroupMembership.objects.create(user=user, group=group)
+                    except UserGroup.DoesNotExist:
+                        messages.warning(request, f'El grupo seleccionado no existe. Usuario creado sin grupo.')
+                
+                # Registrar actividad
+                AdminActivity.objects.create(
+                    admin_user=request.user,
+                    action='user_created',
+                    target_model='User',
+                    target_id=user.id,
+                    details=f'Usuario creado: {user.username}'
+                )
+                
+                messages.success(request, f'Usuario {user.username} creado exitosamente.')
+                return redirect('admin_panel:user_management')
+                
+            except Exception as e:
+                messages.error(request, f'Error al crear el usuario: {str(e)}')
     
     groups = UserGroup.objects.filter(is_active=True)
     
     context = {
-        'form': form,
         'groups': groups,
     }
     
@@ -158,25 +197,53 @@ def edit_user(request, user_id):
     user = get_object_or_404(User, id=user_id)
     
     if request.method == 'POST':
-        # Actualizar campos básicos
+        # Actualizar datos básicos
         user.first_name = request.POST.get('first_name', '')
         user.last_name = request.POST.get('last_name', '')
         user.email = request.POST.get('email', '')
-        user.is_active = request.POST.get('is_active') == 'on'
         user.save()
         
         # Actualizar perfil
-        profile = user.userprofile
+        try:
+            profile = user.userprofile
+        except:
+            from app.models import UserProfile
+            profile = UserProfile.objects.create(user=user)
+        
         profile.is_approved = request.POST.get('is_approved') == 'on'
         profile.save()
         
-        # Actualizar grupos
-        UserGroupMembership.objects.filter(user=user).delete()
-        group_ids = request.POST.getlist('groups')
-        for group_id in group_ids:
-            if group_id:
+        # Actualizar grupo
+        group_id = request.POST.get('group')
+        if group_id:
+            try:
                 group = UserGroup.objects.get(id=group_id)
-                UserGroupMembership.objects.create(user=user, group=group)
+                
+                # Verificar si ya existe una membresía
+                try:
+                    existing_membership = user.group_membership
+                    # Si ya está en el mismo grupo, no hacer nada
+                    if existing_membership.group.id == int(group_id):
+                        pass  # Ya está en el grupo correcto
+                    else:
+                        # Cambiar al nuevo grupo
+                        existing_membership.group = group
+                        existing_membership.save()
+                except UserGroupMembership.DoesNotExist:
+                    # No tiene membresía, crear una nueva
+                    UserGroupMembership.objects.create(user=user, group=group)
+                    
+            except UserGroup.DoesNotExist:
+                messages.error(request, 'El grupo seleccionado no existe.')
+            except ValueError:
+                messages.error(request, 'ID de grupo inválido.')
+        else:
+            # Si no se seleccionó grupo, eliminar membresía existente
+            try:
+                existing_membership = user.group_membership
+                existing_membership.delete()
+            except UserGroupMembership.DoesNotExist:
+                pass  # No tenía membresía
         
         # Registrar actividad
         AdminActivity.objects.create(
@@ -190,13 +257,19 @@ def edit_user(request, user_id):
         messages.success(request, f'Usuario {user.username} actualizado exitosamente.')
         return redirect('admin_panel:user_management')
     
-    user_groups = [membership.group.id for membership in user.group_memberships.all()]
+    # Obtener el grupo actual del usuario
+    try:
+        current_group = user.group_membership.group
+        user_group_id = current_group.id
+    except UserGroupMembership.DoesNotExist:
+        user_group_id = None
+    
     groups = UserGroup.objects.filter(is_active=True)
     
     context = {
         'user': user,
         'groups': groups,
-        'user_groups': user_groups,
+        'user_group_id': user_group_id,
     }
     
     return render(request, 'admin_panel/edit_user.html', context)
@@ -244,7 +317,8 @@ def group_management(request):
             group = UserGroup.objects.create(
                 name=name,
                 description=description,
-                color=color
+                color=color,
+                is_active=True  # Por defecto activo
             )
             
             AdminActivity.objects.create(
@@ -293,6 +367,33 @@ def group_management(request):
             )
             
             messages.success(request, f'Grupo {group_name} eliminado exitosamente.')
+        elif action == 'toggle':
+            group_id = request.POST.get('group_id')
+            is_active = request.POST.get('is_active') == 'true'
+            
+            try:
+                group = get_object_or_404(UserGroup, id=group_id)
+                group.is_active = is_active
+                group.save()
+                
+                AdminActivity.objects.create(
+                    admin_user=request.user,
+                    action='group_updated',
+                    target_model='UserGroup',
+                    target_id=group.id,
+                    details=f'Estado del grupo cambiado: {group.name} - {"Activo" if is_active else "Inactivo"}'
+                )
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Grupo {group.name} {"activado" if is_active else "desactivado"} exitosamente.'
+                })
+                
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al actualizar el grupo: {str(e)}'
+                })
     
     groups = UserGroup.objects.all().order_by('name')
     
@@ -353,26 +454,33 @@ def create_routine(request):
     if request.method == 'POST':
         title = request.POST.get('title')
         description = request.POST.get('description')
-        video_url = request.POST.get('video_url')
-        thumbnail_url = request.POST.get('thumbnail_url', '')
-        duration = request.POST.get('duration')
         group_id = request.POST.get('group')
         assigned_date = request.POST.get('assigned_date')
+        video_ids = request.POST.getlist('videos')  # Lista de IDs de videos
         
         try:
             group = UserGroup.objects.get(id=group_id)
-            duration = int(duration)
             
             routine = CustomRoutine.objects.create(
                 title=title,
                 description=description,
-                video_url=video_url,
-                thumbnail_url=thumbnail_url,
-                duration=duration,
                 group=group,
                 assigned_date=assigned_date,
                 created_by=request.user
             )
+            
+            # Asignar videos a la rutina
+            for order, video_id in enumerate(video_ids, 1):
+                if video_id:
+                    try:
+                        video = Video.objects.get(id=video_id)
+                        RoutineVideo.objects.create(
+                            routine=routine,
+                            video=video,
+                            order=order
+                        )
+                    except Video.DoesNotExist:
+                        pass
             
             AdminActivity.objects.create(
                 admin_user=request.user,
@@ -385,13 +493,17 @@ def create_routine(request):
             messages.success(request, f'Rutina {routine.title} creada exitosamente.')
             return redirect('admin_panel:routine_management')
             
-        except (ValueError, UserGroup.DoesNotExist):
-            messages.error(request, 'Error al crear la rutina. Verifica los datos.')
+        except UserGroup.DoesNotExist:
+            messages.error(request, 'El grupo seleccionado no existe.')
+        except Exception as e:
+            messages.error(request, f'Error al crear la rutina: {str(e)}')
     
     groups = UserGroup.objects.filter(is_active=True)
+    videos = Video.objects.filter(is_active=True).order_by('-created_at')
     
     context = {
         'groups': groups,
+        'videos': videos,
     }
     
     return render(request, 'admin_panel/create_routine.html', context)
@@ -463,10 +575,12 @@ def delete_routine(request, routine_id):
 
 @user_passes_test(is_staff_user, login_url='/login/')
 def video_upload(request):
-    """Página para subir videos a GCP"""
+    """Página para subir videos a S3"""
     if request.method == 'POST':
         # Obtener archivo del request
         video_file = request.FILES.get('video')
+        title = request.POST.get('title', '')
+        description = request.POST.get('description', '')
         
         if video_file:
             # Crear sesión
@@ -474,7 +588,7 @@ def video_upload(request):
                 admin_user=request.user,
                 filename=video_file.name,
                 file_size=video_file.size,
-                s3_bucket=settings.AWS_STORAGE_BUCKET_NAME,  # Bucket desde settings
+                s3_bucket=settings.AWS_STORAGE_BUCKET_NAME,
                 status='uploading'
             )
             
@@ -502,9 +616,38 @@ def video_upload(request):
                 upload_session.completed_at = timezone.now()
                 upload_session.save()
                 
+                # Crear registro Video
+                s3_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{s3_key}"
+                
+                # Calcular duración del video (por ahora usaremos un valor por defecto)
+                duration = 300  # 5 minutos por defecto
+                
+                video = Video.objects.create(
+                    title=title or video_file.name,
+                    description=description,
+                    filename=video_file.name,
+                    s3_key=s3_key,
+                    s3_url=s3_url,
+                    duration=duration,
+                    file_size=video_file.size,
+                    upload_session=upload_session,
+                    created_by=request.user
+                )
+                
+                # Registrar actividad
+                AdminActivity.objects.create(
+                    admin_user=request.user,
+                    action='video_uploaded',
+                    target_model='Video',
+                    target_id=video.id,
+                    details=f'Video subido: {video.title}'
+                )
+                
                 return JsonResponse({
                     'success': True,
-                    's3_url': f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{s3_key}"
+                    's3_url': s3_url,
+                    'video_id': video.id,
+                    'message': f'Video {video.title} subido exitosamente'
                 })
                 
             except ClientError as e:
@@ -517,13 +660,14 @@ def video_upload(request):
                     'error': str(e)
                 })
     
-    # Obtener sesiones de subida recientes
-    recent_uploads = VideoUploadSession.objects.filter(
-        admin_user=request.user
-    ).order_by('-started_at')[:10]
+    # Obtener videos recientes
+    recent_videos = Video.objects.filter(
+        created_by=request.user,
+        is_active=True
+    ).order_by('-created_at')[:10]
     
     context = {
-        'recent_uploads': recent_uploads,
+        'recent_videos': recent_videos,
     }
     
     return render(request, 'admin_panel/video_upload.html', context)

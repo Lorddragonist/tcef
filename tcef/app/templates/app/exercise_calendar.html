@@ -357,6 +357,9 @@
                 const date = dayElement.dataset.date;
                 const day = dayElement.dataset.day;
                 
+                // Extraer mes y año de la fecha
+                const [year, month] = date.split('-');
+                
                 // Mostrar opciones (editar/eliminar)
                 if (confirm('¿Qué quieres hacer?\n\n1. Ver detalles\n2. Eliminar ejercicio\n\nPresiona OK para ver detalles o Cancelar para eliminar.')) {
                     // Mostrar detalles del ejercicio

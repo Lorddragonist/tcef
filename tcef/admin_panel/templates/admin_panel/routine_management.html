@@ -1,0 +1,282 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Gestión de Rutinas - Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-dumbbell me-2"></i>
+                Gestión de Rutinas
+            </h1>
+            <a href="{% url 'admin_panel:create_routine' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                Crear Rutina
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros y búsqueda -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="search" class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ search_query }}" placeholder="Título, descripción...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="group" class="form-label">Grupo</label>
+                        <select class="form-select" id="group" name="group">
+                            <option value="">Todos los grupos</option>
+                            {% for group in groups %}
+                                <option value="{{ group.id }}" {% if group_filter == group.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ group.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date" class="form-label">Fecha</label>
+                        <input type="date" class="form-control" id="date" name="date" value="{{ date_filter }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>
+                            Filtrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de rutinas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list me-2"></i>
+                    Rutinas ({{ page_obj.paginator.count }} total)
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if page_obj %}
+                    <div class="row">
+                        {% for routine in page_obj %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">{{ routine.title }}</h6>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" 
+                                               {% if routine.is_active %}checked{% endif %}
+                                               onchange="toggleRoutineStatus({{ routine.id }}, this.checked)">
+                                        <label class="form-check-label small">Activa</label>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text small">{{ routine.description|truncatechars:100 }}</p>
+                                    
+                                    <div class="mb-2">
+                                        <span class="badge me-1" style="background-color: {{ routine.group.color }}; color: white;">
+                                            {{ routine.group.name }}
+                                        </span>
+                                        <span class="badge bg-info">{{ routine.assigned_date|date:"d/m/Y" }}</span>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-video me-1"></i>
+                                            {{ routine.get_videos_count }} video{{ routine.get_videos_count|pluralize }}
+                                        </small>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ routine.get_total_duration }}
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user me-1"></i>
+                                            Creado por: {{ routine.created_by.username }}
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <div class="btn-group w-100" role="group">
+                                        <a href="{% url 'admin_panel:edit_routine' routine.id %}" 
+                                           class="btn btn-sm btn-outline-primary" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'admin_panel:delete_routine' routine.id %}" 
+                                           class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-info" 
+                                                onclick="viewRoutineDetails({{ routine.id }})" title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Paginación -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Paginación de rutinas">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}">
+                                            {{ num }}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-dumbbell fa-3x mb-3"></i>
+                        <h5>No se encontraron rutinas</h5>
+                        <p>Intenta ajustar los filtros de búsqueda o crea una nueva rutina</p>
+                        <a href="{% url 'admin_panel:create_routine' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            Crear Primera Rutina
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver detalles de rutina -->
+<div class="modal fade" id="routineDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-dumbbell me-2"></i>
+                    Detalles de la Rutina
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="routineDetailsContent">
+                <!-- Contenido cargado dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleRoutineStatus(routineId, isActive) {
+    // Enviar petición AJAX para actualizar el estado
+    fetch('{% url "admin_panel:routine_management" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `action=toggle&routine_id=${routineId}&is_active=${isActive}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+        } else {
+            // Revertir el toggle si falló
+            const checkbox = event.target;
+            checkbox.checked = !isActive;
+            showAlert(data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        // Revertir el toggle si falló
+        const checkbox = event.target;
+        checkbox.checked = !isActive;
+        showAlert('Error al actualizar el estado de la rutina', 'danger');
+    });
+}
+
+function viewRoutineDetails(routineId) {
+    // Cargar detalles de la rutina via AJAX
+    fetch(`/admin-panel/routines/${routineId}/details/`)
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('routineDetailsContent').innerHTML = data.html;
+        const modal = new bootstrap.Modal(document.getElementById('routineDetailsModal'));
+        modal.show();
+    })
+    .catch(error => {
+        showAlert('Error al cargar los detalles de la rutina', 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    // Crear alerta Bootstrap
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insertar al inicio del contenido
+    const content = document.querySelector('.container-fluid');
+    content.insertBefore(alertDiv, content.firstChild);
+    
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %} 

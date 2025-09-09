@@ -104,12 +104,10 @@
                                         </a>
                                     </td>
                                     <td>
-                                        {% if user.group_memberships.all %}
-                                            {% for membership in user.group_memberships.all %}
-                                                <span class="badge me-1" style="background-color: {{ membership.group.color }}; color: white;">
-                                                    {{ membership.group.name }}
-                                                </span>
-                                            {% endfor %}
+                                        {% if user.group_membership %}
+                                            <span class="badge me-1" style="background-color: {{ user.group_membership.group.color }}; color: white;">
+                                                {{ user.group_membership.group.name }}
+                                            </span>
                                         {% else %}
                                             <span class="text-muted">Sin grupos</span>
                                         {% endif %}
