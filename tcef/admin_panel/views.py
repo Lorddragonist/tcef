@@ -660,9 +660,8 @@ def video_upload(request):
                     'error': str(e)
                 })
     
-    # Obtener videos recientes
+    # Obtener videos recientes - Mostrar todos los videos, no solo los del usuario actual
     recent_videos = Video.objects.filter(
-        created_by=request.user,
         is_active=True
     ).order_by('-created_at')[:10]
     
@@ -800,8 +799,8 @@ def delete_video(request, video_id):
         return JsonResponse({'success': False, 'error': 'Método no permitido'})
     
     try:
-        # Obtener la sesión de video
-        upload_session = get_object_or_404(VideoUploadSession, id=video_id, admin_user=request.user)
+        # Obtener la sesión de video - Permitir a cualquier admin eliminar cualquier video
+        upload_session = get_object_or_404(VideoUploadSession, id=video_id)
         
         # Verificar que el video esté completado
         if upload_session.status != 'completed':
@@ -847,4 +846,4 @@ def delete_video(request, video_id):
     except VideoUploadSession.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Video no encontrado'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Error interno: {str(e)}'})
+        return JsonResponse({'success': False, 'error': str(e)})
