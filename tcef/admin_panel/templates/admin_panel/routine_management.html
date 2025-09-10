@@ -211,6 +211,27 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para preview de video -->
+<div class="modal fade" id="videoPreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoPreviewTitle">
+                    <i class="fas fa-play me-2"></i>
+                    Preview del Video
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <video id="videoPreviewPlayer" controls width="100%" style="max-height: 70vh;">
+                    <source id="videoPreviewSource" src="" type="video/mp4">
+                    Tu navegador no soporta el elemento de video.
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -245,16 +266,66 @@ function toggleRoutineStatus(routineId, isActive) {
 }
 
 function viewRoutineDetails(routineId) {
+    // Mostrar loading
+    document.getElementById('routineDetailsContent').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+    const modal = new bootstrap.Modal(document.getElementById('routineDetailsModal'));
+    modal.show();
+    
     // Cargar detalles de la rutina via AJAX
     fetch(`/admin-panel/routines/${routineId}/details/`)
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
-        document.getElementById('routineDetailsContent').innerHTML = data.html;
-        const modal = new bootstrap.Modal(document.getElementById('routineDetailsModal'));
-        modal.show();
+        console.log('Response data:', data);
+        if (data.success) {
+            document.getElementById('routineDetailsContent').innerHTML = data.html;
+        } else {
+            document.getElementById('routineDetailsContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error: ${data.error || 'Error desconocido'}
+                </div>
+            `;
+        }
     })
     .catch(error => {
-        showAlert('Error al cargar los detalles de la rutina', 'danger');
+        console.error('Error:', error);
+        document.getElementById('routineDetailsContent').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Error al cargar los detalles: ${error.message}
+            </div>
+        `;
+    });
+}
+
+function showVideoPreview(videoUrl, videoTitle) {
+    // Configurar el título del modal
+    document.getElementById('videoPreviewTitle').innerHTML = `
+        <i class="fas fa-play me-2"></i>
+        Preview: ${videoTitle}
+    `;
+    
+    // Configurar la fuente del video
+    const videoPlayer = document.getElementById('videoPreviewPlayer');
+    const videoSource = document.getElementById('videoPreviewSource');
+    
+    videoSource.src = videoUrl;
+    videoPlayer.load(); // Recargar el video con la nueva fuente
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('videoPreviewModal'));
+    modal.show();
+    
+    // Pausar el video cuando se cierre el modal
+    document.getElementById('videoPreviewModal').addEventListener('hidden.bs.modal', function () {
+        videoPlayer.pause();
+        videoPlayer.currentTime = 0; // Reiniciar al inicio
     });
 }
 

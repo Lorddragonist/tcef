@@ -515,15 +515,32 @@ def edit_routine(request, routine_id):
     routine = get_object_or_404(CustomRoutine, id=routine_id)
     
     if request.method == 'POST':
+        # Actualizar campos básicos de la rutina
         routine.title = request.POST.get('title')
         routine.description = request.POST.get('description')
-        routine.video_url = request.POST.get('video_url')
-        routine.thumbnail_url = request.POST.get('thumbnail_url', '')
-        routine.duration = int(request.POST.get('duration'))
         routine.group_id = request.POST.get('group')
         routine.assigned_date = request.POST.get('assigned_date')
         routine.is_active = request.POST.get('is_active') == 'on'
         routine.save()
+        
+        # Manejar videos de la rutina
+        video_ids = request.POST.getlist('videos')
+        
+        # Eliminar videos existentes
+        routine.routine_videos.all().delete()
+        
+        # Agregar nuevos videos
+        for order, video_id in enumerate(video_ids, 1):
+            if video_id:
+                try:
+                    video = Video.objects.get(id=video_id)
+                    RoutineVideo.objects.create(
+                        routine=routine,
+                        video=video,
+                        order=order
+                    )
+                except Video.DoesNotExist:
+                    pass
         
         AdminActivity.objects.create(
             admin_user=request.user,
@@ -537,10 +554,16 @@ def edit_routine(request, routine_id):
         return redirect('admin_panel:routine_management')
     
     groups = UserGroup.objects.filter(is_active=True)
+    videos = Video.objects.filter(is_active=True).order_by('-created_at')
+    
+    # Obtener IDs de videos actuales para marcar como seleccionados
+    current_video_ids = list(routine.routine_videos.values_list('video_id', flat=True))
     
     context = {
         'routine': routine,
         'groups': groups,
+        'videos': videos,
+        'current_video_ids': current_video_ids,
     }
     
     return render(request, 'admin_panel/edit_routine.html', context)
@@ -847,3 +870,144 @@ def delete_video(request, video_id):
         return JsonResponse({'success': False, 'error': 'Video no encontrado'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def routine_details(request, routine_id):
+    """Obtener detalles de una rutina para mostrar en modal"""
+    try:
+        routine = get_object_or_404(CustomRoutine, id=routine_id)
+        
+        # Obtener videos de la rutina ordenados
+        routine_videos = routine.get_videos_ordered()
+        
+        # Formatear fechas manualmente
+        assigned_date_str = routine.assigned_date.strftime("%d/%m/%Y")
+        created_date_str = routine.created_at.strftime("%d/%m/%Y %H:%M")
+        
+        # Generar HTML para el modal
+        html_content = f"""
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-primary">Información General</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Título:</strong></td>
+                        <td>{routine.title}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Descripción:</strong></td>
+                        <td>{routine.description}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Grupo:</strong></td>
+                        <td>
+                            <span class="badge" style="background-color: {routine.group.color}; color: white;">
+                                {routine.group.name}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fecha:</strong></td>
+                        <td>{assigned_date_str}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Estado:</strong></td>
+                        <td>
+                            <span class="badge bg-{'success' if routine.is_active else 'secondary'}">
+                                {'Activa' if routine.is_active else 'Inactiva'}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Creado por:</strong></td>
+                        <td>{routine.created_by.username}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Creado:</strong></td>
+                        <td>{created_date_str}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-primary">Estadísticas</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Total de videos:</strong></td>
+                        <td>{routine.get_videos_count()}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Duración total:</strong></td>
+                        <td>{routine.get_total_duration()}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        """
+        
+        if routine_videos:
+            html_content += f"""
+        <hr>
+        <h6 class="text-primary">Videos de la Rutina</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Orden</th>
+                        <th>Título</th>
+                        <th>Duración</th>
+                        <th>Tamaño</th>
+                        <th>Preview</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            
+            for routine_video in routine_videos:
+                video = routine_video.video
+                description_snippet = f'<br><small class="text-muted">{video.description[:50]}...</small>' if video.description else ''
+                html_content += f"""
+                    <tr>
+                        <td>
+                            <span class="badge bg-primary">{routine_video.order}</span>
+                        </td>
+                        <td>
+                            <strong>{video.title}</strong>
+                            {description_snippet}
+                        </td>
+                        <td>{video.get_duration_formatted()}</td>
+                        <td>{video.get_file_size_formatted()}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                    onclick="showVideoPreview('{video.s3_url}', '{video.title}')" 
+                                    title="Ver preview del video">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </td>
+                    </tr>
+                """
+            
+            html_content += """
+                </tbody>
+            </table>
+        </div>
+            """
+        else:
+            html_content += """
+        <hr>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Esta rutina no tiene videos asignados.
+        </div>
+            """
+        
+        return JsonResponse({
+            'success': True,
+            'html': html_content
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
