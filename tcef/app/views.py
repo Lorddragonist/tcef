@@ -14,6 +14,7 @@ from datetime import datetime, date, timedelta
 import calendar
 from .forms import UserRegistrationForm, CustomLoginForm
 from .models import UserProfile, ExerciseLog, WeeklyRoutine, PasswordResetRequest
+from admin_panel.models import CustomRoutine, UserGroupMembership
 
 def home(request):
     """Vista principal de la landing page tipo blog"""
@@ -241,6 +242,44 @@ def exercise_calendar(request, year=None, month=None):
     )
     exercise_dates = {ex.exercise_date: ex for ex in extended_exercises}
     
+    # Obtener rutinas asignadas para el rango del calendario
+    assigned_routines = {}
+    try:
+        user_membership = request.user.group_membership
+        user_group = user_membership.group
+        group_routines = CustomRoutine.objects.filter(
+            group=user_group,
+            is_active=True,
+            assigned_date__gte=calendar_start,
+            assigned_date__lte=calendar_end
+        ).prefetch_related('routine_videos__video')
+        
+        for routine in group_routines:
+            videos_data = []
+            for rv in routine.get_videos_ordered():
+                videos_data.append({
+                    'id': rv.video.id,
+                    'title': rv.video.title,
+                    'description': rv.video.description,
+                    'duration': rv.video.get_duration_formatted(),
+                    's3_url': rv.video.s3_url,
+                    'thumbnail_url': rv.video.thumbnail_url,
+                    'order': rv.order,
+                    'notes': rv.notes
+                })
+            
+            assigned_routines[routine.assigned_date] = {
+                'id': routine.id,
+                'title': routine.title,
+                'description': routine.description,
+                'videos_count': routine.get_videos_count(),
+                'total_duration': routine.get_total_duration(),
+                'videos': videos_data
+            }
+    except UserGroupMembership.DoesNotExist:
+        # Usuario no está en ningún grupo
+        pass
+    
     # Obtener estadísticas del usuario
     user_stats = ExerciseLog.get_user_stats(request.user)
     
@@ -267,6 +306,7 @@ def exercise_calendar(request, year=None, month=None):
         'month': month,
         'month_name': month_names[month - 1],
         'exercise_dates': exercise_dates,
+        'assigned_routines': assigned_routines,  # Nueva variable para rutinas asignadas
         'user_stats': user_stats,
         'prev_month': prev_month,
         'prev_year': prev_year,
@@ -384,108 +424,3 @@ def custom_logout(request):
     
     # Mostrar página de confirmación
     return render(request, 'app/logout.html')
-
-@login_required
-def weekly_routines(request, day=None):
-    """Vista principal de las rutinas semanales con carrusel"""
-    
-    # Si no se especifica día, usar el día actual
-    if day is None:
-        current_routine = WeeklyRoutine.get_today_routine()
-        if current_routine:
-            day = current_routine.day
-        else:
-            # Si no hay rutina para hoy, usar lunes por defecto
-            day = 'lunes'
-    else:
-        # Validar que el día sea válido
-        valid_days = [choice[0] for choice in WeeklyRoutine.DAY_CHOICES]
-        if day not in valid_days:
-            day = 'lunes'
-    
-    # Obtener la rutina del día especificado
-    try:
-        current_routine = WeeklyRoutine.objects.get(day=day, is_active=True)
-    except WeeklyRoutine.DoesNotExist:
-        current_routine = None
-    
-    # Obtener todas las rutinas activas para la navegación
-    all_routines = WeeklyRoutine.get_all_active_routines()
-    
-    # Obtener información de navegación
-    if current_routine:
-        next_day = current_routine.get_next_day()
-        previous_day = current_routine.get_previous_day()
-        
-        # Buscar las rutinas siguiente y anterior
-        try:
-            next_routine = WeeklyRoutine.objects.get(day=next_day, is_active=True)
-        except WeeklyRoutine.DoesNotExist:
-            next_routine = None
-            
-        try:
-            previous_routine = WeeklyRoutine.objects.get(day=previous_day, is_active=True)
-        except WeeklyRoutine.DoesNotExist:
-            previous_routine = None
-    else:
-        next_routine = None
-        previous_routine = None
-    
-    # Verificar si el usuario ya completó la rutina de hoy
-    today = date.today()
-    today_exercise = None
-    if current_routine:
-        try:
-            today_exercise = ExerciseLog.objects.get(user=request.user, exercise_date=today)
-        except ExerciseLog.DoesNotExist:
-            pass
-    
-    context = {
-        'current_routine': current_routine,
-        'all_routines': all_routines,
-        'next_routine': next_routine,
-        'previous_routine': previous_routine,
-        'current_day': day,
-        'today_exercise': today_exercise,
-        'today': today,
-    }
-    
-    return render(request, 'app/weekly_routines.html', context)
-
-@login_required
-@require_POST
-def complete_routine(request):
-    """Vista para marcar una rutina como completada"""
-    try:
-        routine_day = request.POST.get('routine_day')
-        
-        if not routine_day:
-            return JsonResponse({'success': False, 'error': 'Día de rutina requerido'})
-        
-        # Obtener la fecha actual
-        today = date.today()
-        
-        # Verificar que no exista ya un ejercicio para hoy
-        if ExerciseLog.objects.filter(user=request.user, exercise_date=today).exists():
-            return JsonResponse({'success': False, 'error': 'Ya tienes un ejercicio registrado para hoy'})
-        
-        # Crear el registro de ejercicio
-        exercise = ExerciseLog.objects.create(
-            user=request.user,
-            exercise_date=today,
-            notes=f"Rutina completada: {routine_day}",
-            difficulty='medio'  # Por defecto medio, se puede personalizar después
-        )
-        
-        # Obtener estadísticas actualizadas
-        user_stats = ExerciseLog.get_user_stats(request.user)
-        
-        return JsonResponse({
-            'success': True,
-            'exercise_id': exercise.id,
-            'user_stats': user_stats,
-            'message': '¡Rutina marcada como completada!'
-        })
-        
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})

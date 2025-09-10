@@ -681,3 +681,8 @@
     rgba(209, 59, 83, 0.2) 100%
   );
 }
+
+.routine-preview-header {
+    background-color: #e1cfc6 !important;
+    color: white !important;
+}

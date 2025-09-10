@@ -30,10 +30,7 @@
                 </div>
             </div>
             <div class="col-md-4 text-end">
-                <a href="{% url 'app:weekly_routines' %}" class="btn btn-success btn-sm me-2">
-                    <i class="fas fa-play-circle me-1"></i>Ver Rutinas
-                </a>
-                <a href="{% url 'app:exercise_calendar' %}" class="btn btn-primary btn-sm">
+                <a href="{% url 'app:exercise_calendar' %}" class="btn btn-primary btn-sm me-2">
                     <i class="fas fa-calendar-day me-1"></i>Hoy
                 </a>
                 <a href="{% url 'app:exercise_stats' %}" class="btn btn-info btn-sm">
@@ -155,7 +152,7 @@
 
 <!-- Modal para agregar ejercicio -->
 <div class="modal fade" id="addExerciseModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
@@ -172,6 +169,42 @@
                             <i class="fas fa-calendar me-1"></i>Fecha
                         </label>
                         <input type="text" class="form-control" id="exerciseDateDisplay" readonly>
+                    </div>
+                    
+                    <!-- Preview de rutina asignada (solo si existe) -->
+                    <div id="routinePreview" class="mb-3" style="display: none;">
+                        <div class="card border-info" style="border-color: #b3a5a5 !important;">
+                            <div class="card-header routine-preview-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-dumbbell me-2"></i>Rutina Asignada
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="card-title" id="routineTitle"></h6>
+                                <p class="card-text small" id="routineDescription"></p>
+                                
+                                <!-- Lista de videos -->
+                                <div class="mb-3">
+                                    <h6 class="text-muted mb-2">
+                                        <i class="fas fa-video me-1"></i>Videos de la Rutina:
+                                    </h6>
+                                    <div id="routineVideosList" class="list-group list-group-flush">
+                                        <!-- Los videos se cargarán aquí dinámicamente -->
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-video me-1"></i>
+                                        <span id="routineVideosCount"></span> videos
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        <span id="routineDuration"></span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
@@ -228,10 +261,60 @@
     </div>
 </div>
 
+<!-- Modal para preview de video -->
+<div class="modal fade" id="videoPreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoPreviewTitle">
+                    <i class="fas fa-play me-2"></i>Preview del Video
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <video id="videoPreviewPlayer" controls width="100%" style="max-height: 70vh;">
+                    <source id="videoPreviewSource" src="" type="video/mp4">
+                    Tu navegador no soporta el elemento de video.
+                </video>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    // Pasar rutinas asignadas al JavaScript
+    window.assignedRoutines = {
+        {% for date, routine in assigned_routines.items %}
+            '{{ date|date:"Y-m-d" }}': {
+                id: {{ routine.id }},
+                title: '{{ routine.title|escapejs }}',
+                description: '{{ routine.description|escapejs|truncatechars:100 }}',
+                videos_count: {{ routine.videos_count }},
+                total_duration: '{{ routine.total_duration }}',
+                videos: [
+                    {% for video in routine.videos %}
+                    {
+                        id: {{ video.id }},
+                        title: '{{ video.title|escapejs }}',
+                        description: '{{ video.description|escapejs }}',
+                        duration: '{{ video.duration }}',
+                        s3_url: '{{ video.s3_url|escapejs }}',
+                        thumbnail_url: '{{ video.thumbnail_url|escapejs }}',
+                        order: {{ video.order }},
+                        notes: '{{ video.notes|escapejs }}'
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+
     let currentExerciseDate = '';
     let currentExerciseDay = 0;
 
@@ -246,9 +329,80 @@
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('exerciseDateDisplay').value = dateObj.toLocaleDateString('es-ES', options);
         
+        // Verificar si hay rutina asignada para esta fecha
+        const routinePreview = document.getElementById('routinePreview');
+        const routineData = window.assignedRoutines && window.assignedRoutines[date];
+        
+        if (routineData) {
+            // Mostrar preview de la rutina
+            document.getElementById('routineTitle').textContent = routineData.title;
+            document.getElementById('routineDescription').textContent = routineData.description;
+            document.getElementById('routineVideosCount').textContent = routineData.videos_count;
+            document.getElementById('routineDuration').textContent = routineData.total_duration;
+            
+            // Mostrar lista de videos
+            const videosList = document.getElementById('routineVideosList');
+            videosList.innerHTML = '';
+            
+            routineData.videos.forEach((video, index) => {
+                const videoItem = document.createElement('div');
+                videoItem.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
+                videoItem.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-primary me-2">${video.order}</span>
+                        <div>
+                            <h6 class="mb-1 small">${video.title}</h6>
+                            ${video.description ? `<small class="text-muted">${video.description}</small>` : ''}
+                            ${video.notes ? `<br><small class="text-info"><i class="fas fa-sticky-note me-1"></i>${video.notes}</small>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">${video.duration}</small>
+                        <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="previewVideo('${video.s3_url}', '${video.title}')">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                `;
+                videosList.appendChild(videoItem);
+            });
+            
+            routinePreview.style.display = 'block';
+        } else {
+            // Ocultar preview de la rutina
+            routinePreview.style.display = 'none';
+        }
+        
         // Mostrar modal
         const modal = new bootstrap.Modal(document.getElementById('addExerciseModal'));
         modal.show();
+    }
+
+    // Función para preview de video
+    function previewVideo(videoUrl, videoTitle) {
+        console.log('Intentando reproducir video:', videoUrl, videoTitle); // Para debug
+        
+        const modal = new bootstrap.Modal(document.getElementById('videoPreviewModal'));
+        document.getElementById('videoPreviewTitle').innerHTML = `<i class="fas fa-play me-2"></i>${videoTitle}`;
+        
+        const videoPlayer = document.getElementById('videoPreviewPlayer');
+        const videoSource = document.getElementById('videoPreviewSource');
+        
+        // Limpiar el video anterior
+        videoPlayer.pause();
+        videoSource.src = '';
+        
+        // Establecer la nueva fuente
+        videoSource.src = videoUrl;
+        videoPlayer.load();
+        
+        // Mostrar el modal
+        modal.show();
+        
+        // Manejar errores de carga
+        videoPlayer.addEventListener('error', function(e) {
+            console.error('Error al cargar el video:', e);
+            alert('Error al cargar el video. Verifica que la URL sea válida.');
+        });
     }
 
     // Función para agregar ejercicio
