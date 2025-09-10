@@ -106,6 +106,13 @@
                                 <i class="fas fa-user me-1"></i>Mi Perfil
                             </a>
                         </li>
+                        {% if user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_panel:dashboard' %}" style="color: #ffc107;">
+                                <i class="fas fa-shield-alt me-1"></i>Panel Admin
+                            </a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'app:custom_logout' %}">
                                 <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
