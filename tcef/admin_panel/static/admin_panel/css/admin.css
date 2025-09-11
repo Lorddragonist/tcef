@@ -1,0 +1,29 @@
+/* Estilos para drag & drop */
+.draggable-item {
+    transition: all 0.3s ease;
+    cursor: move;
+}
+
+.draggable-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.draggable-item.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+.drag-handle {
+    cursor: move;
+    user-select: none;
+}
+
+.drag-handle:hover {
+    background-color: #0056b3 !important;
+}
+
+/* Indicador visual durante el drag */
+.selected-videos-list .draggable-item.drag-over {
+    border-top: 3px solid #007bff;
+} 

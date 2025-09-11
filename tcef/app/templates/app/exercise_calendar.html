@@ -356,9 +356,9 @@
                             ${video.notes ? `<br><small class="text-info"><i class="fas fa-sticky-note me-1"></i>${video.notes}</small>` : ''}
                         </div>
                     </div>
-                    <div class="text-end">
-                        <small class="text-muted">${video.duration}</small>
-                        <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="previewVideo('${video.s3_url}', '${video.title}')">
+                    <div class="text-end d-flex align-items-center">
+                        <small class="text-muted me-3">${video.duration}</small>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="previewVideo('${video.s3_url}', '${video.title}')">
                             <i class="fas fa-play"></i>
                         </button>
                     </div>

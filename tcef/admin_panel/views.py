@@ -469,18 +469,38 @@ def create_routine(request):
                 created_by=request.user
             )
             
-            # Asignar videos a la rutina
-            for order, video_id in enumerate(video_ids, 1):
+            # Crear lista de videos con sus órdenes
+            video_orders = []
+            for video_id in video_ids:
                 if video_id:
                     try:
                         video = Video.objects.get(id=video_id)
-                        RoutineVideo.objects.create(
-                            routine=routine,
-                            video=video,
-                            order=order
-                        )
+                        # Obtener el orden personalizado del formulario
+                        order_key = f'video_order_{video_id}'
+                        order = request.POST.get(order_key, 1)
+                        
+                        # Convertir a entero y validar
+                        try:
+                            order = int(order)
+                            if order < 1:
+                                order = 1
+                        except (ValueError, TypeError):
+                            order = 1
+                        
+                        video_orders.append((video, order))
                     except Video.DoesNotExist:
                         pass
+            
+            # Ordenar por el orden especificado y asignar órdenes únicos
+            video_orders.sort(key=lambda x: x[1])  # Ordenar por el orden especificado
+            
+            # Crear los RoutineVideo con órdenes únicos secuenciales
+            for index, (video, original_order) in enumerate(video_orders, 1):
+                RoutineVideo.objects.create(
+                    routine=routine,
+                    video=video,
+                    order=index  # Usar índice secuencial para evitar duplicados
+                )
             
             AdminActivity.objects.create(
                 admin_user=request.user,
@@ -529,18 +549,38 @@ def edit_routine(request, routine_id):
         # Eliminar videos existentes
         routine.routine_videos.all().delete()
         
-        # Agregar nuevos videos
-        for order, video_id in enumerate(video_ids, 1):
+        # Crear lista de videos con sus órdenes
+        video_orders = []
+        for video_id in video_ids:
             if video_id:
                 try:
                     video = Video.objects.get(id=video_id)
-                    RoutineVideo.objects.create(
-                        routine=routine,
-                        video=video,
-                        order=order
-                    )
+                    # Obtener el orden personalizado del formulario
+                    order_key = f'video_order_{video_id}'
+                    order = request.POST.get(order_key, 1)
+                    
+                    # Convertir a entero y validar
+                    try:
+                        order = int(order)
+                        if order < 1:
+                            order = 1
+                    except (ValueError, TypeError):
+                        order = 1
+                    
+                    video_orders.append((video, order))
                 except Video.DoesNotExist:
                     pass
+        
+        # Ordenar por el orden especificado y asignar órdenes únicos
+        video_orders.sort(key=lambda x: x[1])  # Ordenar por el orden especificado
+        
+        # Crear los RoutineVideo con órdenes únicos secuenciales
+        for index, (video, original_order) in enumerate(video_orders, 1):
+            RoutineVideo.objects.create(
+                routine=routine,
+                video=video,
+                order=index  # Usar índice secuencial para evitar duplicados
+            )
         
         AdminActivity.objects.create(
             admin_user=request.user,
