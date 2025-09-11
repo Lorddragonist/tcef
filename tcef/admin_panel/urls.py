@@ -22,6 +22,7 @@ urlpatterns = [
     path('routines/<int:routine_id>/edit/', views.edit_routine, name='edit_routine'),
     path('routines/<int:routine_id>/delete/', views.delete_routine, name='delete_routine'),
     path('routines/<int:routine_id>/details/', views.routine_details, name='routine_details'),
+    path('routines/<int:routine_id>/replicate/', views.replicate_routine, name='replicate_routine'),
     
     # Subida de videos
     path('videos/upload/', views.video_upload, name='video_upload'),

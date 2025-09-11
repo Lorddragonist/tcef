@@ -1051,3 +1051,79 @@ def routine_details(request, routine_id):
             'success': False,
             'error': str(e)
         })
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def replicate_routine(request, routine_id):
+    """Replicar rutina a otros grupos y fechas"""
+    routine = get_object_or_404(CustomRoutine, id=routine_id)
+    
+    if request.method == 'POST':
+        group_ids = request.POST.getlist('groups')
+        dates = request.POST.getlist('dates')
+        
+        if not group_ids or not dates:
+            messages.error(request, 'Debes seleccionar al menos un grupo y una fecha.')
+            return redirect('admin_panel:replicate_routine', routine_id=routine_id)
+        
+        try:
+            replicated_count = 0
+            for group_id in group_ids:
+                for date_str in dates:
+                    try:
+                        group = UserGroup.objects.get(id=group_id)
+                        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+                        
+                        # Verificar si ya existe una rutina para este grupo y fecha
+                        if CustomRoutine.objects.filter(group=group, assigned_date=date_obj).exists():
+                            continue  # Saltar si ya existe
+                        
+                        # Crear nueva rutina
+                        new_routine = CustomRoutine.objects.create(
+                            title=f"{routine.title} (Replicada)",
+                            description=routine.description,
+                            group=group,
+                            assigned_date=date_obj,
+                            created_by=request.user
+                        )
+                        
+                        # Replicar videos con el mismo orden
+                        for routine_video in routine.get_videos_ordered():
+                            RoutineVideo.objects.create(
+                                routine=new_routine,
+                                video=routine_video.video,
+                                order=routine_video.order,
+                                notes=routine_video.notes
+                            )
+                        
+                        replicated_count += 1
+                        
+                    except (UserGroup.DoesNotExist, ValueError) as e:
+                        continue
+            
+            AdminActivity.objects.create(
+                admin_user=request.user,
+                action='routine_replicated',
+                target_model='CustomRoutine',
+                target_id=routine.id,
+                details=f'Rutina replicada {replicated_count} veces: {routine.title}'
+            )
+            
+            if replicated_count > 0:
+                messages.success(request, f'Rutina replicada exitosamente {replicated_count} veces.')
+            else:
+                messages.warning(request, 'No se pudo replicar la rutina. Verifica que los grupos y fechas sean válidos.')
+            
+            return redirect('admin_panel:routine_management')
+            
+        except Exception as e:
+            messages.error(request, f'Error al replicar la rutina: {str(e)}')
+    
+    groups = UserGroup.objects.filter(is_active=True)
+    
+    context = {
+        'routine': routine,
+        'groups': groups,
+    }
+    
+    return render(request, 'admin_panel/replicate_routine.html', context)

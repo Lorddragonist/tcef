@@ -1,0 +1,405 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Replicar Rutina - Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-copy me-2"></i>
+                Replicar Rutina: {{ routine.title }}
+            </h1>
+            <a href="{% url 'admin_panel:routine_management' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Volver a Rutinas
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-copy me-2"></i>
+                    Configuración de Replicación
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Información de la rutina original -->
+                    <div class="mb-4">
+                        <h6>Rutina Original</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ routine.title }}</h6>
+                                <p class="card-text">{{ routine.description|truncatechars:100 }}</p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            Fecha: {{ routine.assigned_date|date:"d/m/Y" }}
+                                        </small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            <i class="fas fa-video me-1"></i>
+                                            Videos: {{ routine.get_videos_count }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Selección de grupos -->
+                    <div class="mb-4">
+                        <label class="form-label">Grupos de Destino *</label>
+                        <p class="text-muted small">Selecciona los grupos a los que quieres replicar esta rutina</p>
+                        <div class="row">
+                            {% for group in groups %}
+                            <div class="col-md-6 col-lg-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="groups" 
+                                           value="{{ group.id }}" id="group_{{ group.id }}">
+                                    <label class="form-check-label" for="group_{{ group.id }}">
+                                        {{ group.name }}
+                                        <small class="text-muted d-block">({{ group.members.count }} miembros)</small>
+                                    </label>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    No hay grupos disponibles.
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Selección de fechas -->
+                    <div class="mb-4">
+                        <label class="form-label">Fechas de Asignación *</label>
+                        <p class="text-muted small">Selecciona las fechas en las que quieres asignar esta rutina</p>
+                        
+                        <!-- Opción 1: Días de la semana -->
+                        <div class="mb-3">
+                            <h6>Días de la Semana</h6>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Instrucciones:</strong> Selecciona los días de la semana y el rango de fechas, luego haz clic en "Generar Fechas" para crear las fechas específicas.
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="date_from" class="form-label">Desde</label>
+                                    <input type="date" class="form-control" id="date_from" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="date_to" class="form-label">Hasta</label>
+                                    <input type="date" class="form-control" id="date_to" required>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <label class="form-label small">Selección rápida:</label>
+                                <div class="btn-group btn-group-sm mb-2" role="group">
+                                    <button type="button" class="btn btn-outline-primary" onclick="selectWeekdays()">
+                                        Días Laborales
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" onclick="selectWeekends()">
+                                        Fines de Semana
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="clearDays()">
+                                        Limpiar
+                                    </button>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="day_monday" value="0">
+                                            <label class="form-check-label" for="day_monday">Lunes</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="day_tuesday" value="1">
+                                            <label class="form-check-label" for="day_tuesday">Martes</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="day_wednesday" value="2">
+                                            <label class="form-check-label" for="day_wednesday">Miércoles</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="day_thursday" value="3">
+                                            <label class="form-check-label" for="day_thursday">Jueves</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="day_friday" value="4">
+                                            <label class="form-check-label" for="day_friday">Viernes</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="day_saturday" value="5">
+                                            <label class="form-check-label" for="day_saturday">Sábado</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="day_sunday" value="6">
+                                            <label class="form-check-label" for="day_sunday">Domingo</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-primary" onclick="generateWeeklyDates()">
+                                    <i class="fas fa-calendar-week me-1"></i>
+                                    Generar Fechas por Días de la Semana
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Opción 2: Fechas personalizadas -->
+                        <div class="mb-3">
+                            <h6>Fechas Personalizadas</h6>
+                            <div class="d-flex gap-2">
+                                <input type="date" class="form-control" id="custom_date" style="max-width: 200px;">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addCustomDate()">
+                                    <i class="fas fa-plus me-1"></i>
+                                    Agregar Fecha
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Lista de fechas seleccionadas -->
+                        <div id="selected-dates" class="mt-3" style="display: none;">
+                            <h6>Fechas Seleccionadas</h6>
+                            <div id="dates-list" class="list-group">
+                                <!-- Se llenará dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'admin_panel:routine_management' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-copy me-2"></i>
+                            Replicar Rutina
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Información
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6>Videos de la Rutina</h6>
+                <div class="list-group list-group-flush">
+                    {% for routine_video in routine.get_videos_ordered %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-2">{{ routine_video.order }}</span>
+                            <div>
+                                <h6 class="mb-1 small">{{ routine_video.video.title }}</h6>
+                                <small class="text-muted">{{ routine_video.video.get_duration_formatted }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateFromInput = document.getElementById('date_from');
+    const dateToInput = document.getElementById('date_to');
+    const customDateInput = document.getElementById('custom_date');
+    const selectedDatesDiv = document.getElementById('selected-dates');
+    const datesList = document.getElementById('dates-list');
+    const selectedDates = new Set();
+    
+    // Función para generar fechas por días de la semana
+    window.generateWeeklyDates = function() {
+        const fromDate = dateFromInput.value;
+        const toDate = dateToInput.value;
+        
+        if (!fromDate || !toDate) {
+            alert('Por favor selecciona las fechas de inicio y fin.');
+            return;
+        }
+        
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+        
+        if (from > to) {
+            alert('La fecha de inicio debe ser anterior a la fecha de fin.');
+            return;
+        }
+        
+        // Obtener días seleccionados
+        const selectedDays = [];
+        const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        for (let i = 0; i < 7; i++) {
+            const checkbox = document.getElementById(`day_${dayNames[i]}`);
+            if (checkbox && checkbox.checked) {
+                selectedDays.push(parseInt(checkbox.value));
+            }
+        }
+        
+        if (selectedDays.length === 0) {
+            alert('Por favor selecciona al menos un día de la semana.');
+            return;
+        }
+        
+        console.log('Días seleccionados:', selectedDays);
+        console.log('Rango de fechas:', fromDate, 'a', toDate);
+        
+        const currentDate = new Date(from);
+        let generatedCount = 0;
+        
+        while (currentDate <= to) {
+            const dayOfWeek = currentDate.getDay();
+            if (selectedDays.includes(dayOfWeek)) {
+                const dateStr = currentDate.toISOString().split('T')[0];
+                selectedDates.add(dateStr);
+                generatedCount++;
+                console.log('Fecha generada:', dateStr, 'Día:', dayOfWeek);
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        console.log('Total fechas generadas:', generatedCount);
+        updateDatesList();
+        
+        if (generatedCount === 0) {
+            alert('No se encontraron fechas en el rango seleccionado para los días elegidos.');
+        } else {
+            alert(`Se generaron ${generatedCount} fechas.`);
+        }
+    };
+    
+    // Función para agregar fecha personalizada
+    window.addCustomDate = function() {
+        const customDate = customDateInput.value;
+        if (customDate) {
+            selectedDates.add(customDate);
+            updateDatesList();
+            customDateInput.value = ''; // Limpiar el input
+        } else {
+            alert('Por favor selecciona una fecha.');
+        }
+    };
+    
+    // Función para actualizar la lista de fechas
+    function updateDatesList() {
+        if (selectedDates.size > 0) {
+            selectedDatesDiv.style.display = 'block';
+            datesList.innerHTML = '';
+            
+            // Ordenar fechas
+            const sortedDates = Array.from(selectedDates).sort();
+            
+            sortedDates.forEach(dateStr => {
+                const date = new Date(dateStr);
+                const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                const dayName = dayNames[date.getDay()];
+                
+                const listItem = document.createElement('div');
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                listItem.innerHTML = `
+                    <div>
+                        <span class="fw-bold">${date.toLocaleDateString('es-ES')}</span>
+                        <small class="text-muted ms-2">(${dayName})</small>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeDate('${dateStr}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <input type="hidden" name="dates" value="${dateStr}">
+                    </div>
+                `;
+                datesList.appendChild(listItem);
+            });
+        } else {
+            selectedDatesDiv.style.display = 'none';
+        }
+    }
+    
+    // Función para remover fecha
+    window.removeDate = function(dateStr) {
+        selectedDates.delete(dateStr);
+        updateDatesList();
+    };
+    
+    // Funciones de conveniencia para selección de días
+    window.selectWeekdays = function() {
+        clearDays();
+        document.getElementById('day_monday').checked = true;
+        document.getElementById('day_tuesday').checked = true;
+        document.getElementById('day_wednesday').checked = true;
+        document.getElementById('day_thursday').checked = true;
+        document.getElementById('day_friday').checked = true;
+    };
+    
+    window.selectWeekends = function() {
+        clearDays();
+        document.getElementById('day_saturday').checked = true;
+        document.getElementById('day_sunday').checked = true;
+    };
+    
+    window.clearDays = function() {
+        const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        dayNames.forEach(day => {
+            document.getElementById(`day_${day}`).checked = false;
+        });
+    };
+    
+    // Validación del formulario
+    document.querySelector('form').addEventListener('submit', function(e) {
+        console.log('Validando formulario...');
+        console.log('Fechas seleccionadas:', selectedDates.size);
+        console.log('Grupos seleccionados:', document.querySelectorAll('input[name="groups"]:checked').length);
+        
+        if (selectedDates.size === 0) {
+            e.preventDefault();
+            alert('Debes seleccionar al menos una fecha. Haz clic en "Generar Fechas por Días de la Semana" después de seleccionar los días.');
+            return;
+        }
+        
+        const selectedGroups = document.querySelectorAll('input[name="groups"]:checked');
+        if (selectedGroups.length === 0) {
+            e.preventDefault();
+            alert('Debes seleccionar al menos un grupo.');
+            return;
+        }
+    });
+    
+    // Establecer fechas por defecto (próximas 4 semanas)
+    const today = new Date();
+    const nextMonth = new Date(today);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    
+    dateFromInput.value = today.toISOString().split('T')[0];
+    dateToInput.value = nextMonth.toISOString().split('T')[0];
+});
+</script>
+{% endblock %} 

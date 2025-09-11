@@ -116,6 +116,10 @@
                                            class="btn btn-sm btn-outline-primary" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        <a href="{% url 'admin_panel:replicate_routine' routine.id %}" 
+                                           class="btn btn-sm btn-outline-success" title="Replicar">
+                                            <i class="fas fa-copy"></i>
+                                        </a>
                                         <a href="{% url 'admin_panel:delete_routine' routine.id %}" 
                                            class="btn btn-sm btn-outline-danger" title="Eliminar">
                                             <i class="fas fa-trash"></i>
