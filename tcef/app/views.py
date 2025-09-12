@@ -15,6 +15,8 @@ import calendar
 from .forms import UserRegistrationForm, CustomLoginForm
 from .models import UserProfile, ExerciseLog, WeeklyRoutine, PasswordResetRequest
 from admin_panel.models import CustomRoutine, UserGroupMembership
+from .forms import BodyMeasurementsForm
+from .models import BodyMeasurements
 
 def home(request):
     """Vista principal de la landing page tipo blog"""
@@ -436,3 +438,18 @@ def under_construction(request):
 def test_404(request):
     """Vista de prueba para la página 404"""
     return render(request, 'app/404.html', status=404)
+
+@login_required
+def add_body_measurements(request):
+    if request.method == 'POST':
+        form = BodyMeasurementsForm(request.POST)
+        if form.is_valid():
+            measurement = form.save(commit=False)
+            measurement.user = request.user
+            measurement.save()
+            messages.success(request, 'Medidas registradas correctamente!')
+            return redirect('app:exercise_stats')
+    else:
+        form = BodyMeasurementsForm(initial={'measurement_date': timezone.now().date()})
+    
+    return render(request, 'app/add_measurements.html', {'form': form})

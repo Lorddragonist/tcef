@@ -57,53 +57,9 @@
                             </h5>
                             
                             <div class="account-status">
-                                <!-- Estado de confirmación de email -->
-                                <div class="status-item">
-                                    <div class="status-header">
-                                        <i class="fas fa-envelope me-2"></i>
-                                        <span>Confirmación de Email</span>
-                                    </div>
-                                    <div class="status-value">
-                                        {% if profile.email_confirmed %}
-                                            <span class="badge bg-success">
-                                                <i class="fas fa-check me-1"></i>Confirmado
-                                            </span>
-                                        {% else %}
-                                            <span class="badge bg-warning">
-                                                <i class="fas fa-exclamation-triangle me-1"></i>Pendiente
-                                            </span>
-                                            <div class="mt-2">
-                                                <small class="text-muted">
-                                                    Revisa tu email para confirmar tu cuenta
-                                                </small>
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
                                 
-                                <!-- Estado de términos y condiciones -->
-                                <div class="status-item">
-                                    <div class="status-header">
-                                        <i class="fas fa-file-contract me-2"></i>
-                                        <span>Términos y Condiciones</span>
-                                    </div>
-                                    <div class="status-value">
-                                        {% if profile.terms_accepted %}
-                                            <span class="badge bg-success">
-                                                <i class="fas fa-check me-1"></i>Aceptados
-                                            </span>
-                                            <div class="mt-2">
-                                                <small class="text-muted">
-                                                    Aceptados el {{ profile.terms_accepted_date|date:"d/m/Y H:i" }}
-                                                </small>
-                                            </div>
-                                        {% else %}
-                                            <span class="badge bg-danger">
-                                                <i class="fas fa-times me-1"></i>No Aceptados
-                                            </span>
-                                        {% endif %}
-                                    </div>
-                                </div>
+                                
+                                
                                 
                                 <!-- Última actividad -->
                                 <div class="status-item">

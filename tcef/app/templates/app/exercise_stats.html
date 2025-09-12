@@ -1,0 +1,173 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Estadísticas - TCEF{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'app/css/exercise_calendar.css' %}">
+<style>
+    .stats-container {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .stats-header {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-component {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .stats-component:hover {
+        transform: translateY(-5px);
+    }
+    
+    .component-title {
+        color: var(--primary-color);
+        font-weight: 700;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 0.5rem;
+    }
+    
+    .placeholder-component {
+        text-align: center;
+        color: var(--secondary-color);
+        padding: 3rem 1rem;
+        border: 2px dashed var(--border-color);
+        border-radius: 10px;
+    }
+
+    .row .col-md-4 {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: flex-end;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+    <!-- Header de estadísticas -->
+    <div class="stats-header">
+        
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="stats-title">
+                    <i class="fas fa-chart-bar me-2"></i>Estadísticas de Ejercicios
+                </h2>
+                <p class="text-muted">Análisis detallado de tu progreso y rendimiento</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'app:exercise_calendar' %}" class="btn btn-primary me-2">
+                    <i class="fas fa-calendar-alt me-1"></i>Volver al Calendario
+                </a>
+                <a href="{% url 'app:add_measurements' %}" class="btn btn-success">
+                    <i class="fas fa-ruler me-1"></i>Registrar Medidas
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid de componentes de estadísticas -->
+    <div class="stats-grid">
+        
+        <!-- Componente 1: Resumen General -->
+        <div class="stats-component">
+            <h4 class="component-title">
+                <i class="fas fa-tachometer-alt me-2"></i>Resumen General
+            </h4>
+            <!-- Aquí irá el componente de resumen -->
+            <div class="placeholder-component">
+                <i class="fas fa-cog fa-2x mb-3"></i>
+                <p>Componente de Resumen General</p>
+                <small>Próximamente...</small>
+            </div>
+        </div>
+
+        <!-- Componente 2: Progreso Mensual -->
+        <div class="stats-component">
+            <h4 class="component-title">
+                <i class="fas fa-calendar-check me-2"></i>Progreso Mensual
+            </h4>
+            <!-- Aquí irá el componente de progreso mensual -->
+            <div class="placeholder-component">
+                <i class="fas fa-chart-line fa-2x mb-3"></i>
+                <p>Gráfico de Progreso Mensual</p>
+                <small>Próximamente...</small>
+            </div>
+        </div>
+
+        <!-- Componente 3: Distribución por Dificultad -->
+        <div class="stats-component">
+            <h4 class="component-title">
+                <i class="fas fa-layer-group me-2"></i>Por Dificultad
+            </h4>
+            <!-- Aquí irá el componente de distribución por dificultad -->
+            <div class="placeholder-component">
+                <i class="fas fa-pie-chart fa-2x mb-3"></i>
+                <p>Gráfico de Dificultades</p>
+                <small>Próximamente...</small>
+            </div>
+        </div>
+
+        <!-- Componente 4: Racha de Ejercicios -->
+        <div class="stats-component">
+            <h4 class="component-title">
+                <i class="fas fa-fire me-2"></i>Racha de Ejercicios
+            </h4>
+            <!-- Aquí irá el componente de racha -->
+            <div class="placeholder-component">
+                <i class="fas fa-trophy fa-2x mb-3"></i>
+                <p>Análisis de Rachas</p>
+                <small>Próximamente...</small>
+            </div>
+        </div>
+
+        <!-- Componente 5: Actividad por Día de la Semana -->
+        <div class="stats-component">
+            <h4 class="component-title">
+                <i class="fas fa-calendar-week me-2"></i>Actividad Semanal
+            </h4>
+            <!-- Aquí irá el componente de actividad semanal -->
+            <div class="placeholder-component">
+                <i class="fas fa-chart-bar fa-2x mb-3"></i>
+                <p>Gráfico de Actividad Semanal</p>
+                <small>Próximamente...</small>
+            </div>
+        </div>
+
+        <!-- Componente 6: Metas y Objetivos -->
+        <div class="stats-component">
+            <h4 class="component-title">
+                <i class="fas fa-bullseye me-2"></i>Metas y Objetivos
+            </h4>
+            <!-- Aquí irá el componente de metas -->
+            <div class="placeholder-component">
+                <i class="fas fa-target fa-2x mb-3"></i>
+                <p>Configuración de Metas</p>
+                <small>Próximamente...</small>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

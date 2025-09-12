@@ -1,0 +1,80 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Registrar Medidas - TCEF{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-ruler me-2"></i>Registrar Medidas Corporales</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.measurement_date.id_for_label }}" class="form-label">
+                                    {{ form.measurement_date.label }}
+                                </label>
+                                {{ form.measurement_date }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.age.id_for_label }}" class="form-label">
+                                    {{ form.age.label }}
+                                </label>
+                                {{ form.age }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.weight.id_for_label }}" class="form-label">
+                                    {{ form.weight.label }}
+                                </label>
+                                {{ form.weight }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.height.id_for_label }}" class="form-label">
+                                    {{ form.height.label }}
+                                </label>
+                                {{ form.height }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.waist.id_for_label }}" class="form-label">
+                                    {{ form.waist.label }}
+                                </label>
+                                {{ form.waist }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.hip.id_for_label }}" class="form-label">
+                                    {{ form.hip.label }}
+                                </label>
+                                {{ form.hip }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.chest.id_for_label }}" class="form-label">
+                                    {{ form.chest.label }}
+                                </label>
+                                {{ form.chest }}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'app:exercise_stats' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Guardar Medidas
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

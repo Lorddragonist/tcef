@@ -134,3 +134,62 @@ class CustomLoginForm(forms.Form):
         if not password:
             raise forms.ValidationError('Este campo es requerido.')
         return password 
+    
+
+from .models import BodyMeasurements
+
+class BodyMeasurementsForm(forms.ModelForm):
+    class Meta:
+        model = BodyMeasurements
+        fields = ['measurement_date', 'weight', 'height', 'age', 'waist', 'hip', 'chest']
+        widgets = {
+            'measurement_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'weight': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.1',
+                'min': '0',
+                'placeholder': 'Ej: 70.5'
+            }),
+            'height': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.1',
+                'min': '0',
+                'placeholder': 'Ej: 175.0'
+            }),
+            'age': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+                'max': '120',
+                'placeholder': 'Ej: 25'
+            }),
+            'waist': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.1',
+                'min': '0',
+                'placeholder': 'Ej: 80.0'
+            }),
+            'hip': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.1',
+                'min': '0',
+                'placeholder': 'Ej: 95.0'
+            }),
+            'chest': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.1',
+                'min': '0',
+                'placeholder': 'Ej: 100.0'
+            }),
+        }
+        labels = {
+            'measurement_date': 'Fecha de Medición',
+            'weight': 'Peso (kg)',
+            'height': 'Altura (cm)',
+            'age': 'Edad (años)',
+            'waist': 'Cintura (cm)',
+            'hip': 'Cadera (cm)',
+            'chest': 'Pecho (cm)',
+        }

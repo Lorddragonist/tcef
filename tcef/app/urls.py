@@ -23,4 +23,7 @@ urlpatterns = [
     # Páginas de error y mantenimiento
     path('under-construction/', views.under_construction, name='under_construction'),
     path('test-404/', views.test_404, name='test_404'),  # Para probar la página 404
+    
+    # Medidas físicas
+    path('add-measurements/', views.add_body_measurements, name='add_measurements'),
 ] 
