@@ -64,17 +64,19 @@
 }
 
 .stats-summary .row {
-  align-items: stretch; /* Hace que todas las columnas tengan la misma altura */
+  /*align-items: stretch; /* Hace que todas las columnas tengan la misma altura */
+  height: 136px !important;
 }
 
 .stats-summary .col-md-3 {
   display: flex;
   margin-bottom: 1rem;
-  height: 110px; /* Altura fija para todas las columnas */
+  height: 136px; /* Altura fija para todas las columnas */
 }
 
-.stat-card{
+.col-md-3 .stat-card{
   padding: 10px;
+  height: 136px;
 }
 
 /* Responsividad para pantallas medianas */
@@ -84,7 +86,7 @@
     margin-bottom: 0.75rem;
   }
 
-  .stat-card {
+  .col-md-3 .stat-card {
     height: 100px;
     min-height: 100px;
     padding: 10px;
@@ -96,12 +98,12 @@
     font-size: 1.2rem;
   }
 
-  .stat-number {
-    font-size: 1.5rem;
+  .stat-content .stat-number {
+    font-size: 24px;
   }
 
-  .stat-label {
-    font-size: 0.8rem;
+  .stat-content .stat-label {
+    font-size: 12px;
   }
 }
 
@@ -112,23 +114,23 @@
     margin-bottom: 0.5rem;
   }
 
-  .stat-card {
+  .stat-content .stat-card {
     height: 90px;
     min-height: 90px;
     padding: 0.75rem;
   }
 
-  .stat-icon {
+  .stat-content .stat-icon {
     width: 45px;
     height: 45px;
     font-size: 1rem;
   }
 
-  .stat-number {
+  .stat-content .stat-number {
     font-size: 1.3rem;
   }
 
-  .stat-label {
+  .stat-content .stat-label {
     font-size: 0.75rem;
   }
 }
@@ -487,14 +489,32 @@
     padding: 1.5rem;
   }
 
-  .calendar-title {
-    font-size: 1.5rem;
+  .col-md-4 .calendar-title {
+    width: 100%;
+    font-size: 1.2rem;
     text-align: center;
     margin-bottom: 1rem;
   }
 
-  .month-navigation {
+  .calendar-header .row{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .row .col-md-4{
+    align-items: center !important;
+    align-content: center !important;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+
+  }
+
+  .col-md-4 .month-navigation {
     margin-bottom: 1rem;
+    width: 100%;
   }
 
   .current-month {
@@ -559,8 +579,21 @@
     padding: 1rem;
   }
 
-  .calendar-title {
+  .col-md-4 .calendar-title {
     font-size: 1.3rem;
+    width: 100%;
+    align-items: center;
+    align-content: center;
+  }
+
+  .row .col-md-4{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    text-align: center !important;
+    align-items: center !important;
+    align-content: center !important;
   }
 
   .current-month {

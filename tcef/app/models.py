@@ -81,8 +81,41 @@ class ExerciseLog(models.Model):
         )
     
     @classmethod
-    def get_user_stats(cls, user):
+    def get_user_stats(cls, user, year=None, month=None):
         """Obtiene estadísticas del usuario"""
+        from datetime import datetime, date
+        import calendar
+        
+        # Si no se especifica año/mes, usar el actual
+        if year is None or month is None:
+            now = datetime.now()
+            year = now.year
+            month = now.month
+            
+        # Total de ejercicios del mes que se está mostrando
+        total_exercises_this_month = cls.objects.filter(
+            user=user,
+            exercise_date__year=year,
+            exercise_date__month=month
+        ).count()
+        
+        # Calcular días laborales (lunes a viernes) del mes
+        # Obtener el último día del mes
+        last_day = calendar.monthrange(year, month)[1]
+        
+        weekdays_count = 0
+        for day in range(1, last_day + 1):
+            current_day = date(year, month, day)
+            # weekday() devuelve 0 para lunes, 1 para martes, etc.
+            if current_day.weekday() < 5:  # 0-4 son lunes a viernes
+                weekdays_count += 1
+                
+        # Calcular el porcentaje de días laborales completados
+        if weekdays_count > 0:
+            progress_percentage = (total_exercises_this_month / weekdays_count) * 100
+        else:
+            progress_percentage = 0
+        
         total_exercises = cls.objects.filter(user=user).count()
         current_streak = cls.get_current_week_streak(user)
         longest_streak = cls.get_longest_week_streak(user)
@@ -91,6 +124,9 @@ class ExerciseLog(models.Model):
             'total_exercises': total_exercises,
             'current_streak': current_streak,
             'longest_streak': longest_streak,
+            'total_exercises_this_month': total_exercises_this_month,
+            'weekdays_count': weekdays_count,
+            'progress_percentage': progress_percentage,
         }
     
     @classmethod

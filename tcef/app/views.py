@@ -424,3 +424,15 @@ def custom_logout(request):
     
     # Mostrar página de confirmación
     return render(request, 'app/logout.html')
+
+def custom_404(request, exception=None):
+    """Vista personalizada para error 404"""
+    return render(request, 'app/404.html', status=404)
+
+def under_construction(request):
+    """Vista para páginas en construcción"""
+    return render(request, 'app/under_construction.html')
+
+def test_404(request):
+    """Vista de prueba para la página 404"""
+    return render(request, 'app/404.html', status=404)

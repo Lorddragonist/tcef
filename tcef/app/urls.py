@@ -19,4 +19,8 @@ urlpatterns = [
     
     # URL de logout personalizado
     path('logout/', views.custom_logout, name='custom_logout'),
+    
+    # Páginas de error y mantenimiento
+    path('under-construction/', views.under_construction, name='under_construction'),
+    path('test-404/', views.test_404, name='test_404'),  # Para probar la página 404
 ] 

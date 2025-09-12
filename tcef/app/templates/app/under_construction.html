@@ -1,0 +1,162 @@
+{% extends 'app/base.html' %}
+
+{% block title %}En Construcción - TCEF{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10 col-sm-12">
+            <div class="text-center py-5">
+                <!-- Icono de construcción -->
+                <div class="construction-icon mb-4">
+                    <i class="fas fa-hard-hat" style="font-size: 8rem; color: #ffc107; opacity: 0.8;"></i>
+                </div>
+                
+                <!-- Título principal -->
+                <h1 class="display-1 fw-bold mb-3" style="color: #ffc107;">��</h1>
+                <h2 class="h3 mb-4" style="color: #b3a5a5;">Estamos Trabajando en Esta Sección</h2>
+                
+                <!-- Mensaje descriptivo -->
+                <div class="alert alert-info border-0 mb-4" style="background-color: #d1ecf1; color: #0c5460;">
+                    <i class="fas fa-tools me-2"></i>
+                    <strong>¡Próximamente!</strong> Esta funcionalidad está en desarrollo y estará disponible pronto.
+                </div>
+                
+                <!-- Descripción -->
+                <p class="lead text-muted mb-4">
+                    Nuestro equipo está trabajando duro para traerte nuevas funcionalidades 
+                    y mejorar tu experiencia en TCEF. ¡Mantente atento a las actualizaciones!
+                </p>
+                
+                <!-- Información del progreso -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-start">
+                                <h6 class="card-title">
+                                    <i class="fas fa-cog me-2" style="color: #6f42c1;"></i>
+                                    ¿Qué estamos haciendo?
+                                </h6>
+                                <ul class="list-unstyled small">
+                                    <li><i class="fas fa-check text-success me-2"></i>Desarrollando nuevas funcionalidades</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Mejorando la experiencia de usuario</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Probando y optimizando</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Preparando el lanzamiento</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-start">
+                                <h6 class="card-title">
+                                    <i class="fas fa-bell me-2" style="color: #28a745;"></i>
+                                    ¿Quieres ser notificado?
+                                </h6>
+                                <p class="small text-muted mb-2">
+                                    Te avisaremos cuando esta funcionalidad esté lista.
+                                </p>
+                                <button class="btn btn-sm btn-outline-success" onclick="notifyMe()">
+                                    <i class="fas fa-bell me-1"></i>Notificarme
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Barra de progreso simulada -->
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2">Progreso del Desarrollo</h6>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 75%; background-color: #ffc107;" 
+                             aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                    <small class="text-muted">75% completado</small>
+                </div>
+                
+                <!-- Botones de acción -->
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <a href="{% url 'app:home' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home me-2"></i>Ir al Inicio
+                    </a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'app:exercise_calendar' %}" class="btn btn-success btn-lg">
+                        <i class="fas fa-calendar-alt me-2"></i>Mi Calendario
+                    </a>
+                    <a href="{% url 'app:profile' %}" class="btn btn-info btn-lg">
+                        <i class="fas fa-user me-2"></i>Mi Perfil
+                    </a>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                    </a>
+                    {% endif %}
+                    <button onclick="history.back()" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>Volver Atrás
+                    </button>
+                </div>
+                
+                <!-- Información adicional -->
+                <div class="mt-5">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        En Construcción | TCEF
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.construction-icon {
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.progress-bar-animated {
+    animation: progress-bar-stripes 1s linear infinite;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function notifyMe() {
+    if (Notification.permission === "granted") {
+        new Notification("TCEF - Notificación", {
+            body: "Te notificaremos cuando esta funcionalidad esté lista.",
+            icon: "/static/app/img/logo.png"
+        });
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(function (permission) {
+            if (permission === "granted") {
+                new Notification("TCEF - Notificación", {
+                    body: "Te notificaremos cuando esta funcionalidad esté lista.",
+                    icon: "/static/app/img/logo.png"
+                });
+            }
+        });
+    } else {
+        alert("Las notificaciones están deshabilitadas en tu navegador.");
+    }
+}
+</script>
+{% endblock %} 

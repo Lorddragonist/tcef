@@ -1,0 +1,121 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Página No Encontrada - TCEF{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10 col-sm-12">
+            <div class="text-center py-5">
+                <!-- Icono de error 404 -->
+                <div class="error-icon mb-4">
+                    <i class="fas fa-search" style="font-size: 8rem; color: #dc3545; opacity: 0.3;"></i>
+                </div>
+                
+                <!-- Título principal -->
+                <h1 class="display-1 fw-bold text-danger mb-3">404</h1>
+                <h2 class="h3 mb-4" style="color: #b3a5a5;">Página No Encontrada</h2>
+                
+                <!-- Mensaje descriptivo -->
+                <div class="alert alert-warning border-0 mb-4" style="background-color: #fff3cd; color: #856404;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>¡Ups!</strong> La página que buscas no existe o ha sido movida.
+                </div>
+                
+                <!-- Descripción -->
+                <p class="lead text-muted mb-4">
+                    Es posible que la URL esté mal escrita, la página haya sido eliminada, 
+                    o no tengas permisos para acceder a este contenido.
+                </p>
+                
+                <!-- Sugerencias -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-start">
+                                <h6 class="card-title">
+                                    <i class="fas fa-lightbulb me-2" style="color: #ffc107;"></i>
+                                    ¿Qué puedes hacer?
+                                </h6>
+                                <ul class="list-unstyled small">
+                                    <li><i class="fas fa-check text-success me-2"></i>Verificar la URL</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Volver a la página anterior</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Ir al inicio</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Contactar soporte</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-start">
+                                <h6 class="card-title">
+                                    <i class="fas fa-question-circle me-2" style="color: #17a2b8;"></i>
+                                    ¿Necesitas ayuda?
+                                </h6>
+                                <p class="small text-muted mb-2">
+                                    Si crees que esto es un error, contacta con nuestro equipo de soporte.
+                                </p>
+                                <a href="mailto:soporte@tcef.com" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-envelope me-1"></i>Contactar Soporte
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botones de acción -->
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <a href="{% url 'app:home' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home me-2"></i>Ir al Inicio
+                    </a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'app:exercise_calendar' %}" class="btn btn-success btn-lg">
+                        <i class="fas fa-calendar-alt me-2"></i>Mi Calendario
+                    </a>
+                    <a href="{% url 'app:profile' %}" class="btn btn-info btn-lg">
+                        <i class="fas fa-user me-2"></i>Mi Perfil
+                    </a>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                    </a>
+                    {% endif %}
+                    <button onclick="history.back()" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>Volver Atrás
+                    </button>
+                </div>
+                
+                <!-- Información adicional -->
+                <div class="mt-5">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Error 404 - Página no encontrada | TCEF
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.error-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %} 

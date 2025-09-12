@@ -32,3 +32,6 @@ urlpatterns = [
         success_url='/profile/'
     ), name='password_change'),
 ]
+
+# Solo agregar handlers en producción
+# handler404 = 'app.views.custom_404'

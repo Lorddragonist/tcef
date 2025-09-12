@@ -49,8 +49,8 @@
                         <i class="fas fa-dumbbell"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-number" id="totalExercises">{{ user_stats.total_exercises }}</div>
-                        <div class="stat-label">Total Ejercicios</div>
+                        <div class="stat-number" id="totalExercises">{{ user_stats.total_exercises_this_month  }}</div>
+                        <div class="stat-label">Rutinas completadas</div>
                     </div>
                 </div>
             </div>
@@ -83,8 +83,8 @@
                     </div>
                     <div class="stat-content">
                         <div class="stat-number" id="monthProgress">
-                            {% if user_stats.total_exercises > 0 %}
-                                {{ user_stats.total_exercises|floatformat:0 }}%
+                            {% if user_stats.weekdays_count > 0 %}
+                                {{ user_stats.progress_percentage | floatformat:0 }}%
                             {% else %}
                                 0%
                             {% endif %}
