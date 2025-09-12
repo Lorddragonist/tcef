@@ -1,203 +1,234 @@
-{% extends 'app/base.html' %}
-{% load static %}
-
-{% block title %}TCEF - TuCuerpoEnFormaCion{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'app/css/home.css' %}">
-{% endblock %}
-
-{% block content %}
+{% extends 'app/base.html' %} {% load static %} {% block title %}TCEF -
+TuCuerpoEnFormaCion{% endblock %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'app/css/home.css' %}" />
+{% endblock %} {% block content %}
 <!-- Hero Section -->
 <section class="hero-section">
-    <div class="container">
-        <h1 class="main-title">TuCuerpoEnFormaCion</h1>
-        <p>Es un programa de entrenamiento diseñado para ayudarte a crear el hábito del ejercicio de una forma práctica, motivadora y progresiva.
-
-            Mientras entrenas y construyes ese hábito, tu cuerpo se va acondicionando: ganarás fuerza, estabilidad, equilibrio y salud. 💪💖</p>
-        {% if not user.is_authenticated %}
-            <a href="{% url 'app:register' %}" class="cta-button">Comenzar Ahora</a>
-        {% else %}
-            <a href="{% url 'app:exercise_calendar' %}" class="cta-button">Ver Mi Calendario</a>
-        {% endif %}
-    </div>
+  <div class="container">
+    <h1 class="main-title">TuCuerpoEnFormaCion</h1>
+    <p>
+      Es un programa de entrenamiento diseñado para ayudarte a crear el hábito
+      del ejercicio de una forma práctica, motivadora y progresiva. Mientras
+      entrenas y construyes ese hábito, tu cuerpo se va acondicionando: ganarás
+      fuerza, estabilidad, equilibrio y salud. 💪💖
+    </p>
+    {% if not user.is_authenticated %}
+    <a href="{% url 'app:register' %}" class="cta-button">Comenzar Ahora</a>
+    {% else %}
+    <a href="{% url 'app:exercise_calendar' %}" class="cta-button"
+      >Ver Mi Calendario</a
+    >
+    {% endif %}
+  </div>
 </section>
 
 <!-- About Section -->
 <section class="section">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto text-center">
-                <h2 class="mb-4">Acerca de mí</h2>
-                <img src="https://tcefbucket.s3.us-east-2.amazonaws.com/Static+Images/Derly.png" alt="Derly González - Fisioterapeuta y Entrenadora Personal" class="img-fluid rounded-circle mb-4" style="max-width: 200px; height: auto;">
-                <p class="lead">Hola, soy
-                    DERLY GONZÁLEZ,
-                    fisioterapeuta, entrenadora personal y coach en cambio de hábitos.
-                    
-                    Después de más de 5 años acompañando a personas en su proceso de transformar su salud, descubrí que el verdadero cambio no empieza en el cuerpo… empieza en la disciplina diaria y en el amor propio.</p>
-            </div>
-        </div>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto text-center">
+        <h2 class="mb-4">Acerca de mí</h2>
+        <img
+          src="https://tcefbucket.s3.us-east-2.amazonaws.com/Static+Images/Derly.png"
+          alt="Derly González - Fisioterapeuta y Entrenadora Personal"
+          class="img-fluid rounded-circle mb-4"
+          style="max-width: 200px; height: auto"
+        />
+        <p class="lead">
+          Hola, soy DERLY GONZÁLEZ, fisioterapeuta, entrenadora personal y coach
+          en cambio de hábitos. Después de más de 5 años acompañando a personas
+          en su proceso de transformar su salud, descubrí que el verdadero
+          cambio no empieza en el cuerpo… empieza en la disciplina diaria y en
+          el amor propio.
+        </p>
+      </div>
     </div>
+  </div>
 </section>
 
 <!-- Features Section -->
 <section class="section">
-    <div class="container">
-        <h2 class="text-center mb-5">Características Principales</h2>
-        <div class="row">
-            <div class="col-lg-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-dumbbell"></i>
-                    </div>
-                    <h4>Plan de entrenamiento</h4>
-                    <p>Sigue un plan de entrenamiento diseñado para ayudarte a crear el hábito del ejercicio, ganar fuerza y sentirte con más energía cada día.</p>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
-                    <h4>Seguimiento de Progreso</h4>
-                    <p>Suma tus entrenamientos, rompe tus propias rachas y celebra cada logro con el calendario y las estadísticas de progreso.</p>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <h4>Seguimiento composición corporal</h4>
-                    <p>Registra tus medidas para evaluar de manera objetiva tus progresos: asegúrate de mantener o aumentar tu masa muscular mientras avanzas hacia un mejor equilibrio corporal.</p>
-                </div>
-            </div>
+  <div class="container">
+    <h2 class="text-center mb-5">Características Principales</h2>
+    <div class="row">
+      <div class="col-lg-4">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-dumbbell"></i>
+          </div>
+          <h4>Plan de entrenamiento</h4>
+          <p>
+            Sigue un plan de entrenamiento diseñado para ayudarte a crear el
+            hábito del ejercicio, ganar fuerza y sentirte con más energía cada
+            día.
+          </p>
         </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-calendar-alt"></i>
+          </div>
+          <h4>Seguimiento de Progreso</h4>
+          <p>
+            Suma tus entrenamientos, rompe tus propias rachas y celebra cada
+            logro con el calendario y las estadísticas de progreso.
+          </p>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h4>Seguimiento composición corporal</h4>
+          <p>
+            Registra tus medidas para evaluar de manera objetiva tus progresos:
+            asegúrate de mantener o aumentar tu masa muscular mientras avanzas
+            hacia un mejor equilibrio corporal.
+          </p>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
 
 <!-- Stats Section -->
 <section class="stats-section">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <span class="stat-number">1000+</span>
-                    <p>Usuarios Activos</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <span class="stat-number">50+</span>
-                    <p>Rutinas Disponibles</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <span class="stat-number">95%</span>
-                    <p>Satisfacción</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <span class="stat-number">24/7</span>
-                    <p>Soporte</p>
-                </div>
-            </div>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="stat-item">
+          <span class="stat-number">1000+</span>
+          <p>Asesorados en los últimos 3 años</p>
         </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-item">
+          <span class="stat-number">50+</span>
+          <p>Rutinas Disponibles</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-item">
+          <span class="stat-number">24/7</span>
+          <p>Soporte</p>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
 
 <!-- Blog Section -->
 <section class="section">
-    <div class="container">
-        <h2 class="text-center mb-5">Últimos Artículos</h2>
-        <div class="row">
-            <div class="col-lg-4">
-                <div class="blog-card">
-                    <div class="blog-image">
-                        <i class="fas fa-running"></i>
-                    </div>
-                    <div class="blog-content">
-                        <h5>Lorem Ipsum Dolor Sit</h5>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                        <small class="text-muted">Publicado hace 2 días</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="blog-card">
-                    <div class="blog-image">
-                        <i class="fas fa-apple-alt"></i>
-                    </div>
-                    <div class="blog-content">
-                        <h5>Consectetur Adipiscing Elit</h5>
-                        <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                        <small class="text-muted">Publicado hace 5 días</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="blog-card">
-                    <div class="blog-image">
-                        <i class="fas fa-heart"></i>
-                    </div>
-                    <div class="blog-content">
-                        <h5>Sed Do Eiusmod Tempor</h5>
-                        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-                        <small class="text-muted">Publicado hace 1 semana</small>
-                    </div>
-                </div>
-            </div>
+  <div class="container">
+    <h2 class="text-center mb-5">Otros Servicios</h2>
+    <div class="row">
+      <div class="col-lg-4">
+        <div class="blog-card">
+          <div class="blog-image">
+            <i class="fas fa-running"></i>
+          </div>
+          <div class="blog-content">
+            <h5>Ejercicio Hipopresivo</h5>
+            <p>
+                Ejercicios posturales y respiratorios que fortalecen tu abdomen y piso pélvico.
+            </p>
+            <p>👉 Taller online, clases personalizadas y reto de 30 días.</p>
+            
+          </div>
         </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="blog-card">
+          <div class="blog-image">
+            <i class="fas fa-apple-alt"></i>
+          </div>
+          <div class="blog-content">
+            <h5>Alimentación Saludable</h5>
+            <p>Aprende a comer sanamente sin dietas restrictivas.</p>
+
+            <p>👉 Talleres de alimentación y reto de 30 días.</p>
+            
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="blog-card">
+          <div class="blog-image">
+            <i class="fas fa-heart"></i>
+          </div>
+          <div class="blog-content">
+            <h5>Blog Semanal</h5>
+            <p>Un espacio para motivarte, aprender y cuidar tu cuerpo.</p>
+            <p>👉 Artículos nuevos cada semana.</p>
+            
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
 
 <!-- Testimonials Section -->
 <section class="section">
-    <div class="container">
-        <h2 class="text-center mb-5">Lo Que Dicen Nuestros Usuarios</h2>
-        <div class="row">
-            <div class="col-lg-4">
-                <div class="testimonial-card">
-                    <div class="testimonial-text">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                    </div>
-                    <div class="testimonial-author">- María González</div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="testimonial-card">
-                    <div class="testimonial-text">
-                        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                    </div>
-                    <div class="testimonial-author">- Carlos Rodríguez</div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="testimonial-card">
-                    <div class="testimonial-text">
-                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                    </div>
-                    <div class="testimonial-author">- Ana Martínez</div>
-                </div>
-            </div>
+  <div class="container">
+    <h2 class="text-center mb-5">Lo Que Dicen Nuestros Usuarios</h2>
+    <div class="row">
+      <div class="col-lg-4">
+        <div class="testimonial-card">
+          <div class="testimonial-text">
+            Derly, mi segunda semana de septiembre completa y no sabes lo agradecida que estoy con la vida de haber retomado, mi salud física y mental te lo agradecen 🙏🏼💪🏼
+          </div>
+          <div class="testimonial-author">- Karen G.</div>
         </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="testimonial-card">
+          <div class="testimonial-text">
+            Al terminar he sentido mayor exigencia a mis músculos, al ritmo cardíaco, a la eliminación de agua, más dolores musculares. Pero para mí lo más importante es la satisfacción, de poder exigirme y lograrlo a mis 62 años.
+          </div>
+          <div class="testimonial-author">- Maritza C.</div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="testimonial-card">
+          <div class="testimonial-text">
+            Gracias por todo tu acompañamiento. Aún sigo en ese reto de consolidar mi rutina de ejercicios priorizándolo antes que cualquier cosa.
+          </div>
+          <div class="testimonial-author">- Marcela V.</div>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
 
 <!-- Final CTA Section -->
 <section class="section text-center">
-    <div class="container">
-        <h2 class="mb-4">¿Listo para Transformar tu Vida?</h2>
-        <p class="lead mb-4">No busques la perfección: hacer ejercicio es un regalo para ti mism@. 💖</p>
-        {% if not user.is_authenticated %}
-            <a href="{% url 'app:register' %}" class="cta-button me-3 mb-3 mb-md-0 d-block d-md-inline-block mx-auto mx-md-0">Registrarse Gratis</a>
-            <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg d-block d-md-inline-block mx-auto mx-md-0">Iniciar Sesión</a>
-        {% else %}
-            <a href="{% url 'app:exercise_calendar' %}" class="cta-button me-3">Ver Mi Calendario</a>
-            <a href="{% url 'app:profile' %}" class="btn btn-outline-primary btn-lg">Mi Perfil</a>
-        {% endif %}
-    </div>
+  <div class="container">
+    <h2 class="mb-4">¿Listo para Transformar tu Vida?</h2>
+    <p class="lead mb-4">
+      No busques la perfección: hacer ejercicio es un regalo para ti mism@. 💖
+    </p>
+    {% if not user.is_authenticated %}
+    <a
+      href="{% url 'app:register' %}"
+      class="cta-button me-3 mb-3 mb-md-0 d-block d-md-inline-block mx-auto mx-md-0"
+      >Contactame por Whatsapp</a
+    >
+    <a
+      href="{% url 'login' %}"
+      class="btn btn-outline-primary btn-lg d-block d-md-inline-block mx-auto mx-md-0"
+      >Iniciar Sesión</a
+    >
+    {% else %}
+    <a href="{% url 'app:exercise_calendar' %}" class="cta-button me-3"
+      >Ver Mi Calendario</a
+    >
+    <a href="{% url 'app:profile' %}" class="btn btn-outline-primary btn-lg"
+      >Mi Perfil</a
+    >
+    {% endif %}
+  </div>
 </section>
-{% endblock %} 
+{% endblock %}

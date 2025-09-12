@@ -68,14 +68,25 @@
   margin-bottom: 1rem;
 }
 
-.blog-card {
+.col-lg-4 .blog-card {
   background: white;
   border-radius: 15px;
   overflow: hidden;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
   transition: transform 0.3s ease;
-  min-height: 520px;
+  min-height: 480px;
+}
+
+.blog-card .blog-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 280px;
+}
+
+.col-lg-4 .testimonial-card {
+  height: 360px;
 }
 
 .blog-card:hover {
@@ -146,8 +157,36 @@
   text-align: right;
 }
 
+@media (min-width: 501px) and (max-width: 768px) {
+  
+  .main-title {
+    font-size: 2.6rem !important;
+  }
+  .col-lg-4 .testimonial-card {
+    height: 160px;
+  }
+  .stats-section .container .row{
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
 @media (max-width: 500px) {
   .main-title {
     font-size: 1.6rem !important;
   }
+
+  .testimonial-card .testimonial-text {
+    font-size: 0.9rem !important;
+  }
+
+}
+
+@media (min-width: 1025px) {
+
+  .stats-section .container .row{
+    display: flex;
+    justify-content: space-between;
+  }
+
 }
