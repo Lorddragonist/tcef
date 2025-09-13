@@ -8,12 +8,38 @@ TuCuerpoEnFormaCion{% endblock %} {% block extra_css %}
   <div class="container">
     <h1 class="main-title">TuCuerpoEnFormaCion</h1>
 
-    <p>
-      Es un programa de entrenamiento diseñado para ayudarte a crear el hábito
-      del ejercicio de una forma práctica, motivadora y progresiva. Mientras
-      entrenas y construyes ese hábito, tu cuerpo se va acondicionando: ganarás
-      fuerza, estabilidad, equilibrio y salud. 💪💖
-    </p>
+    <div class="col-lg-8 mx-auto text-center">
+        <h2 class="mb-4">Fisioterapia Preventiva</h2>
+        <p class="lead">
+          Se trata de un método que combina ejercicio, disciplina y
+          acompañamiento para ayudar a las personas a crear el hábito del
+          ejercicio y transformar su estilo de vida.
+        </p>
+        <br />
+        <p>El nombre juega con un doble sentido:</p>
+        <div style="display: flex; justify-content: space-between">
+          <ul
+            style="
+              list-style-type: none;
+              padding: 0;
+              margin: 0;
+              text-align: left;
+            "
+          >
+            <li>👉 En Forma → entrenar para ganar salud, fuerza y energía.</li>
+            <li>
+              👉 Formación → estar en un proceso continuo de aprendizaje,
+              evolución y crecimiento personal.
+            </li>
+          </ul>
+        </div>
+        <br />
+        <p class="lead">
+          TuCuerpoEnFormación no es solo entrenar el cuerpo, sino formar
+          hábitos, mentalidad y constancia que se reflejan en todas las áreas de
+          la vida.
+        </p>
+      </div>
     {% if not user.is_authenticated %}
     <a href="{% url 'app:register' %}" class="cta-button">Comenzar Ahora</a>
     {% else %}
@@ -52,45 +78,7 @@ TuCuerpoEnFormaCion{% endblock %} {% block extra_css %}
   </div>
 </section>
 
-<!-- About Section -->
-<section class="section">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-8 mx-auto text-center">
-        <h2 class="mb-4">Fisioterapia Preventiva</h2>
-        <p class="lead">
-          Se trata de un método que combina ejercicio, disciplina y
-          acompañamiento para ayudar a las personas a crear el hábito del
-          ejercicio y transformar su estilo de vida.
-        </p>
-        <br />
-        <p>El nombre juega con un doble sentido:</p>
-        <div style="display: flex; justify-content: space-between">
-          <ul
-            style="
-              list-style-type: none;
-              padding: 0;
-              margin: 0;
-              text-align: left;
-            "
-          >
-            <li>👉 En Forma → entrenar para ganar salud, fuerza y energía.</li>
-            <li>
-              👉 Formación → estar en un proceso continuo de aprendizaje,
-              evolución y crecimiento personal.
-            </li>
-          </ul>
-        </div>
-        <br />
-        <p class="lead">
-          TuCuerpoEnFormación no es solo entrenar el cuerpo, sino formar
-          hábitos, mentalidad y constancia que se reflejan en todas las áreas de
-          la vida.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
+
 
 <!-- Features Section -->
 <section class="section">
