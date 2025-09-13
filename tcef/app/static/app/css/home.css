@@ -169,6 +169,10 @@
     display: flex;
     justify-content: space-between;
   }
+
+  #tcef-title{
+    width: 600px !important;
+  }
 }
 
 @media (max-width: 500px) {
@@ -187,6 +191,10 @@
   .stats-section .container .row{
     display: flex;
     justify-content: space-between;
+  }
+
+  #tcef-title{
+    width: 800px !important;
   }
 
 }
