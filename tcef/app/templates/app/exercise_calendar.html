@@ -181,7 +181,13 @@
                             </div>
                             <div class="card-body">
                                 <h6 class="card-title" id="routineTitle"></h6>
-                                <p class="card-text small" id="routineDescription"></p>
+                                <p class="card-text small" id="routineDescription">
+                                    <span id="routineDescriptionShort"></span>
+                                    <span id="routineDescriptionFull" style="display: none;"></span>
+                                    <a href="#" id="toggleDescription" onclick="toggleDescription(); return false;" class="text-primary">
+                                        <small>Mostrar más</small>
+                                    </a>
+                                </p>
                                 
                                 <!-- Lista de videos -->
                                 <div class="mb-3">
@@ -197,10 +203,6 @@
                                     <small class="text-muted">
                                         <i class="fas fa-video me-1"></i>
                                         <span id="routineVideosCount"></span> videos
-                                    </small>
-                                    <small class="text-muted">
-                                        <i class="fas fa-clock me-1"></i>
-                                        <span id="routineDuration"></span>
                                     </small>
                                 </div>
                             </div>
@@ -294,9 +296,8 @@
             '{{ date|date:"Y-m-d" }}': {
                 id: {{ routine.id }},
                 title: '{{ routine.title|escapejs }}',
-                description: '{{ routine.description|escapejs|truncatechars:100 }}',
+                description: '{{ routine.description|escapejs }}',
                 videos_count: {{ routine.videos_count }},
-                total_duration: '{{ routine.total_duration }}',
                 videos: [
                     {% for video in routine.videos %}
                     {
@@ -336,9 +337,23 @@
         if (routineData) {
             // Mostrar preview de la rutina
             document.getElementById('routineTitle').textContent = routineData.title;
-            document.getElementById('routineDescription').textContent = routineData.description;
+            
+            const shortDescription = routineData.description.length > 100 ? 
+                routineData.description.substring(0, 100) + '...' : 
+                routineData.description;
+
+            document.getElementById('routineDescriptionShort').textContent = shortDescription;
+            document.getElementById('routineDescriptionFull').textContent = routineData.description;
+
+            // Ocultar el enlace si la descripción es corta
+            const toggleLink = document.getElementById('toggleDescription');
+            if (routineData.description.length <= 100) {
+                toggleLink.style.display = 'none';
+            } else {
+                toggleLink.style.display = 'inline';
+            }
+            
             document.getElementById('routineVideosCount').textContent = routineData.videos_count;
-            document.getElementById('routineDuration').textContent = routineData.total_duration;
             
             // Mostrar lista de videos
             const videosList = document.getElementById('routineVideosList');
@@ -357,7 +372,7 @@
                         </div>
                     </div>
                     <div class="text-end d-flex align-items-center">
-                        <small class="text-muted me-3">${video.duration}</small>
+                        
                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="previewVideo('${video.s3_url}', '${video.title}')">
                             <i class="fas fa-play"></i>
                         </button>
@@ -500,6 +515,25 @@
         setTimeout(() => {
             alertDiv.remove();
         }, 5000);
+    }
+
+    // Función para alternar la descripción
+    function toggleDescription() {
+        const shortDesc = document.getElementById('routineDescriptionShort');
+        const fullDesc = document.getElementById('routineDescriptionFull');
+        const toggleLink = document.getElementById('toggleDescription');
+        
+        if (fullDesc.style.display === 'none') {
+            // Mostrar descripción completa
+            shortDesc.style.display = 'none';
+            fullDesc.style.display = 'inline';
+            toggleLink.innerHTML = '<small>Mostrar menos</small>';
+        } else {
+            // Mostrar descripción corta
+            shortDesc.style.display = 'inline';
+            fullDesc.style.display = 'none';
+            toggleLink.innerHTML = '<small>Mostrar más</small>';
+        }
     }
 
     // Event listeners para clicks en días con ejercicios
