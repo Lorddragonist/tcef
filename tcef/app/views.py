@@ -483,12 +483,31 @@ def exercise_stats(request):
         ).count(),
     }
     
+    # Calcular progreso mensual
+    total_exercises_this_month = ExerciseLog.objects.filter(
+        user=request.user,
+        exercise_date__year=current_year,
+        exercise_date__month=current_month
+    ).count()
+
+    # Calcular días laborables del mes (lunes a viernes)
+    month_days = calendar.monthrange(current_year, current_month)[1]
+    weekdays_in_month = 0
+    for day in range(1, month_days + 1):
+        if calendar.weekday(current_year, current_month, day) < 5:  # 0-4 = lunes a viernes
+            weekdays_in_month += 1
+
+    # Progreso mensual basado en días laborables
+    progress_percentage = min((total_exercises_this_month / weekdays_in_month) * 100, 100) if weekdays_in_month > 0 else 0
+
     user_stats = {
         'total_exercises': ExerciseLog.objects.filter(user=request.user).count(),
         'current_streak': current_streak,
         'longest_streak': longest_streak,
         'weekly_progress': weekly_progress,
         'current_week_exercises': current_week_exercises,
+        'total_exercises_this_month': total_exercises_this_month,  # Agregar esta línea
+        'progress_percentage': progress_percentage,  # Agregar esta línea
         'imc': imc,
         'ica': ica,
         'body_fat_percentage': body_fat_percentage,
