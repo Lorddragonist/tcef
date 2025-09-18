@@ -58,8 +58,206 @@
     .row .col-md-4 {
         display: flex;
         flex-direction: column;
-        align-items: flex-end;
-        justify-content: flex-end;
+        justify-items: center;
+        justify-content: center;
+        align-items: center;
+        padding: 0px 40px;
+        gap: 10px;
+    }
+
+    .row .col-md-4 .btn{
+        width: 100%;
+        padding: 12px 0px;
+        margin: 0px;
+        color: #fdfdfd !important; /* Cambiar a negro */
+    }
+
+    .row .col-md-4 .me-2{
+        color: #000 !important;
+    }
+
+    .me-2{
+        margin: 0px!important;
+    }
+
+    .fas {
+        margin-right: 8px!important;
+    }
+
+    .streak-stat {
+        background: linear-gradient(135deg, #e1cfc6, #b3a5a5);
+        color: white;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .streak-number {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #716e6e !important; /* Cambiar a negro */
+    }
+
+    .streak-label {
+        font-size: 1.1rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-item {
+        padding: 1rem 0.5rem;
+    }
+
+    .stat-number-small {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #e1cfc6;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label-small {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .metric-circle {
+        width: 80px;
+        height: 80px;
+        border: 3px solid #e1cfc6;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        transition: all 0.3s ease;
+    }
+
+    .metric-circle:hover {
+        transform: scale(1.05);
+        border-color: #b3a5a5;
+        box-shadow: 0 4px 15px rgba(225, 207, 198, 0.3);
+    }
+
+    .metric-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #e1cfc6;
+        line-height: 1;
+    }
+
+    .metric-label {
+        font-size: 0.7rem;
+        color: #6c757d;
+        text-align: center;
+        margin-top: 0.25rem;
+    }
+
+    .progress-section {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 15px;
+        border: 1px solid #e9ecef;
+    }
+
+    .progress {
+        border-radius: 20px;
+        background-color: #e9ecef;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .progress-bar.bg-success {
+        background: linear-gradient(135deg, #28a745, #20c997) !important;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: width 0.6s ease;
+    }
+
+    .progress-text {
+        color: white;
+        font-weight: bold;
+        font-size: 1.1rem;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .progress-info {
+        text-align: center;
+    }
+
+    .progress-info h5 {
+        color: #28a745;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+
+    .difficulty-legend {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-bottom: 0.25rem;
+    }
+
+    .legend-label {
+        font-weight: bold;
+        color: #343a40;
+        font-size: 0.9rem;
+    }
+
+    .legend-count {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #e1cfc6;
+    }
+
+    #difficultyChart {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .body-comp-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease-in-out;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .body-comp-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .body-comp-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+    }
+
+    .body-comp-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #343a40;
     }
 </style>
 {% endblock %}
@@ -90,68 +288,166 @@
     <!-- Grid de componentes de estadísticas -->
     <div class="stats-grid">
         
-        <!-- Componente 1: Resumen General -->
+        <!-- Componente 1: Progreso Semanal -->
         <div class="stats-component">
             <h4 class="component-title">
-                <i class="fas fa-tachometer-alt me-2"></i>Resumen General
+                <i class="fas fa-chart-line me-2"></i>Progreso semanal
             </h4>
-            <!-- Aquí irá el componente de resumen -->
-            <div class="placeholder-component">
-                <i class="fas fa-cog fa-2x mb-3"></i>
-                <p>Componente de Resumen General</p>
-                <small>Próximamente...</small>
+            
+            <!-- Progreso semanal centrado -->
+            <div class="progress-section d-flex flex-column justify-content-center align-items-center" style="min-height: 150px;">
+                <div class="progress mb-3" style="height: 40px; width: 90%;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ user_stats.weekly_progress|stringformat:"s" }}%"
+                         aria-valuenow="{{ user_stats.weekly_progress|stringformat:"s" }}" 
+                         aria-valuemin="0" aria-valuemax="100">
+                        <span class="progress-text">{{ user_stats.weekly_progress|stringformat:"s" }}%</span>
+                    </div>
+                </div>
+                <div class="progress-info">
+                    <h5 class="mb-1">{{ user_stats.current_week_exercises }} de 5 rutinas</h5>
+                    <small class="text-muted">esta semana</small>
+                </div>
             </div>
         </div>
 
-        <!-- Componente 2: Progreso Mensual -->
+        <!-- Componente 2: Composición Corporal -->
         <div class="stats-component">
             <h4 class="component-title">
-                <i class="fas fa-calendar-check me-2"></i>Progreso Mensual
+                <i class="fas fa-ruler-combined me-2"></i>Composición Corporal
             </h4>
-            <!-- Aquí irá el componente de progreso mensual -->
-            <div class="placeholder-component">
-                <i class="fas fa-chart-line fa-2x mb-3"></i>
-                <p>Gráfico de Progreso Mensual</p>
-                <small>Próximamente...</small>
+            
+            <div class="row">
+                <div class="col-6 mb-3">
+                    <div class="body-comp-card">
+                        <div class="body-comp-label">IMC</div>
+                        <div class="body-comp-value">{{ user_stats.imc|default:"--" }}</div>
+                    </div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="body-comp-card">
+                        <div class="body-comp-label">% GRASA</div>
+                        <div class="body-comp-value">{{ user_stats.body_fat_percentage|default:"--" }}</div>
+                    </div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="body-comp-card">
+                        <div class="body-comp-label">M. MÚSCULO</div>
+                        <div class="body-comp-value">{{ user_stats.muscle_mass|default:"--" }}</div>
+                    </div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="body-comp-card">
+                        <div class="body-comp-label">ICA</div>
+                        <div class="body-comp-value">{{ user_stats.ica|default:"--" }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Última actualización: {{ user_stats.last_measurement_date|default:"--" }}
+                </small>
             </div>
         </div>
 
-        <!-- Componente 3: Distribución por Dificultad -->
+        <!-- Componente 3: Progreso de Peso (mantener como está) -->
+        <div class="stats-component" style="cursor: pointer;" onclick="openWeightProgressModal()">
+            <h4 class="component-title">
+                <i class="fas fa-weight me-2"></i>Progreso de Peso
+            </h4>
+            <div style="height: 200px; width: 100%; position: relative;">
+                <canvas id="weightPreviewChart"></canvas>
+            </div>
+            <div class="text-center mt-2">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Haz clic para ver gráfico completo
+                </small>
+            </div>
+        </div>
+
+        <!-- Componente 4: Distribución por Dificultad (mantener como está) -->
         <div class="stats-component">
             <h4 class="component-title">
                 <i class="fas fa-layer-group me-2"></i>Por Dificultad
             </h4>
-            <!-- Aquí irá el componente de distribución por dificultad -->
-            <div class="placeholder-component">
-                <i class="fas fa-pie-chart fa-2x mb-3"></i>
-                <p>Gráfico de Dificultades</p>
-                <small>Próximamente...</small>
+            
+            <!-- Gráfico de torta -->
+            <div style="height: 300px; width: 100%; position: relative;">
+                <canvas id="difficultyChart"></canvas>
+            </div>
+            
+            <!-- Leyenda personalizada -->
+            <div class="row mt-3">
+                <div class="col-md-4 text-center">
+                    <div class="difficulty-legend">
+                        <div class="legend-color" style="background-color: #28a745;"></div>
+                        <span class="legend-label">Fácil</span>
+                        <div class="legend-count" id="facilCount">0</div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="difficulty-legend">
+                        <div class="legend-color" style="background-color: #ffc107;"></div>
+                        <span class="legend-label">Medio</span>
+                        <div class="legend-count" id="medioCount">0</div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="difficulty-legend">
+                        <div class="legend-color" style="background-color: #dc3545;"></div>
+                        <span class="legend-label">Difícil</span>
+                        <div class="legend-count" id="dificilCount">0</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Componente 4: Racha de Ejercicios -->
+        <!-- Componente 5: Racha de Ejercicios -->
         <div class="stats-component">
             <h4 class="component-title">
                 <i class="fas fa-fire me-2"></i>Racha de Ejercicios
             </h4>
-            <!-- Aquí irá el componente de racha -->
-            <div class="placeholder-component">
-                <i class="fas fa-trophy fa-2x mb-3"></i>
-                <p>Análisis de Rachas</p>
-                <small>Próximamente...</small>
+            
+            <!-- Números principales -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="text-center">
+                        <div class="streak-number">{{ user_stats.current_streak }}</div>
+                        <div class="streak-label">Racha actual</div>
+                        <small class="text-muted">(5+ rutinas por semana)</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-center">
+                        <div class="streak-number">{{ user_stats.longest_streak }}</div>
+                        <div class="streak-label">Mejor racha</div>
+                        <small class="text-muted">(semanas consecutivas)</small>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <!-- Componente 5: Actividad por Día de la Semana -->
-        <div class="stats-component">
-            <h4 class="component-title">
-                <i class="fas fa-calendar-week me-2"></i>Actividad Semanal
-            </h4>
-            <!-- Aquí irá el componente de actividad semanal -->
-            <div class="placeholder-component">
-                <i class="fas fa-chart-bar fa-2x mb-3"></i>
-                <p>Gráfico de Actividad Semanal</p>
-                <small>Próximamente...</small>
+            
+            <!-- Estadísticas adicionales -->
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <div class="stat-item">
+                        <div class="stat-number-small">{{ user_stats.total_exercises }}</div>
+                        <div class="stat-label-small">Total de rutinas</div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="stat-item">
+                        <div class="stat-number-small">{{ user_stats.total_exercises_this_month }}</div>
+                        <div class="stat-label-small">Este mes</div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="stat-item">
+                        <div class="stat-number-small">{{ user_stats.progress_percentage|floatformat:0 }}%</div>
+                        <div class="stat-label-small">Progreso mensual</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -170,4 +466,387 @@
 
     </div>
 </div>
+
+<!-- Modal para gráfico completo de peso -->
+<div class="modal fade" id="weightProgressModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" style="color: #000 !important;">
+                    <i class="fas fa-weight me-2"></i>Evolución de Peso
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Filtros de fecha -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label for="startDate" class="form-label">Fecha Inicio</label>
+                        <input type="date" class="form-control" id="startDate">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="endDate" class="form-label">Fecha Fin</label>
+                        <input type="date" class="form-control" id="endDate">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary me-2" onclick="filterWeightChart()">
+                            <i class="fas fa-filter me-1"></i>Filtrar
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetWeightChart()">
+                            <i class="fas fa-undo me-1"></i>Reset
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Gráfico completo -->
+                <div style="height: 400px; width: 100%; position: relative;">
+                    <canvas id="weightFullChart"></canvas>
+                </div>
+                
+                <!-- Estadísticas rápidas -->
+                <div class="row mt-4">
+                    <div class="col-md-3 text-center">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">Peso Actual</h6>
+                                <h4 class="text-primary" id="currentWeight">-- kg</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">Peso Inicial</h6>
+                                <h4 class="text-info" id="initialWeight">-- kg</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">Diferencia</h6>
+                                <h4 class="text-success" id="weightDifference">-- kg</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">Promedio</h6>
+                                <h4 class="text-warning" id="averageWeight">-- kg</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <a href="{% url 'app:add_measurements' %}" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i>Registrar Medidas
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Datos de las medidas
+const measurementsData = {{ measurements_data_json|safe }};
+console.log('measurementsData:', measurementsData); // Debug
+
+let weightChart = null;
+let weightPreviewChart = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, measurementsData:', measurementsData); // Debug
+    
+    // Inicializar fechas por defecto
+    const today = new Date();
+    const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
+    
+    document.getElementById('startDate').value = threeMonthsAgo.toISOString().split('T')[0];
+    document.getElementById('endDate').value = today.toISOString().split('T')[0];
+    
+    // Crear gráficos
+    createWeightPreviewChart();
+    createWeightFullChart();
+    createDifficultyChart();
+    
+    // Calcular estadísticas
+    calculateWeightStats(); // Esta función debe existir
+});
+
+function createWeightPreviewChart() {
+    const ctx = document.getElementById('weightPreviewChart').getContext('2d');
+    
+    if (measurementsData.labels.length === 0) {
+        document.getElementById('weightPreviewChart').parentElement.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-chart-line fa-2x text-muted mb-3"></i>
+                <p class="text-muted">No hay datos de peso</p>
+                <small class="text-muted">Registra tu primera medida</small>
+            </div>
+        `;
+        return;
+    }
+    
+    // Mostrar solo los últimos 5 registros
+    const recentData = measurementsData.labels.slice(-5);
+    const recentWeights = measurementsData.weights.slice(-5);
+    
+    weightPreviewChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: recentData,
+            datasets: [{
+                label: 'Peso (kg)',
+                data: recentWeights,
+                borderColor: '#e1cfc6',
+                backgroundColor: 'rgba(225, 207, 198, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    titleFont: { size: 16, weight: 'bold' },
+                    bodyFont: { size: 14 },
+                    padding: 12,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#e1cfc6',
+                    borderWidth: 2
+                }
+            },
+            scales: {
+                x: { display: false },
+                y: { display: false }
+            }
+        }
+    });
+}
+
+function createWeightFullChart() {
+    const ctx = document.getElementById('weightFullChart').getContext('2d');
+    
+    if (measurementsData.labels.length === 0) {
+        document.getElementById('weightFullChart').parentElement.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No hay datos de peso</h5>
+                <p class="text-muted">Registra tu primera medida para ver tu progreso aquí</p>
+                <a href="{% url 'app:add_measurements' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Registrar Medidas
+                </a>
+            </div>
+        `;
+        return;
+    }
+    
+    weightChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: measurementsData.labels,
+            datasets: [{
+                label: 'Peso (kg)',
+                data: measurementsData.weights,
+                borderColor: '#e1cfc6',
+                backgroundColor: 'rgba(225, 207, 198, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: { size: 14, weight: 'bold' }
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    titleFont: { size: 18, weight: 'bold' },
+                    bodyFont: { size: 16 },
+                    padding: 16,
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#e1cfc6',
+                    borderWidth: 2,
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Fecha',
+                        font: { size: 14, weight: 'bold' }
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Peso (kg)',
+                        font: { size: 14, weight: 'bold' }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createDifficultyChart() {
+    const ctx = document.getElementById('difficultyChart').getContext('2d');
+    const difficultyData = {{ difficulty_data|safe }};
+    
+    const totalExercises = difficultyData.facil + difficultyData.medio + difficultyData.dificil;
+    
+    if (totalExercises === 0) {
+        document.getElementById('difficultyChart').parentElement.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-pie-chart fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No hay ejercicios este mes</h5>
+                <p class="text-muted">Comienza a ejercitarte para ver tu distribución</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const difficultyChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Fácil', 'Medio', 'Difícil'],
+            datasets: [{
+                data: [difficultyData.facil, difficultyData.medio, difficultyData.dificil],
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                borderColor: '#fff',
+                borderWidth: 4,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    titleFont: { size: 24, weight: 'bold' },
+                    bodyFont: { size: 20 },
+                    padding: 20,
+                    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#e1cfc6',
+                    borderWidth: 3,
+                    cornerRadius: 12,
+                    displayColors: false,
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return `${context.parsed} ejercicios (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            animation: {
+                animateRotate: true,
+                animateScale: false,
+                duration: 800
+            }
+        }
+    });
+    
+    // Actualizar contadores
+    document.getElementById('facilCount').textContent = difficultyData.facil;
+    document.getElementById('medioCount').textContent = difficultyData.medio;
+    document.getElementById('dificilCount').textContent = difficultyData.dificil;
+}
+
+function openWeightProgressModal() {
+    const modal = new bootstrap.Modal(document.getElementById('weightProgressModal'));
+    modal.show();
+}
+
+function filterWeightChart() {
+    if (!weightChart) return;
+    
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    if (!startDate || !endDate) return;
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    const filteredLabels = [];
+    const filteredWeights = [];
+    
+    measurementsData.labels.forEach((label, index) => {
+        const labelDate = new Date(label);
+        if (labelDate >= start && labelDate <= end) {
+            filteredLabels.push(label);
+            filteredWeights.push(measurementsData.weights[index]);
+        }
+    });
+    
+    weightChart.data.labels = filteredLabels;
+    weightChart.data.datasets[0].data = filteredWeights;
+    weightChart.update();
+}
+
+function resetWeightChart() {
+    if (!weightChart) return;
+    
+    weightChart.data.labels = measurementsData.labels;
+    weightChart.data.datasets[0].data = measurementsData.weights;
+    weightChart.update();
+}
+
+function calculateWeightStats() {
+    console.log('Calculating stats, measurementsData:', measurementsData); // Debug
+    
+    if (measurementsData.weights.length === 0) {
+        console.log('No weight data available'); // Debug
+        return;
+    }
+    
+    const weights = measurementsData.weights;
+    const current = weights[weights.length - 1];
+    const initial = weights[0];
+    const difference = current - initial;
+    const average = weights.reduce((a, b) => a + b, 0) / weights.length;
+    
+    console.log('Stats calculated:', { current, initial, difference, average }); // Debug
+    
+    document.getElementById('currentWeight').textContent = current.toFixed(1) + ' kg';
+    document.getElementById('initialWeight').textContent = initial.toFixed(1) + ' kg';
+    document.getElementById('weightDifference').textContent = (difference >= 0 ? '+' : '') + difference.toFixed(1) + ' kg';
+    document.getElementById('averageWeight').textContent = average.toFixed(1) + ' kg';
+}
+</script>
 {% endblock %}

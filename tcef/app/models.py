@@ -131,26 +131,54 @@ class ExerciseLog(models.Model):
     
     @classmethod
     def get_current_week_streak(cls, user):
-        """Calcula la racha actual de semanas con 5+ rutinas"""
+        """Calcula la última racha de semanas con 5+ rutinas obtenida"""
         from datetime import date, timedelta
         
         today = date.today()
         streak = 0
         current_week_start = today - timedelta(days=today.weekday())
         
-        while True:
-            week_end = current_week_start + timedelta(days=6)
-            week_exercises = cls.objects.filter(
-                user=user,
-                exercise_date__gte=current_week_start,
-                exercise_date__lte=week_end
-            ).count()
+        # Verificar si la semana actual tiene 5+ rutinas
+        week_end = current_week_start + timedelta(days=6)
+        week_exercises = cls.objects.filter(
+            user=user,
+            exercise_date__gte=current_week_start,
+            exercise_date__lte=week_end
+        ).count()
+        
+        # Si la semana actual no tiene 5+ rutinas, buscar la última racha completa
+        if week_exercises < 5:
+            # Retroceder una semana y buscar la última racha completa
+            current_week_start -= timedelta(weeks=1)
             
-            if week_exercises >= 5:
-                streak += 1
-                current_week_start -= timedelta(weeks=1)
-            else:
-                break
+            while True:
+                week_end = current_week_start + timedelta(days=6)
+                week_exercises = cls.objects.filter(
+                    user=user,
+                    exercise_date__gte=current_week_start,
+                    exercise_date__lte=week_end
+                ).count()
+                
+                if week_exercises >= 5:
+                    streak += 1
+                    current_week_start -= timedelta(weeks=1)
+                else:
+                    break
+        else:
+            # Si la semana actual tiene 5+ rutinas, contar desde ahí
+            while True:
+                week_end = current_week_start + timedelta(days=6)
+                week_exercises = cls.objects.filter(
+                    user=user,
+                    exercise_date__gte=current_week_start,
+                    exercise_date__lte=week_end
+                ).count()
+                
+                if week_exercises >= 5:
+                    streak += 1
+                    current_week_start -= timedelta(weeks=1)
+                else:
+                    break
         
         return streak
     
@@ -414,3 +442,16 @@ class BodyMeasurements(models.Model):
         if self.hip > 0:
             return round(self.waist / self.hip, 2)
         return 0
+
+class BodyCompositionHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='body_composition_history')
+    measurement_date = models.DateField()
+    imc = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    ica = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    body_fat_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    muscle_mass = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'measurement_date')
+        ordering = ['-measurement_date']

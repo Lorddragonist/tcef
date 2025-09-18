@@ -10,6 +10,27 @@
             <div class="card">
                 <div class="card-header">
                     <h4><i class="fas fa-ruler me-2"></i>Registrar Medidas Corporales</h4>
+                    {% if form.initial.weight %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Últimas medidas registradas:</strong>
+                        <span class="ms-2">
+                            Peso: {{ form.initial.weight }}kg | 
+                            Altura: {{ form.initial.height }}cm | 
+                            Edad: {{ form.initial.age }} años
+                        </span>
+                        <br>
+                        <small class="text-muted">
+                            Los campos se han llenado con tus últimas medidas. Modifica solo lo que haya cambiado.
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Primera vez registrando medidas:</strong>
+                        <span class="ms-2">Completa todos los campos con tus medidas actuales.</span>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     <form method="post">
@@ -26,6 +47,9 @@
                                     {{ form.age.label }}
                                 </label>
                                 {{ form.age }}
+                                {% if form.initial.age %}
+                                <small class="text-muted">Última medida: {{ form.initial.age }} años</small>
+                                {% endif %}
                             </div>
                         </div>
                         
@@ -35,12 +59,18 @@
                                     {{ form.weight.label }}
                                 </label>
                                 {{ form.weight }}
+                                {% if form.initial.weight %}
+                                <small class="text-muted">Última medida: {{ form.initial.weight }}kg</small>
+                                {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.height.id_for_label }}" class="form-label">
                                     {{ form.height.label }}
                                 </label>
                                 {{ form.height }}
+                                {% if form.initial.height %}
+                                <small class="text-muted">Última medida: {{ form.initial.height }}cm</small>
+                                {% endif %}
                             </div>
                         </div>
                         
@@ -50,18 +80,27 @@
                                     {{ form.waist.label }}
                                 </label>
                                 {{ form.waist }}
+                                {% if form.initial.waist %}
+                                <small class="text-muted">Última: {{ form.initial.waist }}cm</small>
+                                {% endif %}
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="{{ form.hip.id_for_label }}" class="form-label">
                                     {{ form.hip.label }}
                                 </label>
                                 {{ form.hip }}
+                                {% if form.initial.hip %}
+                                <small class="text-muted">Última: {{ form.initial.hip }}cm</small>
+                                {% endif %}
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="{{ form.chest.id_for_label }}" class="form-label">
                                     {{ form.chest.label }}
                                 </label>
                                 {{ form.chest }}
+                                {% if form.initial.chest %}
+                                <small class="text-muted">Última: {{ form.initial.chest }}cm</small>
+                                {% endif %}
                             </div>
                         </div>
                         
@@ -77,4 +116,27 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+.text-muted small {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+</style>
 {% endblock %}

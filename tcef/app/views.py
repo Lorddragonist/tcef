@@ -17,6 +17,7 @@ from .models import UserProfile, ExerciseLog, WeeklyRoutine, PasswordResetReques
 from admin_panel.models import CustomRoutine, UserGroupMembership
 from .forms import BodyMeasurementsForm
 from .models import BodyMeasurements
+import json
 
 def home(request):
     """Vista principal de la landing page tipo blog"""
@@ -389,31 +390,117 @@ def remove_exercise(request):
 
 @login_required
 def exercise_stats(request):
-    """Vista para mostrar estadísticas detalladas del usuario"""
-    user_stats = ExerciseLog.get_user_stats(request.user)
+    # Obtener las medidas del usuario
+    measurements = BodyMeasurements.objects.filter(user=request.user).order_by('measurement_date')
     
-    # Obtener ejercicios de los últimos 30 días
-    thirty_days_ago = date.today() - timedelta(days=30)
-    recent_exercises = ExerciseLog.objects.filter(
+    # Preparar datos para el gráfico de peso
+    measurements_data = {
+        'labels': [m.measurement_date.strftime('%Y-%m-%d') for m in measurements],
+        'weights': [float(m.weight) for m in measurements],
+        'waists': [float(m.waist) for m in measurements],
+        'hips': [float(m.hip) for m in measurements],
+    }
+    
+    # Obtener las últimas medidas corporales
+    last_measurement = BodyMeasurements.objects.filter(user=request.user).order_by('-measurement_date').first()
+    
+    # Inicializar valores por defecto
+    imc = "--"
+    ica = "--"
+    body_fat_percentage = "--"
+    muscle_mass = "--"
+    last_measurement_date = "--"
+    
+    if last_measurement:
+        last_measurement_date = last_measurement.measurement_date.strftime('%Y-%m-%d')
+        weight_kg = float(last_measurement.weight)
+        height_cm = float(last_measurement.height)
+        waist_cm = float(last_measurement.waist)
+        hip_cm = float(last_measurement.hip)
+        age_years = last_measurement.age
+        
+        # Calcular IMC (Índice de Masa Corporal)
+        if height_cm > 0:
+            height_m = height_cm / 100  # Convertir cm a metros
+            imc = round(weight_kg / (height_m ** 2), 1)
+        
+        # Calcular ICA (Índice de Cintura-Altura)
+        if height_cm > 0:
+            ica = round(waist_cm / height_cm, 2)
+        
+        # Calcular % de Grasa Corporal (Fórmula de Deurenberg)
+        if height_cm > 0 and age_years > 0:
+            bmi = weight_kg / ((height_cm / 100) ** 2)
+            body_fat_percentage = round(1.2 * bmi + 0.23 * age_years - 10.8, 1)
+        
+        # Calcular Masa Muscular (Fórmula aproximada)
+        if height_cm > 0 and age_years > 0:
+            # Fórmula simplificada basada en peso, altura y edad
+            muscle_mass = round(weight_kg * 0.4 + (height_cm - 100) * 0.1, 1)
+    
+    # Obtener datos de ejercicios para rachas
+    exercises = ExerciseLog.objects.filter(user=request.user).order_by('exercise_date')
+    
+    # Calcular rachas
+    current_streak = ExerciseLog.get_current_week_streak(request.user)
+    longest_streak = ExerciseLog.get_longest_week_streak(request.user)
+    
+    # Calcular progreso semanal
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    
+    current_week_exercises = ExerciseLog.objects.filter(
         user=request.user,
-        exercise_date__gte=thirty_days_ago
-    ).order_by('-exercise_date')
+        exercise_date__gte=week_start,
+        exercise_date__lte=week_end
+    ).count()
     
-    # Obtener distribución por dificultad
-    difficulty_stats = {}
-    for difficulty in ExerciseLog.DIFFICULTY_CHOICES:
-        count = ExerciseLog.objects.filter(
+    weekly_progress = min((current_week_exercises / 5) * 100, 100)
+    
+    # Calcular distribución por dificultad del mes actual
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    difficulty_data = {
+        'facil': ExerciseLog.objects.filter(
             user=request.user,
-            difficulty=difficulty[0]
-        ).count()
-        difficulty_stats[difficulty[1]] = count
+            exercise_date__year=current_year,
+            exercise_date__month=current_month,
+            difficulty='facil'
+        ).count(),
+        'medio': ExerciseLog.objects.filter(
+            user=request.user,
+            exercise_date__year=current_year,
+            exercise_date__month=current_month,
+            difficulty='medio'
+        ).count(),
+        'dificil': ExerciseLog.objects.filter(
+            user=request.user,
+            exercise_date__year=current_year,
+            exercise_date__month=current_month,
+            difficulty='dificil'
+        ).count(),
+    }
+    
+    user_stats = {
+        'total_exercises': ExerciseLog.objects.filter(user=request.user).count(),
+        'current_streak': current_streak,
+        'longest_streak': longest_streak,
+        'weekly_progress': weekly_progress,
+        'current_week_exercises': current_week_exercises,
+        'imc': imc,
+        'ica': ica,
+        'body_fat_percentage': body_fat_percentage,
+        'muscle_mass': muscle_mass,
+        'last_measurement_date': last_measurement_date,
+    }
     
     context = {
         'user_stats': user_stats,
-        'recent_exercises': recent_exercises,
-        'difficulty_stats': difficulty_stats,
+        'measurements_data_json': json.dumps(measurements_data),
+        'difficulty_data': difficulty_data,
     }
-    
     return render(request, 'app/exercise_stats.html', context)
 
 def custom_logout(request):
@@ -446,10 +533,51 @@ def add_body_measurements(request):
         if form.is_valid():
             measurement = form.save(commit=False)
             measurement.user = request.user
-            measurement.save()
-            messages.success(request, 'Medidas registradas correctamente!')
+            
+            # Verificar si ya existe un registro para esta fecha
+            existing_measurement = BodyMeasurements.objects.filter(
+                user=request.user,
+                measurement_date=measurement.measurement_date
+            ).first()
+            
+            if existing_measurement:
+                # Actualizar el registro existente
+                existing_measurement.weight = measurement.weight
+                existing_measurement.height = measurement.height
+                existing_measurement.age = measurement.age
+                existing_measurement.waist = measurement.waist
+                existing_measurement.hip = measurement.hip
+                existing_measurement.chest = measurement.chest
+                existing_measurement.save()
+                messages.success(request, 'Medidas actualizadas correctamente!')
+            else:
+                # Crear nuevo registro
+                measurement.save()
+                messages.success(request, 'Medidas registradas correctamente!')
+            
             return redirect('app:exercise_stats')
     else:
-        form = BodyMeasurementsForm(initial={'measurement_date': timezone.now().date()})
+        # Obtener las últimas medidas del usuario
+        last_measurement = BodyMeasurements.objects.filter(
+            user=request.user
+        ).order_by('-measurement_date').first()
+        
+        # Preparar datos iniciales
+        initial_data = {
+            'measurement_date': timezone.now().date()
+        }
+        
+        # Si hay medidas anteriores, usarlas como valores por defecto
+        if last_measurement:
+            initial_data.update({
+                'weight': last_measurement.weight,
+                'height': last_measurement.height,
+                'age': last_measurement.age,
+                'waist': last_measurement.waist,
+                'hip': last_measurement.hip,
+                'chest': last_measurement.chest,
+            })
+        
+        form = BodyMeasurementsForm(initial=initial_data)
     
     return render(request, 'app/add_measurements.html', {'form': form})
