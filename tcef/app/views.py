@@ -393,13 +393,54 @@ def exercise_stats(request):
     # Obtener las medidas del usuario
     measurements = BodyMeasurements.objects.filter(user=request.user).order_by('measurement_date')
     
-    # Preparar datos para el gráfico de peso
+    # Preparar datos para el gráfico con todas las métricas
     measurements_data = {
         'labels': [m.measurement_date.strftime('%Y-%m-%d') for m in measurements],
         'weights': [float(m.weight) for m in measurements],
         'waists': [float(m.waist) for m in measurements],
         'hips': [float(m.hip) for m in measurements],
+        'imcs': [],
+        'icas': [],
+        'body_fat_percentages': [],
+        'muscle_masses': [],
     }
+    
+    # Calcular métricas para cada medición
+    for m in measurements:
+        weight_kg = float(m.weight)
+        height_cm = float(m.height)
+        waist_cm = float(m.waist)
+        age_years = m.age
+        
+        # Calcular IMC
+        if height_cm > 0:
+            height_m = height_cm / 100
+            imc = round(weight_kg / (height_m ** 2), 1)
+        else:
+            imc = 0
+        measurements_data['imcs'].append(imc)
+        
+        # Calcular ICA
+        if height_cm > 0:
+            ica = round(waist_cm / height_cm, 2)
+        else:
+            ica = 0
+        measurements_data['icas'].append(ica)
+        
+        # Calcular % de Grasa Corporal
+        if height_cm > 0 and age_years > 0:
+            bmi = weight_kg / ((height_cm / 100) ** 2)
+            body_fat_percentage = round(1.2 * bmi + 0.23 * age_years - 10.8, 1)
+        else:
+            body_fat_percentage = 0
+        measurements_data['body_fat_percentages'].append(body_fat_percentage)
+        
+        # Calcular Masa Muscular
+        if height_cm > 0 and age_years > 0:
+            muscle_mass = round(weight_kg * 0.4 + (height_cm - 100) * 0.1, 1)
+        else:
+            muscle_mass = 0
+        measurements_data['muscle_masses'].append(muscle_mass)
     
     # Obtener las últimas medidas corporales
     last_measurement = BodyMeasurements.objects.filter(user=request.user).order_by('-measurement_date').first()

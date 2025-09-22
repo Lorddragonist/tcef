@@ -435,10 +435,10 @@
 
         
 
-        <!-- Componente 5: Progreso de Peso (mantener como está) -->
+        <!-- Componente 5: Progreso de Métricas Corporales -->
         <div class="stats-component" style="cursor: pointer;" onclick="openWeightProgressModal()">
             <h4 class="component-title">
-                <i class="fas fa-weight me-2"></i>Progreso de Peso
+                <i class="fas fa-chart-line me-2"></i>Progreso de Métricas Corporales
             </h4>
             <div style="height: 200px; width: 100%; position: relative;">
                 <canvas id="weightPreviewChart"></canvas>
@@ -471,28 +471,38 @@
     </div>
 </div>
 
-<!-- Modal para gráfico completo de peso -->
+<!-- Modal para gráfico completo de métricas -->
 <div class="modal fade" id="weightProgressModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" style="color: #000 !important;">
-                    <i class="fas fa-weight me-2"></i>Evolución de Peso
+                    <i class="fas fa-chart-line me-2"></i>Evolución de Métricas Corporales
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- Filtros de fecha -->
+                <!-- Selector de métrica -->
                 <div class="row mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label for="metricSelector" class="form-label">Métrica a Visualizar</label>
+                        <select class="form-control" id="metricSelector" onchange="changeMetric()">
+                            <option value="weight">Peso (kg)</option>
+                            <option value="imc">IMC (Índice de Masa Corporal)</option>
+                            <option value="ica">ICA (Índice Cintura-Altura)</option>
+                            <option value="body_fat">% Grasa Corporal</option>
+                            <option value="muscle_mass">Masa Muscular (kg)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
                         <label for="startDate" class="form-label">Fecha Inicio</label>
                         <input type="date" class="form-control" id="startDate">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label for="endDate" class="form-label">Fecha Fin</label>
                         <input type="date" class="form-control" id="endDate">
                     </div>
-                    <div class="col-md-4 d-flex align-items-end">
+                    <div class="col-md-3 d-flex align-items-end">
                         <button type="button" class="btn btn-primary me-2" onclick="filterWeightChart()">
                             <i class="fas fa-filter me-1"></i>Filtrar
                         </button>
@@ -512,32 +522,32 @@
                     <div class="col-md-3 text-center">
                         <div class="card">
                             <div class="card-body">
-                                <h6 class="card-title">Peso Actual</h6>
-                                <h4 class="text-primary" id="currentWeight">-- kg</h4>
+                                <h6 class="card-title" id="currentMetricTitle">Valor Actual</h6>
+                                <h4 class="text-primary" id="currentWeight">--</h4>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 text-center">
                         <div class="card">
                             <div class="card-body">
-                                <h6 class="card-title">Peso Inicial</h6>
-                                <h4 class="text-info" id="initialWeight">-- kg</h4>
+                                <h6 class="card-title" id="initialMetricTitle">Valor Inicial</h6>
+                                <h4 class="text-info" id="initialWeight">--</h4>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 text-center">
                         <div class="card">
                             <div class="card-body">
-                                <h6 class="card-title">Diferencia</h6>
-                                <h4 class="text-success" id="weightDifference">-- kg</h4>
+                                <h6 class="card-title" id="differenceMetricTitle">Diferencia</h6>
+                                <h4 class="text-success" id="weightDifference">--</h4>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 text-center">
                         <div class="card">
                             <div class="card-body">
-                                <h6 class="card-title">Promedio</h6>
-                                <h4 class="text-warning" id="averageWeight">-- kg</h4>
+                                <h6 class="card-title" id="averageMetricTitle">Promedio</h6>
+                                <h4 class="text-warning" id="averageWeight">--</h4>
                             </div>
                         </div>
                     </div>
@@ -563,6 +573,61 @@ console.log('measurementsData:', measurementsData); // Debug
 
 let weightChart = null;
 let weightPreviewChart = null;
+let currentMetric = 'weight'; // Métrica actual seleccionada
+
+// Configuración de métricas
+const metricConfig = {
+    weight: {
+        label: 'Peso (kg)',
+        color: '#e1cfc6',
+        backgroundColor: 'rgba(225, 207, 198, 0.1)',
+        unit: 'kg',
+        currentTitle: 'Peso Actual',
+        initialTitle: 'Peso Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    },
+    imc: {
+        label: 'IMC',
+        color: '#4CAF50',
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        unit: '',
+        currentTitle: 'IMC Actual',
+        initialTitle: 'IMC Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    },
+    ica: {
+        label: 'ICA',
+        color: '#2196F3',
+        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+        unit: '',
+        currentTitle: 'ICA Actual',
+        initialTitle: 'ICA Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    },
+    body_fat: {
+        label: '% Grasa Corporal',
+        color: '#FF9800',
+        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+        unit: '%',
+        currentTitle: '% Grasa Actual',
+        initialTitle: '% Grasa Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    },
+    muscle_mass: {
+        label: 'Masa Muscular (kg)',
+        color: '#9C27B0',
+        backgroundColor: 'rgba(156, 39, 176, 0.1)',
+        unit: 'kg',
+        currentTitle: 'Masa Muscular Actual',
+        initialTitle: 'Masa Muscular Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    }
+};
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, measurementsData:', measurementsData); // Debug
@@ -580,7 +645,7 @@ document.addEventListener('DOMContentLoaded', function() {
     createDifficultyChart();
     
     // Calcular estadísticas
-    calculateWeightStats(); // Esta función debe existir
+    calculateWeightStats();
 });
 
 function createWeightPreviewChart() {
@@ -590,7 +655,7 @@ function createWeightPreviewChart() {
         document.getElementById('weightPreviewChart').parentElement.innerHTML = `
             <div class="text-center py-5">
                 <i class="fas fa-chart-line fa-2x text-muted mb-3"></i>
-                <p class="text-muted">No hay datos de peso</p>
+                <p class="text-muted">No hay datos de métricas</p>
                 <small class="text-muted">Registra tu primera medida</small>
             </div>
         `;
@@ -647,7 +712,7 @@ function createWeightFullChart() {
         document.getElementById('weightFullChart').parentElement.innerHTML = `
             <div class="text-center py-5">
                 <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">No hay datos de peso</h5>
+                <h5 class="text-muted">No hay datos de métricas</h5>
                 <p class="text-muted">Registra tu primera medida para ver tu progreso aquí</p>
                 <a href="{% url 'app:add_measurements' %}" class="btn btn-primary">
                     <i class="fas fa-plus me-1"></i>Registrar Medidas
@@ -657,66 +722,54 @@ function createWeightFullChart() {
         return;
     }
     
-    weightChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: measurementsData.labels,
-            datasets: [{
-                label: 'Peso (kg)',
-                data: measurementsData.weights,
-                borderColor: '#e1cfc6',
-                backgroundColor: 'rgba(225, 207, 198, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointHoverRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        font: { size: 14, weight: 'bold' }
-                    }
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    titleFont: { size: 18, weight: 'bold' },
-                    bodyFont: { size: 16 },
-                    padding: 16,
-                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                    titleColor: '#fff',
-                    bodyColor: '#fff',
-                    borderColor: '#e1cfc6',
-                    borderWidth: 2,
-                    cornerRadius: 8
-                }
-            },
-            scales: {
-                x: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Fecha',
-                        font: { size: 14, weight: 'bold' }
-                    }
-                },
-                y: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Peso (kg)',
-                        font: { size: 14, weight: 'bold' }
-                    }
-                }
-            }
-        }
-    });
+    updateChart();
+}
+
+function updateChart() {
+    if (!weightChart) return;
+    
+    const config = metricConfig[currentMetric];
+    const data = getCurrentMetricData();
+    
+    weightChart.data.datasets[0].label = config.label;
+    weightChart.data.datasets[0].data = data;
+    weightChart.data.datasets[0].borderColor = config.color;
+    weightChart.data.datasets[0].backgroundColor = config.backgroundColor;
+    
+    weightChart.options.scales.y.title.text = config.label;
+    
+    weightChart.update();
+    
+    // Actualizar títulos de estadísticas
+    document.getElementById('currentMetricTitle').textContent = config.currentTitle;
+    document.getElementById('initialMetricTitle').textContent = config.initialTitle;
+    document.getElementById('differenceMetricTitle').textContent = config.differenceTitle;
+    document.getElementById('averageMetricTitle').textContent = config.averageTitle;
+    
+    // Recalcular estadísticas
+    calculateWeightStats();
+}
+
+function getCurrentMetricData() {
+    switch(currentMetric) {
+        case 'weight':
+            return measurementsData.weights;
+        case 'imc':
+            return measurementsData.imcs;
+        case 'ica':
+            return measurementsData.icas;
+        case 'body_fat':
+            return measurementsData.body_fat_percentages;
+        case 'muscle_mass':
+            return measurementsData.muscle_masses;
+        default:
+            return measurementsData.weights;
+    }
+}
+
+function changeMetric() {
+    currentMetric = document.getElementById('metricSelector').value;
+    updateChart();
 }
 
 function createDifficultyChart() {
@@ -794,6 +847,71 @@ function createDifficultyChart() {
 function openWeightProgressModal() {
     const modal = new bootstrap.Modal(document.getElementById('weightProgressModal'));
     modal.show();
+    
+    // Inicializar el gráfico si no existe
+    if (!weightChart) {
+        const ctx = document.getElementById('weightFullChart').getContext('2d');
+        weightChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: measurementsData.labels,
+                datasets: [{
+                    label: 'Peso (kg)',
+                    data: measurementsData.weights,
+                    borderColor: '#e1cfc6',
+                    backgroundColor: 'rgba(225, 207, 198, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        titleFont: { size: 18, weight: 'bold' },
+                        bodyFont: { size: 16 },
+                        padding: 16,
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#e1cfc6',
+                        borderWidth: 2,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Fecha',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Peso (kg)',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 function filterWeightChart() {
@@ -808,18 +926,19 @@ function filterWeightChart() {
     const end = new Date(endDate);
     
     const filteredLabels = [];
-    const filteredWeights = [];
+    const filteredData = [];
+    const currentData = getCurrentMetricData();
     
     measurementsData.labels.forEach((label, index) => {
         const labelDate = new Date(label);
         if (labelDate >= start && labelDate <= end) {
             filteredLabels.push(label);
-            filteredWeights.push(measurementsData.weights[index]);
+            filteredData.push(currentData[index]);
         }
     });
     
     weightChart.data.labels = filteredLabels;
-    weightChart.data.datasets[0].data = filteredWeights;
+    weightChart.data.datasets[0].data = filteredData;
     weightChart.update();
 }
 
@@ -827,30 +946,33 @@ function resetWeightChart() {
     if (!weightChart) return;
     
     weightChart.data.labels = measurementsData.labels;
-    weightChart.data.datasets[0].data = measurementsData.weights;
+    weightChart.data.datasets[0].data = getCurrentMetricData();
     weightChart.update();
 }
 
 function calculateWeightStats() {
     console.log('Calculating stats, measurementsData:', measurementsData); // Debug
     
-    if (measurementsData.weights.length === 0) {
-        console.log('No weight data available'); // Debug
+    const currentData = getCurrentMetricData();
+    const config = metricConfig[currentMetric];
+    
+    if (currentData.length === 0) {
+        console.log('No data available'); // Debug
         return;
     }
     
-    const weights = measurementsData.weights;
-    const current = weights[weights.length - 1];
-    const initial = weights[0];
+    const current = currentData[currentData.length - 1];
+    const initial = currentData[0];
     const difference = current - initial;
-    const average = weights.reduce((a, b) => a + b, 0) / weights.length;
+    const average = currentData.reduce((a, b) => a + b, 0) / currentData.length;
     
     console.log('Stats calculated:', { current, initial, difference, average }); // Debug
     
-    document.getElementById('currentWeight').textContent = current.toFixed(1) + ' kg';
-    document.getElementById('initialWeight').textContent = initial.toFixed(1) + ' kg';
-    document.getElementById('weightDifference').textContent = (difference >= 0 ? '+' : '') + difference.toFixed(1) + ' kg';
-    document.getElementById('averageWeight').textContent = average.toFixed(1) + ' kg';
+    const unit = config.unit;
+    document.getElementById('currentWeight').textContent = current.toFixed(1) + (unit ? ' ' + unit : '');
+    document.getElementById('initialWeight').textContent = initial.toFixed(1) + (unit ? ' ' + unit : '');
+    document.getElementById('weightDifference').textContent = (difference >= 0 ? '+' : '') + difference.toFixed(1) + (unit ? ' ' + unit : '');
+    document.getElementById('averageWeight').textContent = average.toFixed(1) + (unit ? ' ' + unit : '');
 }
 </script>
 {% endblock %}
