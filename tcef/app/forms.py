@@ -191,5 +191,5 @@ class BodyMeasurementsForm(forms.ModelForm):
             'age': 'Edad (años)',
             'waist': 'Cintura (cm)',
             'hip': 'Cadera (cm)',
-            'chest': 'Pecho (cm)',
+            'chest': 'Cuello (cm)',
         }

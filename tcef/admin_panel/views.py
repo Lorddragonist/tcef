@@ -201,6 +201,7 @@ def edit_user(request, user_id):
         user.first_name = request.POST.get('first_name', '')
         user.last_name = request.POST.get('last_name', '')
         user.email = request.POST.get('email', '')
+        user.is_active = request.POST.get('is_active') == 'on'
         user.save()
         
         # Actualizar perfil
@@ -211,6 +212,8 @@ def edit_user(request, user_id):
             profile = UserProfile.objects.create(user=user)
         
         profile.is_approved = request.POST.get('is_approved') == 'on'
+        # Agregar el campo de género
+        profile.gender = request.POST.get('gender', '')
         profile.save()
         
         # Actualizar grupo

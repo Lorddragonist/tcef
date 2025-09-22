@@ -8,13 +8,20 @@ class UserProfileInline(admin.StackedInline):
     can_delete = False
     verbose_name_plural = 'Perfil de Usuario'
     fk_name = 'user'  # Especificar cuál ForeignKey usar
-    fields = ('is_approved', 'approval_date', 'approved_by', 'terms_accepted', 'terms_accepted_date')
+    fields = ('gender', 'is_approved', 'approval_date', 'approved_by', 'terms_accepted', 'terms_accepted_date')
 
 class UserAdmin(BaseUserAdmin):
     inlines = (UserProfileInline,)
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_is_approved', 'get_terms_accepted')
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'userprofile__is_approved', 'userprofile__terms_accepted')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'get_gender', 'is_staff', 'get_is_approved', 'get_terms_accepted')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'userprofile__gender', 'userprofile__is_approved', 'userprofile__terms_accepted')
     search_fields = ('username', 'first_name', 'last_name', 'email')
+    
+    def get_gender(self, obj):
+        try:
+            return obj.userprofile.get_gender_display()
+        except UserProfile.DoesNotExist:
+            return 'No especificado'
+    get_gender.short_description = 'Sexo'
     
     def get_is_approved(self, obj):
         try:

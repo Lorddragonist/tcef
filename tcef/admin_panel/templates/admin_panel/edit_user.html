@@ -172,6 +172,17 @@
                         <p class="text-muted mb-1">
                             <i class="fas fa-calendar me-2"></i>Registrado: {{ user.date_joined|date:"d/m/Y H:i" }}
                         </p>
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-venus-mars me-2"></i>
+                            Sexo: 
+                            {% if user.userprofile.gender == 'M' %}
+                                <span class="badge bg-primary">Masculino</span>
+                            {% elif user.userprofile.gender == 'F' %}
+                                <span class="badge bg-pink">Femenino</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No especificado</span>
+                            {% endif %}
+                        </p>
                     </div>
                     <div class="col-md-6 text-md-end">
                         <div class="mb-2">
@@ -241,6 +252,21 @@
                         <div class="form-group">
                             <label for="last_name" class="form-label">Apellido</label>
                             <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campo de Género -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="gender" class="form-label">Sexo</label>
+                            <select class="form-control" id="gender" name="gender">
+                                <option value="">Seleccionar sexo</option>
+                                <option value="M" {% if user.userprofile.gender == 'M' %}selected{% endif %}>Masculino</option>
+                                <option value="F" {% if user.userprofile.gender == 'F' %}selected{% endif %}>Femenino</option>
+                            </select>
+                            <small class="text-muted">Selecciona el sexo del usuario</small>
                         </div>
                     </div>
                 </div>
