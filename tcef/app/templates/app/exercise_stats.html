@@ -487,11 +487,11 @@
                     <div class="col-md-3">
                         <label for="metricSelector" class="form-label">Métrica a Visualizar</label>
                         <select class="form-control" id="metricSelector" onchange="changeMetric()">
+                            <option value="muscle_mass">Masa Muscular (kg)</option>
+                            <option value="body_fat">% Grasa Corporal</option>
+                            <option value="ica">ICA (Índice Cintura-Altura)</option>
                             <option value="weight">Peso (kg)</option>
                             <option value="imc">IMC (Índice de Masa Corporal)</option>
-                            <option value="ica">ICA (Índice Cintura-Altura)</option>
-                            <option value="body_fat">% Grasa Corporal</option>
-                            <option value="muscle_mass">Masa Muscular (kg)</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -573,10 +573,40 @@ console.log('measurementsData:', measurementsData); // Debug
 
 let weightChart = null;
 let weightPreviewChart = null;
-let currentMetric = 'weight'; // Métrica actual seleccionada
+let currentMetric = 'muscle_mass'; // Cambiar métrica por defecto a Masa Muscular
 
 // Configuración de métricas
 const metricConfig = {
+    muscle_mass: {
+        label: 'Masa Muscular (kg)',
+        color: '#9C27B0',
+        backgroundColor: 'rgba(156, 39, 176, 0.1)',
+        unit: 'kg',
+        currentTitle: 'Masa Muscular Actual',
+        initialTitle: 'Masa Muscular Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    },
+    body_fat: {
+        label: '% Grasa Corporal',
+        color: '#FF9800',
+        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+        unit: '%',
+        currentTitle: '% Grasa Actual',
+        initialTitle: '% Grasa Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    },
+    ica: {
+        label: 'ICA',
+        color: '#2196F3',
+        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+        unit: '',
+        currentTitle: 'ICA Actual',
+        initialTitle: 'ICA Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    },
     weight: {
         label: 'Peso (kg)',
         color: '#e1cfc6',
@@ -594,36 +624,6 @@ const metricConfig = {
         unit: '',
         currentTitle: 'IMC Actual',
         initialTitle: 'IMC Inicial',
-        differenceTitle: 'Diferencia',
-        averageTitle: 'Promedio'
-    },
-    ica: {
-        label: 'ICA',
-        color: '#2196F3',
-        backgroundColor: 'rgba(33, 150, 243, 0.1)',
-        unit: '',
-        currentTitle: 'ICA Actual',
-        initialTitle: 'ICA Inicial',
-        differenceTitle: 'Diferencia',
-        averageTitle: 'Promedio'
-    },
-    body_fat: {
-        label: '% Grasa Corporal',
-        color: '#FF9800',
-        backgroundColor: 'rgba(255, 152, 0, 0.1)',
-        unit: '%',
-        currentTitle: '% Grasa Actual',
-        initialTitle: '% Grasa Inicial',
-        differenceTitle: 'Diferencia',
-        averageTitle: 'Promedio'
-    },
-    muscle_mass: {
-        label: 'Masa Muscular (kg)',
-        color: '#9C27B0',
-        backgroundColor: 'rgba(156, 39, 176, 0.1)',
-        unit: 'kg',
-        currentTitle: 'Masa Muscular Actual',
-        initialTitle: 'Masa Muscular Inicial',
         differenceTitle: 'Diferencia',
         averageTitle: 'Promedio'
     }
@@ -752,18 +752,18 @@ function updateChart() {
 
 function getCurrentMetricData() {
     switch(currentMetric) {
+        case 'muscle_mass':
+            return measurementsData.muscle_masses;
+        case 'body_fat':
+            return measurementsData.body_fat_percentages;
+        case 'ica':
+            return measurementsData.icas;
         case 'weight':
             return measurementsData.weights;
         case 'imc':
             return measurementsData.imcs;
-        case 'ica':
-            return measurementsData.icas;
-        case 'body_fat':
-            return measurementsData.body_fat_percentages;
-        case 'muscle_mass':
-            return measurementsData.muscle_masses;
         default:
-            return measurementsData.weights;
+            return measurementsData.muscle_masses; // Por defecto masa muscular
     }
 }
 
