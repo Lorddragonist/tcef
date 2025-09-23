@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, date, timedelta
 import calendar
+import math  # Agregar esta importación
 from .forms import UserRegistrationForm, CustomLoginForm
 from .models import UserProfile, ExerciseLog, WeeklyRoutine, PasswordResetRequest
 from admin_panel.models import CustomRoutine, UserGroupMembership
@@ -405,11 +406,19 @@ def exercise_stats(request):
         'muscle_masses': [],
     }
     
+    # Obtener el género del usuario
+    try:
+        user_gender = request.user.userprofile.gender
+    except:
+        user_gender = 'F'  # Por defecto usar fórmula de mujer si no tiene género
+    
     # Calcular métricas para cada medición
     for m in measurements:
         weight_kg = float(m.weight)
         height_cm = float(m.height)
         waist_cm = float(m.waist)
+        hip_cm = float(m.hip)
+        neck_cm = float(m.chest)  # El campo chest representa el cuello
         age_years = m.age
         
         # Calcular IMC
@@ -427,10 +436,27 @@ def exercise_stats(request):
             ica = 0
         measurements_data['icas'].append(ica)
         
-        # Calcular % de Grasa Corporal
-        if height_cm > 0 and age_years > 0:
-            bmi = weight_kg / ((height_cm / 100) ** 2)
-            body_fat_percentage = round(1.2 * bmi + 0.23 * age_years - 10.8, 1)
+        # Calcular % de Grasa Corporal usando fórmula US Navy CORRECTA
+        if height_cm > 0 and waist_cm > 0 and neck_cm > 0:
+            try:
+                if user_gender == 'M':  # Hombre
+                    # Fórmula US Navy para hombres: 495 / (1.0324 - 0.19077 * log(cintura - cuello) + 0.15456 * log(altura)) - 450
+                    if waist_cm > neck_cm:  # Verificar que cintura > cuello
+                        body_fat_percentage = 495 / (1.0324 - 0.19077 * math.log10(waist_cm - neck_cm) + 0.15456 * math.log10(height_cm)) - 450
+                    else:
+                        body_fat_percentage = 0
+                else:  # Mujer (o por defecto)
+                    # Fórmula US Navy para mujeres: 495 / (1.29579 - 0.35004 * log(cintura + cadera - cuello) + 0.22100 * log(altura)) - 450
+                    if (waist_cm + hip_cm) > neck_cm:  # Verificar que (cintura + cadera) > cuello
+                        body_fat_percentage = 495 / (1.29579 - 0.35004 * math.log10(waist_cm + hip_cm - neck_cm) + 0.22100 * math.log10(height_cm)) - 450
+                    else:
+                        body_fat_percentage = 0
+                
+                # Limitar el resultado entre 0-100%
+                body_fat_percentage = round(max(0, min(100, body_fat_percentage)), 1)
+            except (ValueError, ZeroDivisionError):
+                # En caso de error en el cálculo (logaritmo de número negativo o división por cero)
+                body_fat_percentage = 0
         else:
             body_fat_percentage = 0
         measurements_data['body_fat_percentages'].append(body_fat_percentage)
@@ -458,6 +484,7 @@ def exercise_stats(request):
         height_cm = float(last_measurement.height)
         waist_cm = float(last_measurement.waist)
         hip_cm = float(last_measurement.hip)
+        neck_cm = float(last_measurement.chest)
         age_years = last_measurement.age
         
         # Calcular IMC (Índice de Masa Corporal)
@@ -469,10 +496,27 @@ def exercise_stats(request):
         if height_cm > 0:
             ica = round(waist_cm / height_cm, 2)
         
-        # Calcular % de Grasa Corporal (Fórmula de Deurenberg)
-        if height_cm > 0 and age_years > 0:
-            bmi = weight_kg / ((height_cm / 100) ** 2)
-            body_fat_percentage = round(1.2 * bmi + 0.23 * age_years - 10.8, 1)
+        # Calcular % de Grasa Corporal usando fórmula US Navy CORRECTA
+        if height_cm > 0 and waist_cm > 0 and neck_cm > 0:
+            try:
+                if user_gender == 'M':  # Hombre
+                    # Fórmula US Navy para hombres: 495 / (1.0324 - 0.19077 * log(cintura - cuello) + 0.15456 * log(altura)) - 450
+                    if waist_cm > neck_cm:  # Verificar que cintura > cuello
+                        body_fat_percentage = 495 / (1.0324 - 0.19077 * math.log10(waist_cm - neck_cm) + 0.15456 * math.log10(height_cm)) - 450
+                    else:
+                        body_fat_percentage = 0
+                else:  # Mujer (o por defecto)
+                    # Fórmula US Navy para mujeres: 495 / (1.29579 - 0.35004 * log(cintura + cadera - cuello) + 0.22100 * log(altura)) - 450
+                    if (waist_cm + hip_cm) > neck_cm:  # Verificar que (cintura + cadera) > cuello
+                        body_fat_percentage = 495 / (1.29579 - 0.35004 * math.log10(waist_cm + hip_cm - neck_cm) + 0.22100 * math.log10(height_cm)) - 450
+                    else:
+                        body_fat_percentage = 0
+                
+                # Limitar el resultado entre 0-100%
+                body_fat_percentage = round(max(0, min(100, body_fat_percentage)), 1)
+            except (ValueError, ZeroDivisionError):
+                # En caso de error en el cálculo
+                body_fat_percentage = 0
         
         # Calcular Masa Muscular (Fórmula aproximada)
         if height_cm > 0 and age_years > 0:
@@ -641,3 +685,30 @@ def add_body_measurements(request):
         form = BodyMeasurementsForm(initial=initial_data)
     
     return render(request, 'app/add_measurements.html', {'form': form})
+
+# Función corregida con las fórmulas exactas de tu fisioterapeuta
+def calculate_body_fat_us_navy(weight, height, waist, hip, neck, age, gender):
+    """
+    Calcula % de grasa corporal usando fórmula US Navy (según fisioterapeuta)
+    """
+    try:
+        if gender == 'M':  # Hombre
+            if waist <= neck:
+                return 0  # Medidas inválidas
+            # Fórmula para hombres: 495 / (1.0324 - 0.19077 * log(cintura - cuello) + 0.15456 * log(altura)) - 450
+            body_fat = 495 / (1.0324 - 0.19077 * math.log10(waist - neck) + 0.15456 * math.log10(height)) - 450
+        else:  # Mujer
+            if (waist + hip) <= neck:
+                return 0  # Medidas inválidas
+            # Fórmula para mujeres: 495 / (1.29579 - 0.35004 * log(cintura + cadera - cuello) + 0.22100 * log(altura)) - 450
+            body_fat = 495 / (1.29579 - 0.35004 * math.log10(waist + hip - neck) + 0.22100 * math.log10(height)) - 450
+        
+        # Limitar resultado entre 0-100%
+        return max(0, min(100, body_fat))
+    
+    except (ValueError, ZeroDivisionError):
+        return 0
+
+# Probar con tus medidas
+result = calculate_body_fat_us_navy(105, 176, 107, 111, 44, 30, 'M')
+print(f"Resultado con fórmula correcta: {result:.1f}%")
