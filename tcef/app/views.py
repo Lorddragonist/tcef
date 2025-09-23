@@ -461,9 +461,10 @@ def exercise_stats(request):
             body_fat_percentage = 0
         measurements_data['body_fat_percentages'].append(body_fat_percentage)
         
-        # Calcular Masa Muscular
-        if height_cm > 0 and age_years > 0:
-            muscle_mass = round(weight_kg * 0.4 + (height_cm - 100) * 0.1, 1)
+        # Calcular Masa Muscular (Masa corporal magra)
+        if height_cm > 0 and age_years > 0 and body_fat_percentage > 0:
+            # Masa corporal magra = Peso × (100 - %grasa corporal) / 100
+            muscle_mass = round(weight_kg * (100 - body_fat_percentage) / 100, 1)
         else:
             muscle_mass = 0
         measurements_data['muscle_masses'].append(muscle_mass)
@@ -518,10 +519,10 @@ def exercise_stats(request):
                 # En caso de error en el cálculo
                 body_fat_percentage = 0
         
-        # Calcular Masa Muscular (Fórmula aproximada)
-        if height_cm > 0 and age_years > 0:
-            # Fórmula simplificada basada en peso, altura y edad
-            muscle_mass = round(weight_kg * 0.4 + (height_cm - 100) * 0.1, 1)
+        # Calcular Masa Muscular (Masa corporal magra)
+        if height_cm > 0 and age_years > 0 and body_fat_percentage > 0:
+            # Masa corporal magra = Peso × (100 - %grasa corporal) / 100
+            muscle_mass = round(weight_kg * (100 - body_fat_percentage) / 100, 1)
     
     # Obtener datos de ejercicios para rachas
     exercises = ExerciseLog.objects.filter(user=request.user).order_by('exercise_date')
@@ -712,3 +713,20 @@ def calculate_body_fat_us_navy(weight, height, waist, hip, neck, age, gender):
 # Probar con tus medidas
 result = calculate_body_fat_us_navy(105, 176, 107, 111, 44, 30, 'M')
 print(f"Resultado con fórmula correcta: {result:.1f}%")
+
+# Probar la nueva fórmula de masa muscular
+print("=== NUEVA FÓRMULA DE MASA MUSCULAR ===")
+
+# Tus medidas
+weight_kg = 105
+body_fat_percentage = 25.0  # Ejemplo: 25% de grasa corporal
+
+# Fórmula anterior (aproximada)
+old_muscle_mass = weight_kg * 0.4 + (176 - 100) * 0.1
+print(f"Fórmula anterior: {old_muscle_mass:.1f} kg")
+
+# Nueva fórmula (más precisa)
+new_muscle_mass = weight_kg * (100 - body_fat_percentage) / 100
+print(f"Nueva fórmula: {new_muscle_mass:.1f} kg")
+
+print(f"\nDiferencia: {new_muscle_mass - old_muscle_mass:.1f} kg")
