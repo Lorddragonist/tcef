@@ -252,6 +252,7 @@
         color: #6c757d;
         margin-bottom: 0.25rem;
         font-weight: 500;
+        height: 24px;
     }
 
     .body-comp-value {
@@ -497,6 +498,17 @@
             <div style="height: 200px; width: 100%; position: relative;">
                 <canvas id="weightPreviewChart"></canvas>
             </div>
+            
+            <!-- Valor actual de masa muscular -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="body-comp-card">
+                        <div class="body-comp-label">Masa Muscular Actual</div>
+                        <div class="body-comp-value" id="currentMuscleMass">--</div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="text-center mt-2">
                 <small class="text-muted">
                     <i class="fas fa-info-circle me-1"></i>
@@ -545,6 +557,12 @@
                             <div class="body-comp-value" id="carbsResult" style="font-size: 1.4rem;">--</div>
                         </div>
                     </div>
+                </div>
+                <div class="text-center mt-2">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Haz clic para calcular tus necesidades nutricionales
+                    </small>
                 </div>
             </div>
             
@@ -900,6 +918,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar datos guardados de nutrición
     loadNutritionData();
     
+    // Actualizar masa muscular actual
+    updateCurrentMuscleMass();
+    
     // Event listeners para el formulario de nutrición
     document.getElementById('goal').addEventListener('change', function() {
         const goalPercentageRow = document.getElementById('goalPercentageRow');
@@ -922,6 +943,8 @@ function createWeightPreviewChart() {
                 <small class="text-muted">Registra tu primera medida</small>
             </div>
         `;
+        // También actualizar el valor de masa muscular
+        document.getElementById('currentMuscleMass').textContent = '--';
         return;
     }
     
@@ -966,6 +989,9 @@ function createWeightPreviewChart() {
             }
         }
     });
+    
+    // Actualizar valor actual de masa muscular
+    updateCurrentMuscleMass();
 }
 
 function createWeightFullChart() {
@@ -1385,6 +1411,15 @@ function loadNutritionData() {
         
         // Actualizar display
         updateNutritionDisplay();
+    }
+}
+
+function updateCurrentMuscleMass() {
+    if (measurementsData.muscle_masses && measurementsData.muscle_masses.length > 0) {
+        const currentMuscleMass = measurementsData.muscle_masses[measurementsData.muscle_masses.length - 1];
+        document.getElementById('currentMuscleMass').textContent = currentMuscleMass.toFixed(1) + ' kg';
+    } else {
+        document.getElementById('currentMuscleMass').textContent = '--';
     }
 }
 </script>
