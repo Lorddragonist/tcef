@@ -456,15 +456,49 @@
         
 
         <!-- Componente 6: Metas y Objetivos -->
-        <div class="stats-component">
+        <div class="stats-component" style="cursor: pointer;" onclick="openNutritionModal()">
             <h4 class="component-title">
                 <i class="fas fa-bullseye me-2"></i>Metas Nutricionales
             </h4>
-            <!-- Aquí irá el componente de metas -->
-            <div class="placeholder-component">
-                <i class="fas fa-target fa-2x mb-3"></i>
-                <p>Configuración de Metas</p>
-                <small>Próximamente...</small>
+            
+            <!-- Resultados de cálculos nutricionales -->
+            <div id="nutritionResults" style="display: none;">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="body-comp-card">
+                            <div class="body-comp-label">Calorías Objetivo</div>
+                            <div class="body-comp-value" id="targetCaloriesResult">--</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-4">
+                        <div class="body-comp-card">
+                            <div class="body-comp-label">Proteína</div>
+                            <div class="body-comp-value" id="proteinResult" style="font-size: 1.4rem;">--</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="body-comp-card">
+                            <div class="body-comp-label">Grasas</div>
+                            <div class="body-comp-value" id="fatResult" style="font-size: 1.4rem;">--</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="body-comp-card">
+                            <div class="body-comp-label">Carbohidratos</div>
+                            <div class="body-comp-value" id="carbsResult" style="font-size: 1.4rem;">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Placeholder cuando no hay cálculos -->
+            <div id="nutritionPlaceholder" class="placeholder-component">
+                <i class="fas fa-calculator fa-2x mb-3"></i>
+                <p>Calculadora de Macros</p>
+                <small>Haz clic para calcular tus necesidades nutricionales</small>
             </div>
         </div>
 
@@ -562,6 +596,183 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para cálculo de macros -->
+<div class="modal fade" id="nutritionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" style="color: #000 !important;">
+                    <i class="fas fa-calculator me-2"></i>Calculadora de Macros y Calorías
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="nutritionForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="gender" class="form-label">Sexo</label>
+                            <select class="form-control" id="gender" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="male">Hombre</option>
+                                <option value="female">Mujer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="age" class="form-label">Edad (años)</label>
+                            <input type="number" class="form-control" id="age" min="15" max="100" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="weight" class="form-label">Peso (kg)</label>
+                            <input type="number" class="form-control" id="weight" min="30" max="300" step="0.1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="height" class="form-label">Estatura (cm)</label>
+                            <input type="number" class="form-control" id="height" min="120" max="250" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="activityLevel" class="form-label">Nivel de Actividad</label>
+                            <select class="form-control" id="activityLevel" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="1.2">Sedentario (poco/nada de ejercicio)</option>
+                                <option value="1.375">Ligero (ejercicio ligero 1-3 días/semana)</option>
+                                <option value="1.55">Moderado (ejercicio moderado 3-5 días/semana)</option>
+                                <option value="1.725">Activo (ejercicio intenso 6-7 días/semana)</option>
+                                <option value="1.9">Muy activo (ejercicio muy intenso, trabajo físico)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="goal" class="form-label">Objetivo</label>
+                            <select class="form-control" id="goal" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="lose">Perder peso (-10% a -20%)</option>
+                                <option value="maintain">Mantener peso</option>
+                                <option value="gain">Ganar peso (+10% a +20%)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3" id="goalPercentageRow" style="display: none;">
+                        <div class="col-md-12">
+                            <label for="goalPercentage" class="form-label">Porcentaje de Déficit/Superávit</label>
+                            <select class="form-control" id="goalPercentage">
+                                <option value="0.10">10%</option>
+                                <option value="0.15">15%</option>
+                                <option value="0.20">20%</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="proteinRange" class="form-label">Proteína (g por kg de peso)</label>
+                            <select class="form-control" id="proteinRange" required>
+                                <option value="1.6">1.6 g/kg (mínimo)</option>
+                                <option value="1.8">1.8 g/kg (moderado)</option>
+                                <option value="2.0">2.0 g/kg (alto)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="fatPercentage" class="form-label">Grasas (% de calorías)</label>
+                            <select class="form-control" id="fatPercentage" required>
+                                <option value="0.20">20%</option>
+                                <option value="0.25">25%</option>
+                                <option value="0.30">30%</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="button" class="btn btn-primary me-2" onclick="calculateNutrition()">
+                            <i class="fas fa-calculator me-1"></i>Calcular
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="clearNutritionForm()">
+                            <i class="fas fa-eraser me-1"></i>Limpiar
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Resultados detallados -->
+                <div id="detailedResults" style="display: none;" class="mt-4">
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-chart-pie me-2"></i>Resultados Detallados</h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-center">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">TMB</h6>
+                                    <h4 class="text-info" id="detailedTMB">--</h4>
+                                    <small class="text-muted">kcal/día</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">TDEE</h6>
+                                    <h4 class="text-warning" id="detailedTDEE">--</h4>
+                                    <small class="text-muted">kcal/día</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Objetivo</h6>
+                                    <h4 class="text-success" id="detailedTarget">--</h4>
+                                    <small class="text-muted">kcal/día</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Proteína</h6>
+                                    <h4 class="text-primary" id="detailedProtein">--</h4>
+                                    <small class="text-muted">gramos/día</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Grasas</h6>
+                                    <h4 class="text-warning" id="detailedFat">--</h4>
+                                    <small class="text-muted">gramos/día</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Carbohidratos</h6>
+                                    <h4 class="text-success" id="detailedCarbs">--</h4>
+                                    <small class="text-muted">gramos/día</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-success" onclick="saveNutritionData()">
+                    <i class="fas fa-save me-1"></i>Guardar Configuración
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -629,6 +840,9 @@ const metricConfig = {
     }
 };
 
+// Funciones para cálculo nutricional
+let nutritionData = {};
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, measurementsData:', measurementsData); // Debug
     
@@ -646,6 +860,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Calcular estadísticas
     calculateWeightStats();
+    
+    // Cargar datos guardados de nutrición
+    loadNutritionData();
+    
+    // Event listeners para el formulario de nutrición
+    document.getElementById('goal').addEventListener('change', function() {
+        const goalPercentageRow = document.getElementById('goalPercentageRow');
+        if (this.value === 'lose' || this.value === 'gain') {
+            goalPercentageRow.style.display = 'block';
+        } else {
+            goalPercentageRow.style.display = 'none';
+        }
+    });
 });
 
 function createWeightPreviewChart() {
@@ -973,6 +1200,162 @@ function calculateWeightStats() {
     document.getElementById('initialWeight').textContent = initial.toFixed(1) + (unit ? ' ' + unit : '');
     document.getElementById('weightDifference').textContent = (difference >= 0 ? '+' : '') + difference.toFixed(1) + (unit ? ' ' + unit : '');
     document.getElementById('averageWeight').textContent = average.toFixed(1) + (unit ? ' ' + unit : '');
+}
+
+function openNutritionModal() {
+    const modal = new bootstrap.Modal(document.getElementById('nutritionModal'));
+    modal.show();
+}
+
+function calculateNutrition() {
+    const form = document.getElementById('nutritionForm');
+    
+    // Validar formulario
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Obtener valores del formulario
+    const gender = document.getElementById('gender').value;
+    const age = parseInt(document.getElementById('age').value);
+    const weight = parseFloat(document.getElementById('weight').value);
+    const height = parseInt(document.getElementById('height').value);
+    const activityLevel = parseFloat(document.getElementById('activityLevel').value);
+    const goal = document.getElementById('goal').value;
+    const goalPercentage = parseFloat(document.getElementById('goalPercentage').value) || 0;
+    const proteinRange = parseFloat(document.getElementById('proteinRange').value);
+    const fatPercentage = parseFloat(document.getElementById('fatPercentage').value);
+    
+    // Calcular TMB usando Mifflin-St Jeor
+    let tmb;
+    if (gender === 'male') {
+        tmb = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+    } else {
+        tmb = (10 * weight) + (6.25 * height) - (5 * age) - 161;
+    }
+    
+    // Calcular TDEE
+    const tdee = tmb * activityLevel;
+    
+    // Calcular calorías objetivo
+    let targetCalories;
+    switch (goal) {
+        case 'lose':
+            targetCalories = tdee * (1 - goalPercentage);
+            break;
+        case 'gain':
+            targetCalories = tdee * (1 + goalPercentage);
+            break;
+        case 'maintain':
+        default:
+            targetCalories = tdee;
+            break;
+    }
+    
+    // Calcular macros
+    const protein = weight * proteinRange; // gramos
+    const proteinCalories = protein * 4; // 4 kcal por gramo
+    
+    const fatCalories = targetCalories * fatPercentage;
+    const fat = fatCalories / 9; // 9 kcal por gramo
+    
+    const carbsCalories = targetCalories - proteinCalories - fatCalories;
+    const carbs = carbsCalories / 4; // 4 kcal por gramo
+    
+    // Guardar resultados
+    nutritionData = {
+        tmb: Math.round(tmb),
+        tdee: Math.round(tdee),
+        targetCalories: Math.round(targetCalories),
+        protein: Math.round(protein),
+        fat: Math.round(fat),
+        carbs: Math.round(carbs),
+        gender,
+        age,
+        weight,
+        height,
+        activityLevel,
+        goal,
+        goalPercentage,
+        proteinRange,
+        fatPercentage
+    };
+    
+    // Mostrar resultados
+    updateNutritionDisplay();
+    
+    // Mostrar resultados detallados en el modal
+    document.getElementById('detailedTMB').textContent = nutritionData.tmb;
+    document.getElementById('detailedTDEE').textContent = nutritionData.tdee;
+    document.getElementById('detailedTarget').textContent = nutritionData.targetCalories;
+    document.getElementById('detailedProtein').textContent = nutritionData.protein;
+    document.getElementById('detailedFat').textContent = nutritionData.fat;
+    document.getElementById('detailedCarbs').textContent = nutritionData.carbs;
+    
+    document.getElementById('detailedResults').style.display = 'block';
+}
+
+function updateNutritionDisplay() {
+    if (nutritionData.tmb) {
+        // Actualizar componente principal
+        document.getElementById('targetCaloriesResult').textContent = nutritionData.targetCalories + ' kcal';
+        document.getElementById('proteinResult').textContent = nutritionData.protein + 'g';
+        document.getElementById('fatResult').textContent = nutritionData.fat + 'g';
+        document.getElementById('carbsResult').textContent = nutritionData.carbs + 'g';
+        
+        // Mostrar resultados y ocultar placeholder
+        document.getElementById('nutritionResults').style.display = 'block';
+        document.getElementById('nutritionPlaceholder').style.display = 'none';
+    }
+}
+
+function clearNutritionForm() {
+    document.getElementById('nutritionForm').reset();
+    document.getElementById('goalPercentageRow').style.display = 'none';
+    document.getElementById('detailedResults').style.display = 'none';
+}
+
+function saveNutritionData() {
+    if (nutritionData.tmb) {
+        localStorage.setItem('tcef_nutrition_data', JSON.stringify(nutritionData));
+        
+        // Cerrar modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('nutritionModal'));
+        modal.hide();
+        
+        // Mostrar mensaje de éxito
+        alert('Configuración nutricional guardada correctamente');
+    } else {
+        alert('Primero debes calcular los valores');
+    }
+}
+
+function loadNutritionData() {
+    const saved = localStorage.getItem('tcef_nutrition_data');
+    if (saved) {
+        nutritionData = JSON.parse(saved);
+        
+        // Cargar valores en el formulario
+        document.getElementById('gender').value = nutritionData.gender || '';
+        document.getElementById('age').value = nutritionData.age || '';
+        document.getElementById('weight').value = nutritionData.weight || '';
+        document.getElementById('height').value = nutritionData.height || '';
+        document.getElementById('activityLevel').value = nutritionData.activityLevel || '';
+        document.getElementById('goal').value = nutritionData.goal || '';
+        document.getElementById('goalPercentage').value = nutritionData.goalPercentage || '0.15';
+        document.getElementById('proteinRange').value = nutritionData.proteinRange || '1.8';
+        document.getElementById('fatPercentage').value = nutritionData.fatPercentage || '0.25';
+        
+        // Mostrar/ocultar porcentaje según el objetivo
+        const goalPercentageRow = document.getElementById('goalPercentageRow');
+        if (nutritionData.goal === 'lose' || nutritionData.goal === 'gain') {
+            goalPercentageRow.style.display = 'block';
+        }
+        
+        // Actualizar display
+        updateNutritionDisplay();
+    }
 }
 </script>
 {% endblock %}
