@@ -113,12 +113,6 @@
         const logoutForm = document.querySelector('form');
         const logoutButton = logoutForm.querySelector('button[type="submit"]');
         
-        logoutButton.addEventListener('click', function(e) {
-            if (!confirm('¿Estás completamente seguro de que quieres cerrar sesión?')) {
-                e.preventDefault();
-            }
-        });
-        
         // Efecto hover en las opciones
         document.querySelectorAll('.option-card').forEach(card => {
             card.addEventListener('mouseenter', function() {
