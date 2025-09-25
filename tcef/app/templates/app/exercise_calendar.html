@@ -286,6 +286,68 @@
     </div>
 </div>
 
+<!-- Modal para opciones de ejercicio -->
+<div class="modal fade" id="exerciseOptionsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-dumbbell me-2"></i>Opciones de Ejercicio
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="mb-4">¿Qué quieres hacer con este ejercicio?</p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary btn-lg" id="viewDetailsBtn">
+                        <i class="fas fa-eye me-2"></i>Ver Detalles
+                    </button>
+                    <button type="button" class="btn btn-danger btn-lg" id="deleteExerciseBtn">
+                        <i class="fas fa-trash me-2"></i>Eliminar Ejercicio
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalles del ejercicio -->
+<div class="modal fade" id="exerciseDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>Detalles del Ejercicio
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-3" id="exerciseDetailsDate"></h6>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Dificultad:</label>
+                            <div class="d-flex align-items-center">
+                                <span id="exerciseDetailsDifficulty" class="badge bg-primary me-2"></span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Notas:</label>
+                            <p id="exerciseDetailsNotes" class="text-muted"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -548,15 +610,35 @@
                 // Extraer mes y año de la fecha
                 const [year, month] = date.split('-');
                 
-                // Mostrar opciones (editar/eliminar)
-                if (confirm('¿Qué quieres hacer?\n\n1. Ver detalles\n2. Eliminar ejercicio\n\nPresiona OK para ver detalles o Cancelar para eliminar.')) {
-                    // Mostrar detalles del ejercicio
-                    const exercise = this.dataset;
-                    alert(`Ejercicio del ${day}/${month}/${year}\n\nDificultad: ${exercise.difficulty}\nNotas: ${exercise.notes || 'Sin notas'}`);
-                } else {
+                // Guardar datos del ejercicio para usar en los botones
+                const exerciseData = {
+                    difficulty: this.dataset.difficulty,
+                    notes: this.dataset.notes
+                };
+                
+                console.log('Datos del ejercicio:', exerciseData); // Para debug
+                
+                // Mostrar modal de opciones
+                const modal = new bootstrap.Modal(document.getElementById('exerciseOptionsModal'));
+                modal.show();
+                
+                // Configurar botones del modal
+                document.getElementById('viewDetailsBtn').onclick = function() {
+                    modal.hide();
+                    // Mostrar detalles del ejercicio en modal
+                    document.getElementById('exerciseDetailsDate').textContent = `Ejercicio del ${day}/${month}/${year}`;
+                    document.getElementById('exerciseDetailsDifficulty').textContent = exerciseData.difficulty;
+                    document.getElementById('exerciseDetailsNotes').textContent = exerciseData.notes || 'Sin notas';
+                    
+                    const detailsModal = new bootstrap.Modal(document.getElementById('exerciseDetailsModal'));
+                    detailsModal.show();
+                };
+                
+                document.getElementById('deleteExerciseBtn').onclick = function() {
+                    modal.hide();
                     // Eliminar ejercicio
                     showRemoveExerciseModal(date, day);
-                }
+                };
             });
         });
     });
