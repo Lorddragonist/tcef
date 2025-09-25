@@ -1357,12 +1357,8 @@ function saveNutritionData() {
         // Cerrar modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('nutritionModal'));
         modal.hide();
-        
-        // Mostrar mensaje de éxito
-        alert('Configuración nutricional guardada correctamente');
-    } else {
-        alert('Primero debes calcular los valores');
     }
+    // Si no hay datos, simplemente no hace nada
 }
 
 function loadNutritionData() {
