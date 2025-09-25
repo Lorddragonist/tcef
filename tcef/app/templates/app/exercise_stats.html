@@ -259,6 +259,60 @@
         font-weight: bold;
         color: #343a40;
     }
+
+    /* Reducir altura de cards de macros */
+    #nutritionResults .body-comp-card {
+        padding: 0.75rem 1rem;
+        min-height: auto;
+    }
+
+    #nutritionResults .body-comp-label {
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    #nutritionResults .body-comp-value {
+        font-size: 1.4rem;
+    }
+
+    /* Estilos para cards de resultados detallados en modal */
+    #detailedResults .card {
+        border: none;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    #detailedResults .card-body {
+        padding: 1rem 0.5rem;
+        background: transparent;
+        border-radius: 0;
+        border: none;
+        transition: all 0.2s ease;
+    }
+
+    #detailedResults .card-body:hover {
+        background: transparent;
+        transform: none;
+    }
+
+    #detailedResults .card-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+
+    #detailedResults h4 {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+        color: #343a40 !important;
+    }
+
+    #detailedResults .text-muted {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
 </style>
 {% endblock %}
 
@@ -473,19 +527,19 @@
                 </div>
                 
                 <div class="row">
-                    <div class="col-4">
+                    <div class="col-12 mb-2">
                         <div class="body-comp-card">
                             <div class="body-comp-label">Proteína</div>
                             <div class="body-comp-value" id="proteinResult" style="font-size: 1.4rem;">--</div>
                         </div>
                     </div>
-                    <div class="col-4">
+                    <div class="col-12 mb-2">
                         <div class="body-comp-card">
                             <div class="body-comp-label">Grasas</div>
                             <div class="body-comp-value" id="fatResult" style="font-size: 1.4rem;">--</div>
                         </div>
                     </div>
-                    <div class="col-4">
+                    <div class="col-12">
                         <div class="body-comp-card">
                             <div class="body-comp-label">Carbohidratos</div>
                             <div class="body-comp-value" id="carbsResult" style="font-size: 1.4rem;">--</div>
@@ -704,28 +758,10 @@
                     <h6 class="mb-3"><i class="fas fa-chart-pie me-2"></i>Resultados Detallados</h6>
                     
                     <div class="row mb-3">
-                        <div class="col-md-4 text-center">
+                        <div class="col-md-12 text-center">
                             <div class="card">
                                 <div class="card-body">
-                                    <h6 class="card-title">TMB</h6>
-                                    <h4 class="text-info" id="detailedTMB">--</h4>
-                                    <small class="text-muted">kcal/día</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h6 class="card-title">TDEE</h6>
-                                    <h4 class="text-warning" id="detailedTDEE">--</h4>
-                                    <small class="text-muted">kcal/día</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h6 class="card-title">Objetivo</h6>
+                                    <h6 class="card-title">Calorías Objetivo</h6>
                                     <h4 class="text-success" id="detailedTarget">--</h4>
                                     <small class="text-muted">kcal/día</small>
                                 </div>
@@ -1286,8 +1322,6 @@ function calculateNutrition() {
     updateNutritionDisplay();
     
     // Mostrar resultados detallados en el modal
-    document.getElementById('detailedTMB').textContent = nutritionData.tmb;
-    document.getElementById('detailedTDEE').textContent = nutritionData.tdee;
     document.getElementById('detailedTarget').textContent = nutritionData.targetCalories;
     document.getElementById('detailedProtein').textContent = nutritionData.protein;
     document.getElementById('detailedFat').textContent = nutritionData.fat;
