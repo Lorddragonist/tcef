@@ -316,7 +316,7 @@
 
 <!-- Modal para detalles del ejercicio -->
 <div class="modal fade" id="exerciseDetailsModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
@@ -340,6 +340,45 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Información de la rutina -->
+                <div id="routineDetails" class="mt-4" style="display: none;">
+                    <hr>
+                    <div class="card border-info" style="border-color: #b3a5a5 !important;">
+                        <div class="card-header routine-preview-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-dumbbell me-2"></i>Rutina Asignada
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title" id="exerciseDetailsRoutineTitle"></h6>
+                            <p class="card-text small" id="exerciseDetailsRoutineDescription">
+                                <span id="exerciseDetailsRoutineDescriptionShort"></span>
+                                <span id="exerciseDetailsRoutineDescriptionFull" style="display: none;"></span>
+                                <a href="#" id="toggleExerciseDescription" onclick="toggleExerciseDescription(); return false;" class="text-primary">
+                                    <small>Mostrar más</small>
+                                </a>
+                            </p>
+                            
+                            <!-- Lista de videos -->
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-video me-1"></i>Videos de la Rutina:
+                                </h6>
+                                <div id="exerciseDetailsRoutineVideosList" class="list-group list-group-flush">
+                                    <!-- Los videos se cargarán aquí dinámicamente -->
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-video me-1"></i>
+                                    <span id="exerciseDetailsRoutineVideosCount"></span> videos
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
@@ -348,9 +387,17 @@
     </div>
 </div>
 
-{% endblock %}
+<style>
+    /* Asegurar que el modal de video aparezca por encima de otros modales */
+    #videoPreviewModal {
+        z-index: 1060 !important;
+    }
+    
+    #videoPreviewModal .modal-backdrop {
+        z-index: 1059 !important;
+    }
+</style>
 
-{% block extra_js %}
 <script>
     // Pasar rutinas asignadas al JavaScript
     window.assignedRoutines = {
@@ -471,6 +518,13 @@
         // Establecer la nueva fuente
         videoSource.src = videoUrl;
         videoPlayer.load();
+        
+        // Pausar el video cuando se cierre el modal
+        const videoModal = document.getElementById('videoPreviewModal');
+        videoModal.addEventListener('hidden.bs.modal', function () {
+            videoPlayer.pause();
+            videoPlayer.currentTime = 0; // Reiniciar al inicio
+        });
         
         // Mostrar el modal
         modal.show();
@@ -598,6 +652,81 @@
         }
     }
 
+    // Función para cargar detalles de la rutina
+    function loadRoutineDetails(date) {
+        // Obtener datos reales de la rutina asignada para esa fecha
+        const routineData = window.assignedRoutines && window.assignedRoutines[date];
+        
+        if (routineData) {
+            // Mostrar la sección de rutina
+            document.getElementById('routineDetails').style.display = 'block';
+            
+            // Cargar datos de la rutina
+            document.getElementById('exerciseDetailsRoutineTitle').textContent = routineData.title;
+            
+            // Manejar descripción
+            const shortDescription = routineData.description.length > 100 ?
+                routineData.description.substring(0, 100) + '...' :
+                routineData.description;
+            
+            document.getElementById('exerciseDetailsRoutineDescriptionShort').textContent = shortDescription;
+            document.getElementById('exerciseDetailsRoutineDescriptionFull').textContent = routineData.description;
+            document.getElementById('exerciseDetailsRoutineVideosCount').textContent = routineData.videos_count;
+            
+            // Ocultar/mostrar botón de "Mostrar más" según la longitud
+            if (routineData.description.length <= 100) {
+                document.getElementById('toggleExerciseDescription').style.display = 'none';
+            } else {
+                document.getElementById('toggleExerciseDescription').style.display = 'inline';
+            }
+            
+            // Cargar videos con la estructura completa
+            const videosList = document.getElementById('exerciseDetailsRoutineVideosList');
+            videosList.innerHTML = '';
+            
+            routineData.videos.forEach((video, index) => {
+                const videoItem = document.createElement('div');
+                videoItem.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
+                videoItem.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-primary me-2">${video.order}</span>
+                        <div>
+                            <h6 class="mb-1 small">${video.title}</h6>
+                            ${video.description ? `<small class="text-muted">${video.description}</small>` : ''}
+                            ${video.notes ? `<br><small class="text-info"><i class="fas fa-sticky-note me-1"></i>${video.notes}</small>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-end d-flex align-items-center">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="previewVideo('${video.s3_url}', '${video.title}')">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                `;
+                videosList.appendChild(videoItem);
+            });
+        } else {
+            // Si no hay rutina asignada, ocultar la sección
+            document.getElementById('routineDetails').style.display = 'none';
+        }
+    }
+    
+    // Función para alternar descripción
+    function toggleExerciseDescription() {
+        const short = document.getElementById('exerciseDetailsRoutineDescriptionShort');
+        const full = document.getElementById('exerciseDetailsRoutineDescriptionFull');
+        const toggle = document.getElementById('toggleExerciseDescription');
+        
+        if (full.style.display === 'none') {
+            short.style.display = 'none';
+            full.style.display = 'inline';
+            toggle.innerHTML = '<small>Mostrar menos</small>';
+        } else {
+            short.style.display = 'inline';
+            full.style.display = 'none';
+            toggle.innerHTML = '<small>Mostrar más</small>';
+        }
+    }
+
     // Event listeners para clicks en días con ejercicios
     document.addEventListener('DOMContentLoaded', function() {
         // Agregar click a días con ejercicios para mostrar opciones
@@ -629,6 +758,9 @@
                     document.getElementById('exerciseDetailsDate').textContent = `Ejercicio del ${day}/${month}/${year}`;
                     document.getElementById('exerciseDetailsDifficulty').textContent = exerciseData.difficulty;
                     document.getElementById('exerciseDetailsNotes').textContent = exerciseData.notes || 'Sin notas';
+                    
+                    // Cargar información de la rutina
+                    loadRoutineDetails(date);
                     
                     const detailsModal = new bootstrap.Modal(document.getElementById('exerciseDetailsModal'));
                     detailsModal.show();
