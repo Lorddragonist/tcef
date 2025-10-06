@@ -5,9 +5,21 @@ TuCuerpoEnFormaCion{% endblock %} {% block extra_css %}
 
 <!-- Hero Section -->
 <section class="hero-section">
+  <!-- Video de fondo -->
+  <video
+    class="hero-bg"
+    src="https://tcefbucket.s3.us-east-2.amazonaws.com/videos/Landing+video.mp4"
+    poster="{% static 'app/img/hero-poster.jpg' %}"
+    autoplay
+    muted
+    loop
+    playsinline
+  ></video>
+  <!-- Overlay para legibilidad -->
+  <div class="hero-overlay"></div>
   <div class="container">
     <img
-          src="https://tcefbucket.s3.us-east-2.amazonaws.com/Static+Images/TCEF+Title.png"
+          src="https://tcefbucket.s3.us-east-2.amazonaws.com/Static+Images/titulo.png"
           alt="Derly González - Fisioterapeuta y Entrenadora Personal"
           class="img-fluid mb-4"
           id="tcef-title"
@@ -39,12 +51,7 @@ TuCuerpoEnFormaCion{% endblock %} {% block extra_css %}
     <div class="row">
       <div class="col-lg-8 mx-auto text-center">
         <h2 class="mb-4">Acerca de mí</h2>
-        <img
-          src="https://tcefbucket.s3.us-east-2.amazonaws.com/Static+Images/Derly.png"
-          alt="Derly González - Fisioterapeuta y Entrenadora Personal"
-          class="img-fluid rounded-circle mb-4"
-          style="max-width: 200px; height: auto"
-        />
+        
         <p class="lead">
           Soy Derly Neryeth González G., fisioterapeuta, entrenadora personal,
           coach en cambio de hábitos e instructora certificada en ejercicio
