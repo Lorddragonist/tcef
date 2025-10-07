@@ -43,12 +43,20 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
   z-index: 0;
 }
+
+/* Alternativas para eliminar líneas negras */
+/* Si el video tiene líneas arriba y abajo, prueba: */
+/* .hero-bg { object-position: center top; } */
+/* Si el video tiene líneas a los lados, prueba: */
+/* .hero-bg { object-position: center center; } */
 
 /* Degradado/oscurecido para legibilidad */
 .hero-overlay {
   position: absolute;
+  height: 100%;
   inset: 0;
   z-index: 1;
   background: linear-gradient(135deg, rgba(225,207,198,.65), rgba(105,103,103,.65));
