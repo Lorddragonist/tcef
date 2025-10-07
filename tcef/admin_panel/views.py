@@ -13,7 +13,7 @@ import json
 from datetime import datetime, timedelta
 
 from .models import UserGroup, UserGroupMembership, CustomRoutine, AdminActivity, VideoUploadSession, Video, RoutineVideo
-from app.models import UserProfile, ExerciseLog
+from app.models import UserProfile, ExerciseLog, BodyMeasurements, BodyCompositionHistory
 
 import boto3
 from botocore.exceptions import ClientError
@@ -1130,3 +1130,169 @@ def replicate_routine(request, routine_id):
     }
     
     return render(request, 'admin_panel/replicate_routine.html', context)
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def user_monitoring(request):
+    """Vista principal de monitoreo de usuarios con tabla de métricas del mes actual"""
+    from datetime import date
+    from django.db.models import Count, Q, Avg, Max
+    
+    # Obtener el mes actual
+    current_date = timezone.now().date()
+    current_year = current_date.year
+    current_month = current_date.month
+    
+    # Obtener todos los usuarios con perfil aprobado
+    users = User.objects.filter(
+        userprofile__is_approved=True
+    ).select_related('userprofile').prefetch_related(
+        'exercise_logs', 'body_measurements', 'body_composition_history'
+    )
+    
+    # Calcular métricas para cada usuario del mes actual
+    user_metrics = []
+    
+    for user in users:
+        # Ejercicios del mes actual
+        month_exercises = ExerciseLog.get_month_exercises(user, current_year, current_month)
+        exercise_count = month_exercises.count()
+        
+        # Días del mes que han pasado
+        days_passed = min(current_date.day, 30)  # Aproximación
+        
+        # Racha actual (días consecutivos)
+        current_streak = ExerciseLog.get_current_streak(user)
+        
+        # Mejor racha
+        best_streak = ExerciseLog.get_best_streak(user)
+        
+        # Medidas más recientes
+        latest_measurement = BodyMeasurements.objects.filter(user=user).first()
+        latest_composition = BodyCompositionHistory.objects.filter(user=user).first()
+        
+        # Progreso mensual (ejercicios completados vs días del mes)
+        monthly_progress = (exercise_count / days_passed * 100) if days_passed > 0 else 0
+        
+        user_metrics.append({
+            'user': user,
+            'exercise_count': exercise_count,
+            'current_streak': current_streak,
+            'best_streak': best_streak,
+            'monthly_progress': round(monthly_progress, 1),
+            'latest_weight': latest_measurement.weight if latest_measurement else None,
+            'latest_bmi': latest_measurement.bmi if latest_measurement else None,
+            'latest_body_fat': latest_composition.body_fat_percentage if latest_composition else None,
+            'latest_muscle': latest_composition.muscle_mass if latest_composition else None,
+            'latest_ica': latest_composition.ica if latest_composition else None,
+        })
+    
+    # Ordenar por progreso mensual descendente
+    user_metrics.sort(key=lambda x: x['monthly_progress'], reverse=True)
+    
+    context = {
+        'user_metrics': user_metrics,
+        'current_year': current_year,
+        'current_month': current_month,
+        'current_date': current_date,
+    }
+    
+    return render(request, 'admin_panel/user_monitoring.html', context)
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def user_detail_modal(request, user_id):
+    """Vista AJAX para obtener detalles de un usuario específico"""
+    from datetime import date, timedelta
+    from django.db.models import Count, Q
+    
+    user = get_object_or_404(User, id=user_id)
+    
+    # Obtener parámetros de fecha
+    year = int(request.GET.get('year', timezone.now().year))
+    month = int(request.GET.get('month', timezone.now().month))
+    
+    # Ejercicios del mes seleccionado
+    month_exercises = ExerciseLog.get_month_exercises(user, year, month)
+    exercise_dates = [ex.exercise_date for ex in month_exercises]
+    
+    # Estadísticas del mes
+    total_exercises = month_exercises.count()
+    days_in_month = 30  # Aproximación
+    exercise_percentage = (total_exercises / days_in_month * 100) if days_in_month > 0 else 0
+    
+    # Racha actual y mejor racha
+    current_streak = ExerciseLog.get_current_streak(user)
+    best_streak = ExerciseLog.get_best_streak(user)
+    
+    # Medidas corporales del mes
+    month_measurements = BodyMeasurements.objects.filter(
+        user=user,
+        measurement_date__year=year,
+        measurement_date__month=month
+    ).order_by('measurement_date')
+    
+    # Composición corporal del mes
+    month_composition = BodyCompositionHistory.objects.filter(
+        user=user,
+        measurement_date__year=year,
+        measurement_date__month=month
+    ).order_by('measurement_date')
+    
+    # Datos para gráficos
+    weight_data = []
+    bmi_data = []
+    body_fat_data = []
+    muscle_data = []
+    ica_data = []
+    
+    for measurement in month_measurements:
+        weight_data.append({
+            'date': measurement.measurement_date.strftime('%Y-%m-%d'),
+            'weight': float(measurement.weight),
+            'bmi': float(measurement.bmi)
+        })
+    
+    for composition in month_composition:
+        if composition.body_fat_percentage:
+            body_fat_data.append({
+                'date': composition.measurement_date.strftime('%Y-%m-%d'),
+                'body_fat': float(composition.body_fat_percentage)
+            })
+        if composition.muscle_mass:
+            muscle_data.append({
+                'date': composition.measurement_date.strftime('%Y-%m-%d'),
+                'muscle': float(composition.muscle_mass)
+            })
+        if composition.ica:
+            ica_data.append({
+                'date': composition.measurement_date.strftime('%Y-%m-%d'),
+                'ica': float(composition.ica)
+            })
+    
+    # Estadísticas generales del usuario
+    total_exercises_all_time = ExerciseLog.objects.filter(user=user).count()
+    first_exercise = ExerciseLog.objects.filter(user=user).order_by('exercise_date').first()
+    current_date = timezone.now().date()
+    days_since_start = (current_date - first_exercise.exercise_date).days if first_exercise else 0
+    
+    context = {
+        'user': user,
+        'year': year,
+        'month': month,
+        'exercise_dates': exercise_dates,
+        'total_exercises': total_exercises,
+        'exercise_percentage': round(exercise_percentage, 1),
+        'current_streak': current_streak,
+        'best_streak': best_streak,
+        'month_measurements': month_measurements,
+        'month_composition': month_composition,
+        'weight_data': weight_data,
+        'body_fat_data': body_fat_data,
+        'muscle_data': muscle_data,
+        'ica_data': ica_data,
+        'total_exercises_all_time': total_exercises_all_time,
+        'days_since_start': days_since_start,
+    }
+    
+    return render(request, 'admin_panel/user_detail_modal.html', context)

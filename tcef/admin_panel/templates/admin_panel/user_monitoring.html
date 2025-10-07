@@ -1,0 +1,361 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Monitoreo de Usuarios{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+<style>
+    .metrics-table {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .metrics-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #495057;
+        border: none;
+        padding: 15px 10px;
+    }
+    
+    .metrics-table td {
+        padding: 12px 10px;
+        border-top: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+    
+    .user-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .user-row:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .progress-bar {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #e9ecef;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745, #20c997);
+        transition: width 0.3s ease;
+    }
+    
+    .streak-badge {
+        background: #ffc107;
+        color: #212529;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .best-streak-badge {
+        background: #17a2b8;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .metric-value {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .metric-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .modal-lg {
+        max-width: 90%;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 20px 0;
+    }
+    
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+        margin: 20px 0;
+    }
+    
+    .calendar-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .calendar-day.exercise {
+        background: #28a745;
+        color: white;
+    }
+    
+    .calendar-day.no-exercise {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+    
+    .calendar-day.other-month {
+        background: #f8f9fa;
+        color: #adb5bd;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .stats-card h5 {
+        color: #495057;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .stat-value {
+        font-weight: 600;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Monitoreo de Usuarios
+                </h2>
+                <div class="text-muted">
+                    <i class="fas fa-calendar me-1"></i>
+                    {{ current_date|date:"F Y" }}
+                </div>
+            </div>
+            
+            <div class="metrics-table">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Ejercicios del Mes</th>
+                            <th>Progreso Mensual</th>
+                            <th>Racha Actual</th>
+                            <th>Mejor Racha</th>
+                            <th>Peso Actual</th>
+                            <th>IMC</th>
+                            <th>% Grasa</th>
+                            <th>Músculo</th>
+                            <th>ICA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for metric in user_metrics %}
+                        <tr class="user-row" onclick="openUserModal({{ metric.user.id }})">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ metric.user.get_full_name|default:metric.user.username }}</div>
+                                        <small class="text-muted">{{ metric.user.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="metric-value">{{ metric.exercise_count }}</span>
+                                <div class="metric-label">ejercicios</div>
+                            </td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ metric.monthly_progress }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ metric.monthly_progress }}%</small>
+                            </td>
+                            <td>
+                                <span class="streak-badge">{{ metric.current_streak }} días</span>
+                            </td>
+                            <td>
+                                <span class="best-streak-badge">{{ metric.best_streak }} días</span>
+                            </td>
+                            <td>
+                                {% if metric.latest_weight %}
+                                    <span class="metric-value">{{ metric.latest_weight }} kg</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if metric.latest_bmi %}
+                                    <span class="metric-value">{{ metric.latest_bmi }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if metric.latest_body_fat %}
+                                    <span class="metric-value">{{ metric.latest_body_fat }}%</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if metric.latest_muscle %}
+                                    <span class="metric-value">{{ metric.latest_muscle }} kg</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if metric.latest_ica %}
+                                    <span class="metric-value">{{ metric.latest_ica }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4">
+                                <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                                <div class="text-muted">No hay usuarios registrados</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de detalles del usuario -->
+<div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userDetailModalLabel">
+                    <i class="fas fa-user me-2"></i>
+                    Detalles del Usuario
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="userDetailContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <div class="mt-2">Cargando detalles del usuario...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+function openUserModal(userId) {
+    const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+    const content = document.getElementById('userDetailContent');
+    
+    // Mostrar loading
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <div class="mt-2">Cargando detalles del usuario...</div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Cargar contenido del usuario
+    fetch(`/admin-panel/monitoring/user/${userId}/details/`)
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
+        })
+        .catch(error => {
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error al cargar los detalles del usuario.
+                </div>
+            `;
+        });
+}
+
+// Navegación de meses en el modal
+function changeMonth(userId, year, month) {
+    const content = document.getElementById('userDetailContent');
+    
+    // Mostrar loading
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <div class="mt-2">Cargando datos del mes...</div>
+        </div>
+    `;
+    
+    // Cargar nuevo contenido
+    fetch(`/admin-panel/monitoring/user/${userId}/details/?year=${year}&month=${month}`)
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
+        })
+        .catch(error => {
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error al cargar los datos del mes.
+                </div>
+            `;
+        });
+}
+</script>
+{% endblock %}

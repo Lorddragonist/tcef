@@ -244,6 +244,59 @@ class ExerciseLog(models.Model):
                 current_streak = 1
         
         return longest_streak
+    
+    @classmethod
+    def get_current_streak(cls, user):
+        """Calcula la racha actual de días consecutivos con ejercicio"""
+        from datetime import date, timedelta
+        
+        today = date.today()
+        streak = 0
+        current_date = today
+        
+        # Verificar si hoy tiene ejercicio
+        if cls.objects.filter(user=user, exercise_date=current_date).exists():
+            streak = 1
+            current_date -= timedelta(days=1)
+            
+            # Continuar contando hacia atrás
+            while cls.objects.filter(user=user, exercise_date=current_date).exists():
+                streak += 1
+                current_date -= timedelta(days=1)
+        else:
+            # Si hoy no tiene ejercicio, buscar la última racha
+            current_date -= timedelta(days=1)
+            while current_date >= date(2020, 1, 1):  # Límite razonable
+                if cls.objects.filter(user=user, exercise_date=current_date).exists():
+                    streak += 1
+                    current_date -= timedelta(days=1)
+                else:
+                    break
+        
+        return streak
+    
+    @classmethod
+    def get_best_streak(cls, user):
+        """Calcula la mejor racha de días consecutivos con ejercicio"""
+        from datetime import date, timedelta
+        
+        exercises = cls.objects.filter(user=user).order_by('exercise_date')
+        if not exercises:
+            return 0
+        
+        best_streak = 1
+        current_streak = 1
+        last_date = exercises.first().exercise_date
+        
+        for exercise in exercises[1:]:
+            if exercise.exercise_date == last_date + timedelta(days=1):
+                current_streak += 1
+                best_streak = max(best_streak, current_streak)
+            else:
+                current_streak = 1
+            last_date = exercise.exercise_date
+        
+        return best_streak
 
 
 
