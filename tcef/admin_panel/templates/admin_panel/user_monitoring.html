@@ -154,6 +154,66 @@
         font-weight: 600;
         color: #495057;
     }
+    
+    /* Estilos para la barra de búsqueda */
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+    }
+    
+    #userSearch {
+        border-left: none;
+    }
+    
+    #userSearch:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    #clearSearch {
+        border-left: none;
+    }
+    
+    #clearSearch:hover {
+        background-color: #e9ecef;
+    }
+    
+    .btn-group .btn {
+        border-radius: 0.375rem;
+        margin-left: 2px;
+    }
+    
+    .btn-group .btn:first-child {
+        margin-left: 0;
+    }
+    
+    .btn-group .btn.active {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+    }
+    
+    /* Estilos para el título del mes en el modal */
+    .alert-info {
+        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        border: 1px solid #b8daff;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .alert-info .fa-calendar-alt {
+        color: #0c5460;
+    }
+    
+    .alert-heading {
+        color: #0c5460;
+        font-weight: 600;
+    }
+    
+    .alert-info p {
+        color: #0c5460;
+        font-size: 0.95rem;
+    }
 </style>
 {% endblock %}
 
@@ -169,6 +229,50 @@
                 <div class="text-muted">
                     <i class="fas fa-calendar me-1"></i>
                     {{ current_date|date:"F Y" }}
+                </div>
+            </div>
+            
+            <!-- Barra de búsqueda -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control" 
+                               id="userSearch" 
+                               placeholder="Buscar usuario por nombre, email o username..."
+                               autocomplete="off">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-end align-items-center">
+                        <span class="text-muted me-3">
+                            <span id="userCount">{{ user_metrics|length }}</span> usuarios
+                        </span>
+                        <button type="button" class="btn btn-warning btn-sm me-2" id="createTestData">
+                            <i class="fas fa-flask me-1"></i>
+                            Crear Datos de Prueba
+                        </button>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-primary btn-sm" id="sortByProgress">
+                                <i class="fas fa-sort-amount-down me-1"></i>
+                                Progreso
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="sortByStreak">
+                                <i class="fas fa-fire me-1"></i>
+                                Racha
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="sortByName">
+                                <i class="fas fa-sort-alpha-down me-1"></i>
+                                Nombre
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -296,6 +400,188 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
+// Variables globales para el filtrado
+let allUsers = [];
+let filteredUsers = [];
+let currentSort = 'progress';
+
+// Inicializar datos al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Recopilar todos los usuarios de la tabla
+    const userRows = document.querySelectorAll('.user-row');
+    allUsers = Array.from(userRows).map(row => {
+        const userId = row.getAttribute('onclick').match(/\d+/)[0];
+        const userName = row.querySelector('.fw-bold').textContent.trim();
+        const userEmail = row.querySelector('.text-muted').textContent.trim();
+        const exerciseCount = parseInt(row.cells[1].querySelector('.metric-value').textContent);
+        const progress = parseFloat(row.cells[2].querySelector('small').textContent.replace('%', ''));
+        const currentStreak = parseInt(row.cells[3].querySelector('.streak-badge').textContent.replace(' días', ''));
+        const bestStreak = parseInt(row.cells[4].querySelector('.best-streak-badge').textContent.replace(' días', ''));
+        
+        return {
+            element: row,
+            userId: userId,
+            userName: userName,
+            userEmail: userEmail,
+            exerciseCount: exerciseCount,
+            progress: progress,
+            currentStreak: currentStreak,
+            bestStreak: bestStreak
+        };
+    });
+    
+    filteredUsers = [...allUsers];
+    
+    // Configurar eventos de búsqueda
+    setupSearch();
+    setupSorting();
+    setupTestData();
+});
+
+function setupSearch() {
+    const searchInput = document.getElementById('userSearch');
+    const clearButton = document.getElementById('clearSearch');
+    const userCount = document.getElementById('userCount');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        if (searchTerm === '') {
+            filteredUsers = [...allUsers];
+        } else {
+            filteredUsers = allUsers.filter(user => 
+                user.userName.toLowerCase().includes(searchTerm) ||
+                user.userEmail.toLowerCase().includes(searchTerm) ||
+                user.userId.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        updateTable();
+        userCount.textContent = filteredUsers.length;
+    });
+    
+    clearButton.addEventListener('click', function() {
+        searchInput.value = '';
+        filteredUsers = [...allUsers];
+        updateTable();
+        userCount.textContent = filteredUsers.length;
+    });
+}
+
+function setupSorting() {
+    const sortByProgress = document.getElementById('sortByProgress');
+    const sortByStreak = document.getElementById('sortByStreak');
+    const sortByName = document.getElementById('sortByName');
+    
+    sortByProgress.addEventListener('click', function() {
+        currentSort = 'progress';
+        sortUsers('progress');
+        updateSortButtons(this);
+    });
+    
+    sortByStreak.addEventListener('click', function() {
+        currentSort = 'streak';
+        sortUsers('streak');
+        updateSortButtons(this);
+    });
+    
+    sortByName.addEventListener('click', function() {
+        currentSort = 'name';
+        sortUsers('name');
+        updateSortButtons(this);
+    });
+}
+
+function setupTestData() {
+    const createTestDataBtn = document.getElementById('createTestData');
+    
+    createTestDataBtn.addEventListener('click', function() {
+        if (confirm('¿Estás seguro de que quieres crear datos de prueba? Esto agregará ejercicios y medidas de ejemplo.')) {
+            // Mostrar loading
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creando...';
+            this.disabled = true;
+            
+            fetch('/admin-panel/monitoring/create-test-data/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`✅ ${data.message}\n\nEjercicios creados: ${data.exercises_created}\nMedidas creadas: ${data.measurement_created}\nComposición creada: ${data.composition_created}`);
+                        // Recargar la página para mostrar los nuevos datos
+                        location.reload();
+                    } else {
+                        alert(`❌ Error: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`❌ Error al crear datos de prueba: ${error.message}`);
+                })
+                .finally(() => {
+                    // Restaurar botón
+                    this.innerHTML = '<i class="fas fa-flask me-1"></i>Crear Datos de Prueba';
+                    this.disabled = false;
+                });
+        }
+    });
+}
+
+function sortUsers(sortType) {
+    switch(sortType) {
+        case 'progress':
+            filteredUsers.sort((a, b) => b.progress - a.progress);
+            break;
+        case 'streak':
+            filteredUsers.sort((a, b) => b.currentStreak - a.currentStreak);
+            break;
+        case 'name':
+            filteredUsers.sort((a, b) => a.userName.localeCompare(b.userName));
+            break;
+    }
+    updateTable();
+}
+
+function updateSortButtons(activeButton) {
+    // Remover clase activa de todos los botones
+    document.querySelectorAll('#sortByProgress, #sortByStreak, #sortByName').forEach(btn => {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline-primary');
+    });
+    
+    // Agregar clase activa al botón seleccionado
+    activeButton.classList.remove('btn-outline-primary');
+    activeButton.classList.add('btn-primary');
+}
+
+function updateTable() {
+    const tbody = document.querySelector('.metrics-table tbody');
+    const noResultsRow = tbody.querySelector('tr td[colspan="10"]');
+    
+    // Remover fila de "no hay usuarios" si existe
+    if (noResultsRow) {
+        noResultsRow.parentElement.remove();
+    }
+    
+    // Ocultar todas las filas
+    allUsers.forEach(user => {
+        user.element.style.display = 'none';
+    });
+    
+    // Mostrar solo los usuarios filtrados
+    if (filteredUsers.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center py-4">
+                    <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                    <div class="text-muted">No se encontraron usuarios que coincidan con la búsqueda</div>
+                </td>
+            </tr>
+        `;
+    } else {
+        filteredUsers.forEach(user => {
+            user.element.style.display = '';
+        });
+    }
+}
+
 function openUserModal(userId) {
     const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
     const content = document.getElementById('userDetailContent');

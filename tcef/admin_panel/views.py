@@ -1214,7 +1214,12 @@ def user_detail_modal(request, user_id):
     
     # Ejercicios del mes seleccionado
     month_exercises = ExerciseLog.get_month_exercises(user, year, month)
-    exercise_dates = [ex.exercise_date for ex in month_exercises]
+    exercise_dates = [ex.exercise_date.day for ex in month_exercises]  # Solo los días del mes
+    
+    # Debug: imprimir información para verificar (solo en desarrollo)
+    # print(f"Debug - User: {user.username}, Year: {year}, Month: {month}")
+    # print(f"Debug - Exercise dates found: {exercise_dates}")
+    # print(f"Debug - Total exercises: {month_exercises.count()}")
     
     # Estadísticas del mes
     total_exercises = month_exercises.count()
@@ -1276,10 +1281,15 @@ def user_detail_modal(request, user_id):
     current_date = timezone.now().date()
     days_since_start = (current_date - first_exercise.exercise_date).days if first_exercise else 0
     
+    # Crear objeto de fecha para el mes actual
+    from datetime import date
+    month_date = date(year, month, 1)
+    
     context = {
         'user': user,
         'year': year,
         'month': month,
+        'month_date': month_date,  # Objeto de fecha para el template
         'exercise_dates': exercise_dates,
         'total_exercises': total_exercises,
         'exercise_percentage': round(exercise_percentage, 1),
@@ -1296,3 +1306,81 @@ def user_detail_modal(request, user_id):
     }
     
     return render(request, 'admin_panel/user_detail_modal.html', context)
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def create_test_data(request):
+    """Función temporal para crear datos de prueba"""
+    from datetime import date, timedelta
+    from app.models import ExerciseLog, BodyMeasurements, BodyCompositionHistory
+    
+    # Obtener el primer usuario aprobado
+    try:
+        user = User.objects.filter(userprofile__is_approved=True).first()
+        if not user:
+            return JsonResponse({'error': 'No hay usuarios aprobados'})
+        
+        # Crear algunos ejercicios de prueba para el mes actual
+        today = date.today()
+        current_year = today.year
+        current_month = today.month
+        
+        # Crear ejercicios para algunos días del mes
+        test_dates = [
+            today - timedelta(days=1),  # Ayer
+            today - timedelta(days=2),  # Anteayer
+            today - timedelta(days=5),  # Hace 5 días
+            today - timedelta(days=7),  # Hace una semana
+            today - timedelta(days=10), # Hace 10 días
+        ]
+        
+        created_exercises = []
+        for test_date in test_dates:
+            if test_date.month == current_month and test_date.year == current_year:
+                exercise, created = ExerciseLog.objects.get_or_create(
+                    user=user,
+                    exercise_date=test_date,
+                    defaults={
+                        'difficulty': 'medio',
+                        'notes': 'Ejercicio de prueba creado automáticamente'
+                    }
+                )
+                if created:
+                    created_exercises.append(exercise)
+        
+        # Crear algunas medidas corporales de prueba
+        test_measurement, created = BodyMeasurements.objects.get_or_create(
+            user=user,
+            measurement_date=today,
+            defaults={
+                'weight': 70.5,
+                'height': 170.0,
+                'age': 30,
+                'waist': 80.0,
+                'hip': 95.0,
+                'chest': 90.0
+            }
+        )
+        
+        # Crear composición corporal de prueba
+        test_composition, created = BodyCompositionHistory.objects.get_or_create(
+            user=user,
+            measurement_date=today,
+            defaults={
+                'imc': 24.4,
+                'ica': 0.47,
+                'body_fat_percentage': 18.5,
+                'muscle_mass': 35.2
+            }
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Datos de prueba creados para {user.username}',
+            'exercises_created': len(created_exercises),
+            'measurement_created': created,
+            'composition_created': created
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)})

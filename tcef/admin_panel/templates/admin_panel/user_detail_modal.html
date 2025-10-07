@@ -18,11 +18,30 @@
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 <button type="button" class="btn btn-primary btn-sm">
-                    {{ month|date:"F Y" }}
+                    {{ month_date|date:"F Y" }}
                 </button>
                 <button type="button" class="btn btn-outline-primary btn-sm" onclick="changeMonth({{ user.id }}, {{ year }}, {{ month|add:'1' }})">
                     <i class="fas fa-chevron-right"></i>
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Título del mes actual -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="fas fa-calendar-alt me-3 fa-2x"></i>
+            <div>
+                <h5 class="alert-heading mb-1">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Progreso de {{ month_date|date:"F Y" }}
+                </h5>
+                <p class="mb-0">
+                    Visualizando el progreso y métricas de <strong>{{ user.get_full_name|default:user.username }}</strong> 
+                    para el mes de <strong>{{ month_date|date:"F Y" }}</strong>
+                </p>
             </div>
         </div>
     </div>
@@ -116,18 +135,18 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="stats-card">
-            <h5><i class="fas fa-calendar-alt me-2"></i>Calendario de Ejercicios - {{ month|date:"F Y" }}</h5>
+            <h5><i class="fas fa-calendar-alt me-2"></i>Calendario de Ejercicios - {{ month_date|date:"F Y" }}</h5>
             <div class="calendar-grid">
                 {% for day in "1234567890123456789012345678901"|make_list %}
                     {% if forloop.counter <= 31 %}
-                        {% with exercise_date=year|add:"-"|add:month|add:"-"|add:forloop.counter %}
-                            {% if forloop.counter|stringformat:"s" in exercise_dates %}
-                                <div class="calendar-day exercise" title="Ejercicio completado">
-                                    {{ forloop.counter }}
+                        {% with day_num=forloop.counter %}
+                            {% if day_num in exercise_dates %}
+                                <div class="calendar-day exercise" title="Ejercicio completado el día {{ day_num }}">
+                                    {{ day_num }}
                                 </div>
                             {% else %}
-                                <div class="calendar-day no-exercise" title="Sin ejercicio">
-                                    {{ forloop.counter }}
+                                <div class="calendar-day no-exercise" title="Sin ejercicio el día {{ day_num }}">
+                                    {{ day_num }}
                                 </div>
                             {% endif %}
                         {% endwith %}
