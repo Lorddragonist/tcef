@@ -31,8 +31,5 @@ urlpatterns = [
     # Monitoreo de usuarios
     path('monitoring/', views.user_monitoring, name='user_monitoring'),
     path('monitoring/user/<int:user_id>/details/', views.user_detail_modal, name='user_detail_modal'),
-    path('monitoring/create-test-data/', views.create_test_data, name='create_test_data'),
     
-    # Registro de actividades
-    path('activities/', views.admin_activity_log, name='activity_log'),
 ] 

@@ -254,10 +254,6 @@
                         <span class="text-muted me-3">
                             <span id="userCount">{{ user_metrics|length }}</span> usuarios
                         </span>
-                        <button type="button" class="btn btn-warning btn-sm me-2" id="createTestData">
-                            <i class="fas fa-flask me-1"></i>
-                            Crear Datos de Prueba
-                        </button>
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-primary btn-sm" id="sortByProgress">
                                 <i class="fas fa-sort-amount-down me-1"></i>
@@ -492,37 +488,6 @@ function setupSorting() {
     });
 }
 
-function setupTestData() {
-    const createTestDataBtn = document.getElementById('createTestData');
-    
-    createTestDataBtn.addEventListener('click', function() {
-        if (confirm('¿Estás seguro de que quieres crear datos de prueba? Esto agregará ejercicios y medidas de ejemplo.')) {
-            // Mostrar loading
-            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creando...';
-            this.disabled = true;
-            
-            fetch('/admin-panel/monitoring/create-test-data/')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(`✅ ${data.message}\n\nEjercicios creados: ${data.exercises_created}\nMedidas creadas: ${data.measurement_created}\nComposición creada: ${data.composition_created}`);
-                        // Recargar la página para mostrar los nuevos datos
-                        location.reload();
-                    } else {
-                        alert(`❌ Error: ${data.error}`);
-                    }
-                })
-                .catch(error => {
-                    alert(`❌ Error al crear datos de prueba: ${error.message}`);
-                })
-                .finally(() => {
-                    // Restaurar botón
-                    this.innerHTML = '<i class="fas fa-flask me-1"></i>Crear Datos de Prueba';
-                    this.disabled = false;
-                });
-        }
-    });
-}
 
 function sortUsers(sortType) {
     switch(sortType) {
