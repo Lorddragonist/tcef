@@ -43,6 +43,22 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
+                            <label for="gender" class="form-label">Género *</label>
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option value="">Seleccionar género</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                            </select>
+                            <div class="form-text">Requerido para cálculos de composición corporal</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <!-- Campo vacío para mantener el layout -->
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                             <label for="password1" class="form-label">Contraseña *</label>
                             <input type="password" class="form-control" id="password1" name="password1" required>
                             <div class="form-text">

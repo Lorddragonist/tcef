@@ -112,6 +112,7 @@ def create_user(request):
         email = request.POST.get('email')
         first_name = request.POST.get('first_name', '')
         last_name = request.POST.get('last_name', '')
+        gender = request.POST.get('gender')
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
         
@@ -127,6 +128,11 @@ def create_user(request):
             errors.append('El email es requerido.')
         elif User.objects.filter(email=email).exists():
             errors.append('Este email ya está registrado.')
+            
+        if not gender:
+            errors.append('El género es requerido.')
+        elif gender not in ['M', 'F']:
+            errors.append('El género seleccionado no es válido.')
             
         if not password1:
             errors.append('La contraseña es requerida.')
@@ -155,7 +161,8 @@ def create_user(request):
                     user=user,
                     is_approved=True,  # Los usuarios creados por admin están aprobados
                     terms_accepted=True,
-                    terms_accepted_date=timezone.now()
+                    terms_accepted_date=timezone.now(),
+                    gender=gender  # Asignar el género seleccionado
                 )
                 
                 # Asignar grupo si se especificó
