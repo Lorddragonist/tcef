@@ -317,10 +317,10 @@
                                 <small class="text-muted">{{ metric.monthly_progress }}%</small>
                             </td>
                             <td>
-                                <span class="streak-badge">{{ metric.current_streak }} días</span>
+                                <span class="streak-badge">{{ metric.current_streak }} semanas</span>
                             </td>
                             <td>
-                                <span class="best-streak-badge">{{ metric.best_streak }} días</span>
+                                <span class="best-streak-badge">{{ metric.best_streak }} semanas</span>
                             </td>
                             <td>
                                 {% if metric.latest_weight %}
@@ -415,8 +415,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const userEmail = row.querySelector('.text-muted').textContent.trim();
         const exerciseCount = parseInt(row.cells[1].querySelector('.metric-value').textContent);
         const progress = parseFloat(row.cells[2].querySelector('small').textContent.replace('%', ''));
-        const currentStreak = parseInt(row.cells[3].querySelector('.streak-badge').textContent.replace(' días', ''));
-        const bestStreak = parseInt(row.cells[4].querySelector('.best-streak-badge').textContent.replace(' días', ''));
+        const currentStreak = parseInt(row.cells[3].querySelector('.streak-badge').textContent.replace(' semanas', ''));
+        const bestStreak = parseInt(row.cells[4].querySelector('.best-streak-badge').textContent.replace(' semanas', ''));
         
         return {
             element: row,

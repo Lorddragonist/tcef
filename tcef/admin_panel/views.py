@@ -1158,21 +1158,26 @@ def user_monitoring(request):
         month_exercises = ExerciseLog.get_month_exercises(user, current_year, current_month)
         exercise_count = month_exercises.count()
         
-        # Días del mes que han pasado
-        days_passed = min(current_date.day, 30)  # Aproximación
+        # Calcular días laborables del mes (lunes a viernes)
+        import calendar
+        month_days = calendar.monthrange(current_year, current_month)[1]
+        weekdays_in_month = 0
+        for day in range(1, month_days + 1):
+            if calendar.weekday(current_year, current_month, day) < 5:  # 0-4 = lunes a viernes
+                weekdays_in_month += 1
         
-        # Racha actual (días consecutivos)
-        current_streak = ExerciseLog.get_current_streak(user)
+        # Racha actual (semanas consecutivas con 5+ ejercicios)
+        current_streak = ExerciseLog.get_current_week_streak(user)
         
-        # Mejor racha
-        best_streak = ExerciseLog.get_best_streak(user)
+        # Mejor racha (semanas consecutivas con 5+ ejercicios)
+        best_streak = ExerciseLog.get_longest_week_streak(user)
         
-        # Medidas más recientes
-        latest_measurement = BodyMeasurements.objects.filter(user=user).first()
-        latest_composition = BodyCompositionHistory.objects.filter(user=user).first()
+        # Medidas más recientes (sin importar el mes, las últimas que haya ingresado)
+        latest_measurement = BodyMeasurements.objects.filter(user=user).order_by('-measurement_date').first()
+        latest_composition = BodyCompositionHistory.objects.filter(user=user).order_by('-measurement_date').first()
         
-        # Progreso mensual (ejercicios completados vs días del mes)
-        monthly_progress = (exercise_count / days_passed * 100) if days_passed > 0 else 0
+        # Progreso mensual basado en días laborables (igual que en exercise_stats)
+        monthly_progress = min((exercise_count / weekdays_in_month * 100), 100) if weekdays_in_month > 0 else 0
         
         user_metrics.append({
             'user': user,
@@ -1226,9 +1231,9 @@ def user_detail_modal(request, user_id):
     days_in_month = 30  # Aproximación
     exercise_percentage = (total_exercises / days_in_month * 100) if days_in_month > 0 else 0
     
-    # Racha actual y mejor racha
-    current_streak = ExerciseLog.get_current_streak(user)
-    best_streak = ExerciseLog.get_best_streak(user)
+    # Racha actual y mejor racha (semanas consecutivas con 5+ ejercicios)
+    current_streak = ExerciseLog.get_current_week_streak(user)
+    best_streak = ExerciseLog.get_longest_week_streak(user)
     
     # Medidas corporales del mes
     month_measurements = BodyMeasurements.objects.filter(
@@ -1243,6 +1248,13 @@ def user_detail_modal(request, user_id):
         measurement_date__year=year,
         measurement_date__month=month
     ).order_by('measurement_date')
+    
+    # Si no hay datos del mes, obtener los más recientes disponibles
+    if not month_measurements.exists():
+        month_measurements = BodyMeasurements.objects.filter(user=user).order_by('-measurement_date')[:5]
+    
+    if not month_composition.exists():
+        month_composition = BodyCompositionHistory.objects.filter(user=user).order_by('-measurement_date')[:5]
     
     # Datos para gráficos
     weight_data = []

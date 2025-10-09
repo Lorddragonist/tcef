@@ -654,11 +654,55 @@ def add_body_measurements(request):
                 existing_measurement.hip = measurement.hip
                 existing_measurement.chest = measurement.chest
                 existing_measurement.save()
+                measurement = existing_measurement
                 messages.success(request, 'Medidas actualizadas correctamente!')
             else:
                 # Crear nuevo registro
                 measurement.save()
                 messages.success(request, 'Medidas registradas correctamente!')
+            
+            # Crear o actualizar registro de composición corporal
+            from .models import BodyCompositionHistory
+            import math
+            
+            # Obtener género del usuario
+            user_gender = getattr(request.user.userprofile, 'gender', 'M') if hasattr(request.user, 'userprofile') else 'M'
+            
+            # Calcular IMC
+            height_m = measurement.height / 100
+            imc = round(measurement.weight / (height_m ** 2), 2)
+            
+            # Calcular ICA (Índice Cintura-Altura)
+            ica = round(measurement.waist / measurement.height, 2)
+            
+            # Calcular % de grasa corporal usando fórmula US Navy
+            body_fat_percentage = calculate_body_fat_us_navy(
+                measurement.weight, measurement.height, measurement.waist, 
+                measurement.hip, measurement.chest, measurement.age, user_gender
+            )
+            
+            # Calcular masa muscular
+            muscle_mass = round(measurement.weight * (100 - body_fat_percentage) / 100, 1)
+            
+            # Crear o actualizar registro de composición corporal
+            composition, created = BodyCompositionHistory.objects.get_or_create(
+                user=request.user,
+                measurement_date=measurement.measurement_date,
+                defaults={
+                    'imc': imc,
+                    'ica': ica,
+                    'body_fat_percentage': round(body_fat_percentage, 1),
+                    'muscle_mass': muscle_mass
+                }
+            )
+            
+            if not created:
+                # Actualizar registro existente
+                composition.imc = imc
+                composition.ica = ica
+                composition.body_fat_percentage = round(body_fat_percentage, 1)
+                composition.muscle_mass = muscle_mass
+                composition.save()
             
             return redirect('app:exercise_stats')
     else:

@@ -163,60 +163,83 @@
     </div>
 </div>
 
-<!-- Gráficos de evolución -->
+<!-- Gráfico de evolución con selector -->
 {% if weight_data or body_fat_data or muscle_data or ica_data %}
 <div class="row">
     <div class="col-12">
         <div class="stats-card">
             <h5><i class="fas fa-chart-line me-2"></i>Evolución de Medidas</h5>
             
-            <!-- Peso e IMC -->
-            {% if weight_data %}
-            <div class="row">
-                <div class="col-md-6">
-                    <h6>Peso (kg)</h6>
-                    <div class="chart-container">
-                        <canvas id="weightChart"></canvas>
+            <!-- Selector de métrica -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <label for="metricSelector" class="form-label">Métrica a Visualizar</label>
+                    <select class="form-control" id="metricSelector" onchange="changeMetric()">
+                        <option value="weight">Peso (kg)</option>
+                        <option value="imc">IMC (Índice de Masa Corporal)</option>
+                        <option value="muscle_mass">Masa Muscular (kg)</option>
+                        <option value="body_fat">% Grasa Corporal</option>
+                        <option value="ica">ICA (Índice Cintura-Altura)</option>
+                    </select>
                     </div>
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Fecha Inicio</label>
+                    <input type="date" class="form-control" id="startDate">
                 </div>
-                <div class="col-md-6">
-                    <h6>IMC</h6>
-                    <div class="chart-container">
-                        <canvas id="bmiChart"></canvas>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">Fecha Fin</label>
+                    <input type="date" class="form-control" id="endDate">
                     </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary me-2" onclick="filterChart()">
+                        <i class="fas fa-filter me-1"></i>Filtrar
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetChart()">
+                        <i class="fas fa-undo me-1"></i>Reset
+                    </button>
                 </div>
             </div>
-            {% endif %}
             
-            <!-- Composición corporal -->
-            {% if body_fat_data or muscle_data or ica_data %}
-            <div class="row mt-4">
-                {% if body_fat_data %}
-                <div class="col-md-4">
-                    <h6>% Grasa Corporal</h6>
-                    <div class="chart-container">
-                        <canvas id="bodyFatChart"></canvas>
-                    </div>
-                </div>
-                {% endif %}
-                {% if muscle_data %}
-                <div class="col-md-4">
-                    <h6>Masa Muscular (kg)</h6>
-                    <div class="chart-container">
-                        <canvas id="muscleChart"></canvas>
-                    </div>
-                </div>
-                {% endif %}
-                {% if ica_data %}
-                <div class="col-md-4">
-                    <h6>ICA</h6>
-                    <div class="chart-container">
-                        <canvas id="icaChart"></canvas>
-                    </div>
-                </div>
-                {% endif %}
+            <!-- Gráfico principal -->
+            <div style="height: 400px; width: 100%; position: relative;">
+                <canvas id="mainChart"></canvas>
             </div>
-            {% endif %}
+            
+            <!-- Estadísticas rápidas -->
+            <div class="row mt-4">
+                <div class="col-md-3 text-center">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title" id="currentMetricTitle">Valor Actual</h6>
+                            <h4 class="text-primary" id="currentValue">--</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title" id="initialMetricTitle">Valor Inicial</h6>
+                            <h4 class="text-info" id="initialValue">--</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title" id="differenceMetricTitle">Diferencia</h6>
+                            <h4 class="text-success" id="differenceValue">--</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title" id="averageMetricTitle">Promedio</h6>
+                            <h4 class="text-warning" id="averageValue">--</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -264,117 +287,361 @@
 {% endif %}
 
 <!-- Scripts para gráficos -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Configuración común para gráficos
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
+// Datos de las medidas - con validación
+const weightDataRaw = {{ weight_data|safe }};
+const muscleDataRaw = {{ muscle_data|safe }};
+const bodyFatDataRaw = {{ body_fat_data|safe }};
+const icaDataRaw = {{ ica_data|safe }};
+
+console.log('=== DATOS RECIBIDOS ===');
+console.log('weight_data:', weightDataRaw);
+console.log('muscle_data:', muscleDataRaw);
+console.log('body_fat_data:', bodyFatDataRaw);
+console.log('ica_data:', icaDataRaw);
+
+// Validar y procesar datos
+const measurementsData = {
+    labels: weightDataRaw ? weightDataRaw.map(d => d.date) : [],
+    weights: weightDataRaw ? weightDataRaw.map(d => d.weight) : [],
+    imcs: weightDataRaw ? weightDataRaw.map(d => d.bmi) : [],
+    muscle_masses: muscleDataRaw ? muscleDataRaw.map(d => d.muscle) : [],
+    body_fat_percentages: bodyFatDataRaw ? bodyFatDataRaw.map(d => d.body_fat) : [],
+    icas: icaDataRaw ? icaDataRaw.map(d => d.ica) : []
+};
+
+console.log('measurementsData procesado:', measurementsData);
+
+let mainChart = null;
+let currentMetric = 'weight'; // Métrica por defecto
+
+// Configuración de métricas
+const metricConfig = {
+    weight: {
+        label: 'Peso (kg)',
+        color: '#007bff',
+        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+        unit: 'kg',
+        currentTitle: 'Peso Actual',
+        initialTitle: 'Peso Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    },
+    imc: {
+        label: 'IMC',
+        color: '#28a745',
+        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+        unit: '',
+        currentTitle: 'IMC Actual',
+        initialTitle: 'IMC Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    },
+    muscle_mass: {
+        label: 'Masa Muscular (kg)',
+        color: '#dc3545',
+        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+        unit: 'kg',
+        currentTitle: 'Masa Muscular Actual',
+        initialTitle: 'Masa Muscular Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    },
+    body_fat: {
+        label: '% Grasa Corporal',
+        color: '#ffc107',
+        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+        unit: '%',
+        currentTitle: '% Grasa Actual',
+        initialTitle: '% Grasa Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    },
+    ica: {
+        label: 'ICA',
+        color: '#6f42c1',
+        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+        unit: '',
+        currentTitle: 'ICA Actual',
+        initialTitle: 'ICA Inicial',
+        differenceTitle: 'Diferencia',
+        averageTitle: 'Promedio'
+    }
+};
+
+// Función para inicializar el gráfico cuando esté listo
+function initializeChart() {
+    console.log('=== INICIALIZANDO GRÁFICO ===');
+    
+    // Verificar que Chart.js esté disponible
+    if (typeof Chart === 'undefined') {
+        console.log('❌ Chart.js no está disponible, reintentando en 100ms...');
+        setTimeout(initializeChart, 100);
+        return;
+    }
+    
+    // Verificar que todos los elementos existen
+    const mainChartEl = document.getElementById('mainChart');
+    const metricSelectorEl = document.getElementById('metricSelector');
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    
+    console.log('Elementos del DOM:');
+    console.log('- mainChart:', !!mainChartEl);
+    console.log('- metricSelector:', !!metricSelectorEl);
+    console.log('- startDate:', !!startDateEl);
+    console.log('- endDate:', !!endDateEl);
+    
+    if (!mainChartEl) {
+        console.log('❌ Canvas mainChart no encontrado, reintentando...');
+        setTimeout(initializeChart, 100);
+        return;
+    }
+    
+    // Inicializar fechas por defecto
+    if (startDateEl && endDateEl) {
+        const today = new Date();
+        const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
+        
+        startDateEl.value = threeMonthsAgo.toISOString().split('T')[0];
+        endDateEl.value = today.toISOString().split('T')[0];
+    }
+    
+    console.log('✅ Todos los elementos disponibles, creando gráfica...');
+    createMainChart();
+    
+    // Calcular estadísticas
+    calculateStats();
+    
+    console.log('=== GRÁFICO INICIALIZADO ===');
+}
+
+// Inicializar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeChart);
+} else {
+    // Si ya está cargado, inicializar inmediatamente
+    initializeChart();
+}
+
+function createMainChart() {
+    console.log('Creating main chart...');
+    
+    const canvasEl = document.getElementById('mainChart');
+    if (!canvasEl) {
+        console.log('❌ Canvas no encontrado');
+        return;
+    }
+    
+    const ctx = canvasEl.getContext('2d');
+    console.log('Canvas context:', ctx);
+    
+    // Verificar si hay datos disponibles
+    const hasData = measurementsData.labels && measurementsData.labels.length > 0;
+    console.log('Has data:', hasData, 'Labels count:', measurementsData.labels ? measurementsData.labels.length : 0);
+    
+    if (!hasData) {
+        console.log('No data available, showing placeholder');
+        canvasEl.parentElement.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No hay datos de métricas</h5>
+                <p class="text-muted">No se encontraron medidas para mostrar en este mes</p>
+                <small class="text-muted">Los datos aparecerán cuando el usuario registre medidas corporales</small>
+            </div>
+        `;
+        return;
+    }
+    
+    console.log('Data available, creating chart with', measurementsData.labels.length, 'points');
+    
+    const config = metricConfig[currentMetric];
+    const data = getCurrentMetricData();
+    
+    console.log('Chart config:', config);
+    console.log('Chart data:', data);
+    
+    try {
+        mainChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: measurementsData.labels,
+                datasets: [{
+                    label: config.label,
+                    data: data,
+                    borderColor: config.color,
+                    backgroundColor: config.backgroundColor,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        titleFont: { size: 18, weight: 'bold' },
+                        bodyFont: { size: 16 },
+                        padding: 16,
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: config.color,
+                        borderWidth: 2,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Fecha',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: config.label,
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    }
+                }
             }
-        },
-        scales: {
-            y: {
-                beginAtZero: false
-            }
+        });
+        
+        console.log('✅ Chart created successfully:', mainChart);
+    } catch (error) {
+        console.error('❌ Error creating chart:', error);
+        canvasEl.parentElement.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <h5 class="text-warning">Error al crear el gráfico</h5>
+                <p class="text-muted">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function getCurrentMetricData() {
+    switch(currentMetric) {
+        case 'weight':
+            return measurementsData.weights;
+        case 'imc':
+            return measurementsData.imcs;
+        case 'muscle_mass':
+            return measurementsData.muscle_masses;
+        case 'body_fat':
+            return measurementsData.body_fat_percentages;
+        case 'ica':
+            return measurementsData.icas;
+        default:
+            return measurementsData.weights;
+    }
+}
+
+// Funciones globales para el modal
+window.changeMetric = function() {
+    console.log('changeMetric called');
+    currentMetric = document.getElementById('metricSelector').value;
+    updateChart();
+}
+
+window.updateChart = function() {
+    if (!mainChart) return;
+    
+    const config = metricConfig[currentMetric];
+    const data = getCurrentMetricData();
+    
+    mainChart.data.datasets[0].label = config.label;
+    mainChart.data.datasets[0].data = data;
+    mainChart.data.datasets[0].borderColor = config.color;
+    mainChart.data.datasets[0].backgroundColor = config.backgroundColor;
+    
+    mainChart.options.scales.y.title.text = config.label;
+    
+    mainChart.update();
+    
+    // Actualizar títulos de estadísticas
+    document.getElementById('currentMetricTitle').textContent = config.currentTitle;
+    document.getElementById('initialMetricTitle').textContent = config.initialTitle;
+    document.getElementById('differenceMetricTitle').textContent = config.differenceTitle;
+    document.getElementById('averageMetricTitle').textContent = config.averageTitle;
+    
+    // Recalcular estadísticas
+    calculateStats();
+}
+
+window.filterChart = function() {
+    console.log('filterChart called');
+    if (!mainChart) return;
+    
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    if (!startDate || !endDate) return;
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    const filteredLabels = [];
+    const filteredData = [];
+    const currentData = getCurrentMetricData();
+    
+    measurementsData.labels.forEach((label, index) => {
+        const labelDate = new Date(label);
+        if (labelDate >= start && labelDate <= end) {
+            filteredLabels.push(label);
+            filteredData.push(currentData[index]);
         }
-    };
-    
-    // Gráfico de peso
-    {% if weight_data %}
-    const weightCtx = document.getElementById('weightChart').getContext('2d');
-    new Chart(weightCtx, {
-        type: 'line',
-        data: {
-            labels: {{ weight_data|safe }}.map(d => d.date),
-            datasets: [{
-                label: 'Peso (kg)',
-                data: {{ weight_data|safe }}.map(d => d.weight),
-                borderColor: '#007bff',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: chartOptions
     });
-    {% endif %}
     
-    // Gráfico de IMC
-    {% if weight_data %}
-    const bmiCtx = document.getElementById('bmiChart').getContext('2d');
-    new Chart(bmiCtx, {
-        type: 'line',
-        data: {
-            labels: {{ weight_data|safe }}.map(d => d.date),
-            datasets: [{
-                label: 'IMC',
-                data: {{ weight_data|safe }}.map(d => d.bmi),
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: chartOptions
-    });
-    {% endif %}
+    mainChart.data.labels = filteredLabels;
+    mainChart.data.datasets[0].data = filteredData;
+    mainChart.update();
+}
+
+window.resetChart = function() {
+    console.log('resetChart called');
+    if (!mainChart) return;
     
-    // Gráfico de % grasa
-    {% if body_fat_data %}
-    const bodyFatCtx = document.getElementById('bodyFatChart').getContext('2d');
-    new Chart(bodyFatCtx, {
-        type: 'line',
-        data: {
-            labels: {{ body_fat_data|safe }}.map(d => d.date),
-            datasets: [{
-                label: '% Grasa',
-                data: {{ body_fat_data|safe }}.map(d => d.body_fat),
-                borderColor: '#ffc107',
-                backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: chartOptions
-    });
-    {% endif %}
+    mainChart.data.labels = measurementsData.labels;
+    mainChart.data.datasets[0].data = getCurrentMetricData();
+    mainChart.update();
+}
+
+function calculateStats() {
+    const currentData = getCurrentMetricData();
+    const config = metricConfig[currentMetric];
     
-    // Gráfico de masa muscular
-    {% if muscle_data %}
-    const muscleCtx = document.getElementById('muscleChart').getContext('2d');
-    new Chart(muscleCtx, {
-        type: 'line',
-        data: {
-            labels: {{ muscle_data|safe }}.map(d => d.date),
-            datasets: [{
-                label: 'Masa Muscular (kg)',
-                data: {{ muscle_data|safe }}.map(d => d.muscle),
-                borderColor: '#dc3545',
-                backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: chartOptions
-    });
-    {% endif %}
+    if (currentData.length === 0) {
+        return;
+    }
     
-    // Gráfico de ICA
-    {% if ica_data %}
-    const icaCtx = document.getElementById('icaChart').getContext('2d');
-    new Chart(icaCtx, {
-        type: 'line',
-        data: {
-            labels: {{ ica_data|safe }}.map(d => d.date),
-            datasets: [{
-                label: 'ICA',
-                data: {{ ica_data|safe }}.map(d => d.ica),
-                borderColor: '#6f42c1',
-                backgroundColor: 'rgba(111, 66, 193, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: chartOptions
-    });
-    {% endif %}
-});
+    const current = currentData[currentData.length - 1];
+    const initial = currentData[0];
+    const difference = current - initial;
+    const average = currentData.reduce((a, b) => a + b, 0) / currentData.length;
+    
+    const unit = config.unit;
+    document.getElementById('currentValue').textContent = current.toFixed(1) + (unit ? ' ' + unit : '');
+    document.getElementById('initialValue').textContent = initial.toFixed(1) + (unit ? ' ' + unit : '');
+    document.getElementById('differenceValue').textContent = (difference >= 0 ? '+' : '') + difference.toFixed(1) + (unit ? ' ' + unit : '');
+    document.getElementById('averageValue').textContent = average.toFixed(1) + (unit ? ' ' + unit : '');
+}
+
 </script>
