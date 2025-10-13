@@ -670,17 +670,17 @@ def add_body_measurements(request):
             user_gender = getattr(request.user.userprofile, 'gender', 'M') if hasattr(request.user, 'userprofile') else 'M'
             
             # Calcular IMC
-            height_m = measurement.height / 100
-            imc = round(measurement.weight / (height_m ** 2), 2)
+            height_m = float(measurement.height) / 100
+            imc = round(float(measurement.weight) / (height_m ** 2), 2)
             
             # Calcular ICA (Índice Cintura-Altura)
-            ica = round(measurement.waist / measurement.height, 2)
+            ica = round(float(measurement.waist) / float(measurement.height), 2)
             
             # Calcular % de grasa corporal usando fórmula US Navy
             try:
                 body_fat_percentage = calculate_body_fat_us_navy(
-                    measurement.weight, measurement.height, measurement.waist, 
-                    measurement.hip, measurement.chest, measurement.age, user_gender
+                    float(measurement.weight), float(measurement.height), float(measurement.waist), 
+                    float(measurement.hip), float(measurement.chest), int(measurement.age), user_gender
                 )
             except (ValueError, ZeroDivisionError, TypeError):
                 body_fat_percentage = 0
@@ -688,7 +688,9 @@ def add_body_measurements(request):
             
             # Calcular masa muscular
             try:
-                muscle_mass = round(measurement.weight * (100 - body_fat_percentage) / 100, 1)
+                # Convertir Decimal a float para el cálculo
+                weight_float = float(measurement.weight)
+                muscle_mass = round(weight_float * (100 - body_fat_percentage) / 100, 1)
             except (ValueError, ZeroDivisionError, TypeError):
                 muscle_mass = 0
                 messages.warning(request, 'No se pudo calcular la masa muscular.')
