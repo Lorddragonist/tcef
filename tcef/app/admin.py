@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import UserProfile, ExerciseLog, WeeklyRoutine
+from .models import UserProfile, ExerciseLog, WeeklyRoutine, BodyMeasurements, BodyCompositionHistory
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
@@ -99,6 +99,64 @@ class WeeklyRoutineAdmin(admin.ModelAdmin):
         self.message_user(request, f'{updated} rutina(s) desactivada(s) exitosamente.')
     deactivate_routines.short_description = 'Desactivar rutinas seleccionadas'
 
+class BodyMeasurementsAdmin(admin.ModelAdmin):
+    list_display = ('user', 'measurement_date', 'weight', 'height', 'age', 'waist', 'hip', 'chest', 'bmi', 'waist_hip_ratio', 'created_at')
+    list_filter = ('measurement_date', 'created_at', 'user__userprofile__gender')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name')
+    date_hierarchy = 'measurement_date'
+    ordering = ('-measurement_date', '-created_at')
+    
+    fieldsets = (
+        ('Usuario y Fecha', {
+            'fields': ('user', 'measurement_date')
+        }),
+        ('Medidas Básicas', {
+            'fields': ('weight', 'height', 'age')
+        }),
+        ('Medidas Corporales', {
+            'fields': ('waist', 'hip', 'chest')
+        }),
+        ('Cálculos Automáticos', {
+            'fields': ('bmi', 'waist_hip_ratio'),
+            'classes': ('collapse',),
+            'description': 'Estos valores se calculan automáticamente'
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    readonly_fields = ('bmi', 'waist_hip_ratio', 'created_at', 'updated_at')
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
+
+class BodyCompositionHistoryAdmin(admin.ModelAdmin):
+    list_display = ('user', 'measurement_date', 'imc', 'ica', 'body_fat_percentage', 'muscle_mass', 'created_at')
+    list_filter = ('measurement_date', 'created_at', 'user__userprofile__gender')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name')
+    date_hierarchy = 'measurement_date'
+    ordering = ('-measurement_date', '-created_at')
+    
+    fieldsets = (
+        ('Usuario y Fecha', {
+            'fields': ('user', 'measurement_date')
+        }),
+        ('Composición Corporal', {
+            'fields': ('imc', 'ica', 'body_fat_percentage', 'muscle_mass')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    readonly_fields = ('created_at',)
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
+
 # Desregistrar el User admin por defecto y registrar el personalizado
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
@@ -106,3 +164,5 @@ admin.site.register(User, UserAdmin)
 # Registrar los modelos personalizados
 admin.site.register(ExerciseLog, ExerciseLogAdmin)
 admin.site.register(WeeklyRoutine, WeeklyRoutineAdmin)
+admin.site.register(BodyMeasurements, BodyMeasurementsAdmin)
+admin.site.register(BodyCompositionHistory, BodyCompositionHistoryAdmin)

@@ -163,14 +163,19 @@ class Command(BaseCommand):
     def fix_user_composition_data(self, user, measurement):
         """Intenta corregir los datos de composición corporal para un usuario"""
         from app.models import BodyCompositionHistory
+        from decimal import Decimal
         
         # Obtener género del usuario
         user_gender = getattr(user.userprofile, 'gender', 'M') if hasattr(user, 'userprofile') else 'M'
         
-        # Calcular métricas
-        height_m = measurement.height / 100
-        imc = round(measurement.weight / (height_m ** 2), 2)
-        ica = round(measurement.waist / measurement.height, 2)
+        # Calcular métricas con validación de límites
+        height_m = float(measurement.height) / 100
+        imc = round(float(measurement.weight) / (height_m ** 2), 2)
+        ica = round(float(measurement.waist) / float(measurement.height), 2)
+        
+        # Limitar valores a los rangos permitidos por la base de datos (max 999.99)
+        imc = min(imc, 999.99)
+        ica = min(ica, 999.99)
         
         # Calcular % de grasa corporal
         body_fat_percentage = self.calculate_body_fat_us_navy(
@@ -179,8 +184,25 @@ class Command(BaseCommand):
             measurement.chest, measurement.age, user_gender
         )
         
+        # Limitar porcentaje de grasa a 100%
+        body_fat_percentage = min(body_fat_percentage, 100.0)
+        
         # Calcular masa muscular
         muscle_mass = round(float(measurement.weight) * (100 - body_fat_percentage) / 100, 1)
+        
+        # Limitar masa muscular
+        muscle_mass = min(muscle_mass, 999.99)
+        
+        # Debug: mostrar valores calculados
+        self.stdout.write(f'    📊 Valores calculados para {user.username}:')
+        self.stdout.write(f'        Peso: {measurement.weight}kg, Altura: {measurement.height}cm')
+        self.stdout.write(f'        Cintura: {measurement.waist}cm, Cadera: {measurement.hip}cm, Cuello: {measurement.chest}cm')
+        self.stdout.write(f'        IMC: {imc}, ICA: {ica}')
+        self.stdout.write(f'        Grasa: {body_fat_percentage}%, Músculo: {muscle_mass}kg')
+        
+        # Validar que los valores estén dentro de rangos razonables
+        if imc > 100 or ica > 10 or body_fat_percentage > 100 or muscle_mass > 500:
+            raise ValueError(f"Valores fuera de rango: IMC={imc}, ICA={ica}, Grasa={body_fat_percentage}%, Músculo={muscle_mass}kg")
         
         # Crear o actualizar registro
         composition, created = BodyCompositionHistory.objects.get_or_create(
