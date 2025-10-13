@@ -1,8 +1,3 @@
-<!-- DEBUG: Verificar que el modal se está cargando -->
-<script>
-console.log('🔍 MODAL CARGADO - user_detail_modal.html');
-console.log('📅 Timestamp:', new Date().toISOString());
-</script>
 
 <!-- Header del modal con información del usuario -->
 <div class="row mb-4">
@@ -295,9 +290,6 @@ console.log('📅 Timestamp:', new Date().toISOString());
 <!-- Scripts para gráficos -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-console.log('=== 🚀 INICIANDO SCRIPT DEL MODAL ===');
-console.log('📅 Fecha y hora:', new Date().toLocaleString());
-console.log('🌐 User Agent:', navigator.userAgent);
 
 // Datos de las medidas - con validación mejorada
 let weightDataRaw, muscleDataRaw, bodyFatDataRaw, icaDataRaw;
@@ -330,75 +322,6 @@ try {
     icaDataRaw = [];
 }
 
-console.log('=== DEBUG DETALLADO DE DATOS ===');
-console.log('🔍 Verificando datos recibidos del servidor...');
-
-// Debug del JSON crudo desde Django
-console.log('📦 JSON CRUDO DESDE DJANGO:');
-console.log('weight_data JSON crudo:', '{{ weight_data|escapejs }}');
-console.log('muscle_data JSON crudo:', '{{ muscle_data|escapejs }}');
-console.log('body_fat_data JSON crudo:', '{{ body_fat_data|escapejs }}');
-console.log('ica_data JSON crudo:', '{{ ica_data|escapejs }}');
-
-// Debug de los datos parseados
-console.log('📊 DATOS PARSEADOS:');
-console.log('weightDataRaw:', weightDataRaw);
-console.log('muscleDataRaw:', muscleDataRaw);
-console.log('bodyFatDataRaw:', bodyFatDataRaw);
-console.log('icaDataRaw:', icaDataRaw);
-
-// Debug de tipos y longitudes
-console.log('🔢 INFORMACIÓN DE TIPOS Y LONGITUDES:');
-console.log('- weightDataRaw:', {
-    type: typeof weightDataRaw,
-    length: weightDataRaw ? weightDataRaw.length : 'N/A',
-    isArray: Array.isArray(weightDataRaw),
-    firstItem: weightDataRaw && weightDataRaw.length > 0 ? weightDataRaw[0] : 'N/A'
-});
-console.log('- muscleDataRaw:', {
-    type: typeof muscleDataRaw,
-    length: muscleDataRaw ? muscleDataRaw.length : 'N/A',
-    isArray: Array.isArray(muscleDataRaw),
-    firstItem: muscleDataRaw && muscleDataRaw.length > 0 ? muscleDataRaw[0] : 'N/A'
-});
-console.log('- bodyFatDataRaw:', {
-    type: typeof bodyFatDataRaw,
-    length: bodyFatDataRaw ? bodyFatDataRaw.length : 'N/A',
-    isArray: Array.isArray(bodyFatDataRaw),
-    firstItem: bodyFatDataRaw && bodyFatDataRaw.length > 0 ? bodyFatDataRaw[0] : 'N/A'
-});
-console.log('- icaDataRaw:', {
-    type: typeof icaDataRaw,
-    length: icaDataRaw ? icaDataRaw.length : 'N/A',
-    isArray: Array.isArray(icaDataRaw),
-    firstItem: icaDataRaw && icaDataRaw.length > 0 ? icaDataRaw[0] : 'N/A'
-});
-
-// Validación detallada de datos
-console.log('✅ VALIDACIÓN DE DATOS:');
-if (!weightDataRaw || weightDataRaw.length === 0) {
-    console.warn('⚠️ No hay datos de peso disponibles');
-} else {
-    console.log('✅ Datos de peso disponibles:', weightDataRaw.length, 'registros');
-}
-
-if (!muscleDataRaw || muscleDataRaw.length === 0) {
-    console.warn('⚠️ No hay datos de masa muscular disponibles');
-} else {
-    console.log('✅ Datos de masa muscular disponibles:', muscleDataRaw.length, 'registros');
-}
-
-if (!bodyFatDataRaw || bodyFatDataRaw.length === 0) {
-    console.warn('⚠️ No hay datos de grasa corporal disponibles');
-} else {
-    console.log('✅ Datos de grasa corporal disponibles:', bodyFatDataRaw.length, 'registros');
-}
-
-if (!icaDataRaw || icaDataRaw.length === 0) {
-    console.warn('⚠️ No hay datos de ICA disponibles');
-} else {
-    console.log('✅ Datos de ICA disponibles:', icaDataRaw.length, 'registros');
-}
 
 // Validar y procesar datos
 const measurementsData = {
@@ -410,7 +333,6 @@ const measurementsData = {
     icas: icaDataRaw ? icaDataRaw.map(d => d.ica) : []
 };
 
-console.log('measurementsData procesado:', measurementsData);
 
 let mainChart = null;
 let currentMetric = 'weight'; // Métrica por defecto
@@ -526,78 +448,54 @@ function showNoDataMessage() {
 
 // Función para inicializar el gráfico cuando el modal esté completamente visible
 function initializeModalChart() {
-    console.log('=== 🚀 INICIALIZANDO GRÁFICO EN MODAL ===');
-    console.log('🔍 Verificando disponibilidad de Chart.js...');
-    
     // Verificar que Chart.js esté disponible
     if (typeof Chart === 'undefined') {
-        console.log('❌ Chart.js no está disponible, reintentando en 100ms...');
         setTimeout(initializeModalChart, 100);
         return;
     }
-    console.log('✅ Chart.js está disponible');
     
     // Verificar que el canvas existe
     const mainChartEl = document.getElementById('mainChart');
     if (!mainChartEl) {
-        console.log('❌ Canvas mainChart no encontrado, reintentando...');
         setTimeout(initializeModalChart, 100);
         return;
     }
-    console.log('✅ Canvas mainChart encontrado');
     
-    console.log('🔍 Verificando datos disponibles...');
-    console.log('measurementsData completo:', measurementsData);
-    console.log('Labels disponibles:', measurementsData.labels ? measurementsData.labels.length : 0);
-    console.log('Weights disponibles:', measurementsData.weights ? measurementsData.weights.length : 0);
-    console.log('Muscle masses disponibles:', measurementsData.muscle_masses ? measurementsData.muscle_masses.length : 0);
-    console.log('Body fat percentages disponibles:', measurementsData.body_fat_percentages ? measurementsData.body_fat_percentages.length : 0);
-    console.log('ICAs disponibles:', measurementsData.icas ? measurementsData.icas.length : 0);
+    // IMPORTANTE: Destruir el gráfico anterior si existe
+    if (typeof mainChart !== 'undefined' && mainChart !== null) {
+        mainChart.destroy();
+        mainChart = null;
+    }
     
     // Verificar si hay datos disponibles
     const hasAnyData = measurementsData.labels && measurementsData.labels.length > 0;
-    console.log('📊 ¿Hay datos disponibles?', hasAnyData);
-    console.log('📊 Número de labels:', measurementsData.labels ? measurementsData.labels.length : 0);
     
     if (hasAnyData) {
-        console.log('✅ Datos disponibles, creando gráfico...');
         createMainChart();
         calculateStats();
     } else {
-        console.log('⚠️ No hay datos, mostrando mensaje de sin datos...');
         showNoDataMessage();
     }
 }
 
 // Función para ser llamada cuando el modal se abra
 window.initializeUserDetailChart = function() {
-    console.log('Modal abierto, inicializando gráfico...');
     // Pequeño delay para asegurar que el modal esté completamente visible
     setTimeout(initializeModalChart, 200);
 };
 
 function createMainChart() {
-    console.log('=== 📊 CREANDO GRÁFICO PRINCIPAL ===');
-    
     const canvasEl = document.getElementById('mainChart');
     if (!canvasEl) {
-        console.log('❌ Canvas no encontrado');
         return;
     }
-    console.log('✅ Canvas encontrado');
     
     const ctx = canvasEl.getContext('2d');
-    console.log('✅ Contexto del canvas obtenido');
     
     // Verificar si hay datos disponibles
     const hasData = measurementsData.labels && measurementsData.labels.length > 0;
-    console.log('🔍 Verificando datos:');
-    console.log('- ¿Hay datos?', hasData);
-    console.log('- Labels count:', measurementsData.labels ? measurementsData.labels.length : 0);
-    console.log('- Labels:', measurementsData.labels);
     
     if (!hasData) {
-        console.log('⚠️ No hay datos disponibles, mostrando placeholder');
         canvasEl.parentElement.innerHTML = `
             <div class="text-center py-5">
                 <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
@@ -612,14 +510,7 @@ function createMainChart() {
     const config = metricConfig[currentMetric];
     const data = getCurrentMetricData();
     
-    console.log('🔧 Configuración del gráfico:');
-    console.log('- Métrica actual:', currentMetric);
-    console.log('- Config:', config);
-    console.log('- Datos para el gráfico:', data);
-    console.log('- Número de puntos de datos:', data.length);
-    
     try {
-        console.log('🚀 Creando instancia de Chart.js...');
         mainChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -680,12 +571,7 @@ function createMainChart() {
                 }
             }
         });
-        
-        console.log('✅ ¡Gráfico creado exitosamente!');
-        console.log('📊 Instancia del gráfico:', mainChart);
     } catch (error) {
-        console.error('❌ Error creando el gráfico:', error);
-        console.error('❌ Stack trace:', error.stack);
         canvasEl.parentElement.innerHTML = `
             <div class="text-center py-5">
                 <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
@@ -697,46 +583,33 @@ function createMainChart() {
 }
 
 function getCurrentMetricData() {
-    console.log('🔍 Obteniendo datos para la métrica:', currentMetric);
-    
     let data = [];
     switch(currentMetric) {
         case 'weight':
             data = measurementsData.weights;
-            console.log('📊 Datos de peso:', data);
             break;
         case 'imc':
             data = measurementsData.imcs;
-            console.log('📊 Datos de IMC:', data);
             break;
         case 'muscle_mass':
             data = measurementsData.muscle_masses;
-            console.log('📊 Datos de masa muscular:', data);
             break;
         case 'body_fat':
             data = measurementsData.body_fat_percentages;
-            console.log('📊 Datos de grasa corporal:', data);
             break;
         case 'ica':
             data = measurementsData.icas;
-            console.log('📊 Datos de ICA:', data);
             break;
         default:
             data = measurementsData.weights;
-            console.log('📊 Datos por defecto (peso):', data);
     }
-    
-    console.log('✅ Datos finales para el gráfico:', data);
-    console.log('✅ Número de puntos:', data ? data.length : 0);
     
     return data;
 }
 
 // Funciones globales para el modal - Sobrescribir las definiciones básicas
 window.changeMetric = function() {
-    console.log('changeMetric called from modal');
     if (typeof currentMetric === 'undefined') {
-        console.log('currentMetric no está definido, usando peso por defecto');
         currentMetric = 'weight';
     }
     
@@ -747,15 +620,11 @@ window.changeMetric = function() {
     
     if (typeof updateChart === 'function') {
         updateChart();
-    } else {
-        console.log('updateChart no está disponible');
     }
 }
 
 window.updateChart = function() {
-    console.log('updateChart called from modal');
     if (!mainChart) {
-        console.log('mainChart no está disponible');
         return;
     }
     
@@ -789,9 +658,7 @@ window.updateChart = function() {
 }
 
 window.filterChart = function() {
-    console.log('filterChart called from modal');
     if (!mainChart) {
-        console.log('mainChart no está disponible');
         return;
     }
     
@@ -799,7 +666,6 @@ window.filterChart = function() {
     const endDate = document.getElementById('endDate');
     
     if (!startDate || !endDate || !startDate.value || !endDate.value) {
-        console.log('Fechas no válidas');
         return;
     }
     
@@ -824,9 +690,7 @@ window.filterChart = function() {
 }
 
 window.resetChart = function() {
-    console.log('resetChart called from modal');
     if (!mainChart) {
-        console.log('mainChart no está disponible');
         return;
     }
     
@@ -837,7 +701,6 @@ window.resetChart = function() {
 
 // Función para setup de datos de prueba (si es necesaria)
 window.setupTestData = function() {
-    console.log('setupTestData called from user_detail_modal');
     // Esta función puede ser implementada si se necesitan datos de prueba
     // Por ejemplo, crear datos de prueba para el gráfico
     return true;
@@ -846,21 +709,15 @@ window.setupTestData = function() {
 // Asegurar que la función esté disponible inmediatamente
 if (typeof window.setupTestData !== 'function') {
     window.setupTestData = function() {
-        console.log('setupTestData fallback called');
         return true;
     };
 }
 
 function calculateStats() {
-    console.log('Calculating stats...');
     const currentData = getCurrentMetricData();
     const config = metricConfig[currentMetric];
     
-    console.log('Current data for stats:', currentData);
-    console.log('Config for stats:', config);
-    
     if (currentData.length === 0) {
-        console.log('No data available for stats');
         return;
     }
     
@@ -868,8 +725,6 @@ function calculateStats() {
     const initial = currentData[0];
     const difference = current - initial;
     const average = currentData.reduce((a, b) => a + b, 0) / currentData.length;
-    
-    console.log('Stats calculated:', { current, initial, difference, average });
     
     const unit = config.unit;
     
@@ -879,27 +734,11 @@ function calculateStats() {
     const differenceEl = document.getElementById('differenceValue');
     const averageEl = document.getElementById('averageValue');
     
-    console.log('Scorecard elements:', {
-        currentEl: !!currentEl,
-        initialEl: !!initialEl,
-        differenceEl: !!differenceEl,
-        averageEl: !!averageEl
-    });
-    
     if (currentEl) currentEl.textContent = current.toFixed(1) + (unit ? ' ' + unit : '');
     if (initialEl) initialEl.textContent = initial.toFixed(1) + (unit ? ' ' + unit : '');
     if (differenceEl) differenceEl.textContent = (difference >= 0 ? '+' : '') + difference.toFixed(1) + (unit ? ' ' + unit : '');
     if (averageEl) averageEl.textContent = average.toFixed(1) + (unit ? ' ' + unit : '');
-    
-    console.log('Stats updated successfully');
 }
 
-// Log final para verificar que el script se ejecutó completamente
-console.log('✅ SCRIPT DEL MODAL COMPLETADO');
-console.log('📊 Variables disponibles:');
-console.log('- weightDataRaw:', typeof weightDataRaw, weightDataRaw ? weightDataRaw.length : 'N/A');
-console.log('- muscleDataRaw:', typeof muscleDataRaw, muscleDataRaw ? muscleDataRaw.length : 'N/A');
-console.log('- measurementsData:', typeof measurementsData);
-console.log('- initializeUserDetailChart:', typeof window.initializeUserDetailChart);
 
 </script>
