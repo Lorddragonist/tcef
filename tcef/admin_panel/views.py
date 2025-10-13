@@ -1258,10 +1258,10 @@ def user_detail_modal(request, user_id):
     
     # Si no hay datos del mes, obtener los más recientes disponibles
     if not month_measurements.exists():
-        month_measurements = BodyMeasurements.objects.filter(user=user).order_by('-measurement_date')[:5]
+        month_measurements = BodyMeasurements.objects.filter(user=user).order_by('-measurement_date')[:10]
     
     if not month_composition.exists():
-        month_composition = BodyCompositionHistory.objects.filter(user=user).order_by('-measurement_date')[:5]
+        month_composition = BodyCompositionHistory.objects.filter(user=user).order_by('-measurement_date')[:10]
     
     # Datos para gráficos
     weight_data = []
@@ -1304,6 +1304,25 @@ def user_detail_modal(request, user_id):
     from datetime import date
     month_date = date(year, month, 1)
     
+    # Obtener la primera fecha de medida del usuario
+    first_measurement = BodyMeasurements.objects.filter(user=user).order_by('measurement_date').first()
+    first_measurement_date = first_measurement.measurement_date if first_measurement else date.today()
+    
+    # Fecha de hoy
+    today_date = date.today()
+    
+    # Debug: imprimir información de datos
+    print(f"Debug - Usuario: {user.username}")
+    print(f"Debug - Medidas encontradas: {month_measurements.count()}")
+    print(f"Debug - Composición encontrada: {month_composition.count()}")
+    print(f"Debug - weight_data: {len(weight_data)} registros")
+    print(f"Debug - body_fat_data: {len(body_fat_data)} registros")
+    print(f"Debug - muscle_data: {len(muscle_data)} registros")
+    print(f"Debug - ica_data: {len(ica_data)} registros")
+    
+    # Serializar datos para JavaScript
+    import json
+    
     context = {
         'user': user,
         'year': year,
@@ -1316,12 +1335,14 @@ def user_detail_modal(request, user_id):
         'best_streak': best_streak,
         'month_measurements': month_measurements,
         'month_composition': month_composition,
-        'weight_data': weight_data,
-        'body_fat_data': body_fat_data,
-        'muscle_data': muscle_data,
-        'ica_data': ica_data,
+        'weight_data': json.dumps(weight_data),
+        'body_fat_data': json.dumps(body_fat_data),
+        'muscle_data': json.dumps(muscle_data),
+        'ica_data': json.dumps(ica_data),
         'total_exercises_all_time': total_exercises_all_time,
         'days_since_start': days_since_start,
+        'first_measurement_date': first_measurement_date,
+        'today_date': today_date,
     }
     
     return render(request, 'admin_panel/user_detail_modal.html', context)

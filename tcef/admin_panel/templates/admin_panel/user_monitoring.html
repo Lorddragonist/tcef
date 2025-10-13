@@ -431,6 +431,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configurar eventos de búsqueda
     setupSearch();
     setupSorting();
+    
+    // Definir setupTestData si no existe
+    if (typeof window.setupTestData !== 'function') {
+        window.setupTestData = function() {
+            console.log('setupTestData called from user_monitoring');
+            // Implementar funcionalidad de datos de prueba si es necesario
+        };
+    }
+    
+    // Definir funciones globales para modales
+    if (typeof window.filterChart !== 'function') {
+        window.filterChart = function() {
+            console.log('filterChart called from user_monitoring');
+            // Esta función se implementará en el modal cuando sea necesario
+        };
+    }
+    
+    if (typeof window.resetChart !== 'function') {
+        window.resetChart = function() {
+            console.log('resetChart called from user_monitoring');
+            // Esta función se implementará en el modal cuando sea necesario
+        };
+    }
+    
+    if (typeof window.changeMetric !== 'function') {
+        window.changeMetric = function() {
+            console.log('changeMetric called from user_monitoring');
+            // Esta función se implementará en el modal cuando sea necesario
+        };
+    }
+    
+    // Llamar setupTestData
     setupTestData();
 });
 
@@ -590,8 +622,13 @@ function updateTable() {
 }
 
 function openUserModal(userId) {
+    console.log('🚀 ABRIENDO MODAL PARA USUARIO:', userId);
+    
     const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
     const content = document.getElementById('userDetailContent');
+    
+    console.log('📦 Modal element:', modal);
+    console.log('📦 Content element:', content);
     
     // Mostrar loading
     content.innerHTML = `
@@ -603,15 +640,69 @@ function openUserModal(userId) {
         </div>
     `;
     
+    console.log('🔄 Mostrando modal...');
     modal.show();
+    
+    console.log('🌐 Haciendo fetch a:', `/admin-panel/monitoring/user/${userId}/details/`);
     
     // Cargar contenido del usuario
     fetch(`/admin-panel/monitoring/user/${userId}/details/`)
-        .then(response => response.text())
+        .then(response => {
+            console.log('📡 Respuesta del servidor:', response.status, response.statusText);
+            return response.text();
+        })
         .then(html => {
+            console.log('📄 HTML recibido, longitud:', html.length);
+            console.log('📄 Primeros 200 caracteres:', html.substring(0, 200));
+            
             content.innerHTML = html;
+            
+            // Esperar un poco para que el script se ejecute
+            setTimeout(() => {
+                console.log('🔍 Verificando si existe initializeUserDetailChart después del delay...');
+                console.log('🔍 Tipo de función:', typeof window.initializeUserDetailChart);
+                
+                // Inicializar el gráfico después de cargar el contenido
+                if (typeof window.initializeUserDetailChart === 'function') {
+                    console.log('✅ Función encontrada, llamando initializeUserDetailChart...');
+                    window.initializeUserDetailChart();
+                } else {
+                    console.log('❌ Función initializeUserDetailChart no encontrada después del delay');
+                    console.log('🔍 Verificando si hay errores en el script...');
+                    
+                    // Intentar ejecutar manualmente el script si existe
+                    const scripts = content.querySelectorAll('script');
+                    console.log('📜 Scripts encontrados en el modal:', scripts.length);
+                    
+                    if (scripts.length > 0) {
+                        console.log('🔄 Intentando ejecutar scripts manualmente...');
+                        scripts.forEach((script, index) => {
+                            console.log(`📜 Ejecutando script ${index + 1}:`, script.textContent.substring(0, 100) + '...');
+                            try {
+                                eval(script.textContent);
+                            } catch (e) {
+                                console.error('❌ Error ejecutando script:', e);
+                            }
+                        });
+                        
+                        // Verificar nuevamente después de ejecutar los scripts
+                        setTimeout(() => {
+                            console.log('🔍 Verificando nuevamente después de ejecutar scripts...');
+                            console.log('🔍 Tipo de función:', typeof window.initializeUserDetailChart);
+                            
+                            if (typeof window.initializeUserDetailChart === 'function') {
+                                console.log('✅ Función encontrada después de ejecutar scripts, llamando initializeUserDetailChart...');
+                                window.initializeUserDetailChart();
+                            } else {
+                                console.log('❌ Función initializeUserDetailChart aún no encontrada');
+                            }
+                        }, 100);
+                    }
+                }
+            }, 100);
         })
         .catch(error => {
+            console.error('❌ Error en fetch:', error);
             content.innerHTML = `
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle me-2"></i>
