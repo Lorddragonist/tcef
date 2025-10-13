@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
@@ -676,13 +677,21 @@ def add_body_measurements(request):
             ica = round(measurement.waist / measurement.height, 2)
             
             # Calcular % de grasa corporal usando fórmula US Navy
-            body_fat_percentage = calculate_body_fat_us_navy(
-                measurement.weight, measurement.height, measurement.waist, 
-                measurement.hip, measurement.chest, measurement.age, user_gender
-            )
+            try:
+                body_fat_percentage = calculate_body_fat_us_navy(
+                    measurement.weight, measurement.height, measurement.waist, 
+                    measurement.hip, measurement.chest, measurement.age, user_gender
+                )
+            except (ValueError, ZeroDivisionError, TypeError):
+                body_fat_percentage = 0
+                messages.warning(request, 'No se pudo calcular el porcentaje de grasa corporal con los datos proporcionados.')
             
             # Calcular masa muscular
-            muscle_mass = round(measurement.weight * (100 - body_fat_percentage) / 100, 1)
+            try:
+                muscle_mass = round(measurement.weight * (100 - body_fat_percentage) / 100, 1)
+            except (ValueError, ZeroDivisionError, TypeError):
+                muscle_mass = 0
+                messages.warning(request, 'No se pudo calcular la masa muscular.')
             
             # Crear o actualizar registro de composición corporal
             composition, created = BodyCompositionHistory.objects.get_or_create(
@@ -705,6 +714,9 @@ def add_body_measurements(request):
                 composition.save()
             
             return redirect('app:exercise_stats')
+        else:
+            # Si el formulario no es válido, mostrar errores
+            messages.error(request, 'Por favor, corrige los errores en el formulario.')
     else:
         # Obtener las últimas medidas del usuario
         last_measurement = BodyMeasurements.objects.filter(

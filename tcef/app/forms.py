@@ -193,3 +193,51 @@ class BodyMeasurementsForm(forms.ModelForm):
             'hip': 'Cadera (cm)',
             'chest': 'Cuello (cm)',
         }
+    
+    def clean_weight(self):
+        weight = self.cleaned_data.get('weight')
+        if weight is not None and weight <= 0:
+            raise forms.ValidationError('El peso debe ser mayor a 0.')
+        if weight is not None and weight > 500:
+            raise forms.ValidationError('El peso debe ser menor a 500 kg.')
+        return weight
+    
+    def clean_height(self):
+        height = self.cleaned_data.get('height')
+        if height is not None and height <= 0:
+            raise forms.ValidationError('La altura debe ser mayor a 0.')
+        if height is not None and height > 300:
+            raise forms.ValidationError('La altura debe ser menor a 300 cm.')
+        return height
+    
+    def clean_age(self):
+        age = self.cleaned_data.get('age')
+        if age is not None and age <= 0:
+            raise forms.ValidationError('La edad debe ser mayor a 0.')
+        if age is not None and age > 120:
+            raise forms.ValidationError('La edad debe ser menor a 120 años.')
+        return age
+    
+    def clean_waist(self):
+        waist = self.cleaned_data.get('waist')
+        if waist is not None and waist <= 0:
+            raise forms.ValidationError('La cintura debe ser mayor a 0.')
+        if waist is not None and waist > 200:
+            raise forms.ValidationError('La cintura debe ser menor a 200 cm.')
+        return waist
+    
+    def clean_hip(self):
+        hip = self.cleaned_data.get('hip')
+        if hip is not None and hip <= 0:
+            raise forms.ValidationError('La cadera debe ser mayor a 0.')
+        if hip is not None and hip > 200:
+            raise forms.ValidationError('La cadera debe ser menor a 200 cm.')
+        return hip
+    
+    def clean_chest(self):
+        chest = self.cleaned_data.get('chest')
+        if chest is not None and chest <= 0:
+            raise forms.ValidationError('El cuello debe ser mayor a 0.')
+        if chest is not None and chest > 100:
+            raise forms.ValidationError('El cuello debe ser menor a 100 cm.')
+        return chest
