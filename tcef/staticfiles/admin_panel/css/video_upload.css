@@ -1,0 +1,64 @@
+.upload-drop-zone {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-drop-zone:hover {
+    border-color: #007bff !important;
+    background-color: #f8f9fa;
+}
+
+.upload-drop-zone.border-primary {
+    border-color: #007bff !important;
+    background-color: #f8f9fa;
+}
+
+.progress {
+    height: 25px;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+.video-thumbnail {
+    transition: transform 0.2s ease;
+}
+
+.video-thumbnail:hover {
+    transform: scale(1.05);
+}
+
+.video-poster {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.video-poster:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transform: scale(1.05);
+}
+
+#videoPreviewModal .modal-dialog {
+    max-width: 90%;
+    margin: 5vh auto;
+    transform: none !important;
+}
+
+#videoPreviewModal .modal-content {
+    max-height: 90vh;
+    overflow: hidden;
+}
+
+#videoPreviewModal .modal-body {
+    padding: 1rem;
+    text-align: center;
+}
+
+#videoPlayer {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
