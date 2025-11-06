@@ -137,23 +137,43 @@
     <div class="col-12">
         <div class="stats-card">
             <h5><i class="fas fa-calendar-alt me-2"></i>Calendario de Ejercicios - {{ month_date|date:"F Y" }}</h5>
-            <div class="calendar-grid">
-                {% for day in "1234567890123456789012345678901"|make_list %}
-                    {% if forloop.counter <= 31 %}
-                        {% with day_num=forloop.counter %}
-                            {% if day_num in exercise_dates %}
-                                <div class="calendar-day exercise" title="Ejercicio completado el día {{ day_num }}">
-                                    {{ day_num }}
-                                </div>
+            
+            <!-- Encabezados de días de la semana -->
+            <div class="calendar-header-grid mb-2">
+                <div class="calendar-header">Lunes</div>
+                <div class="calendar-header">Martes</div>
+                <div class="calendar-header">Miércoles</div>
+                <div class="calendar-header">Jueves</div>
+                <div class="calendar-header">Viernes</div>
+                <div class="calendar-header">Sábado</div>
+                <div class="calendar-header">Domingo</div>
+            </div>
+            
+            <!-- Calendario tradicional con semanas en filas -->
+            <div class="calendar-container">
+                {% for week in calendar_weeks %}
+                    <div class="calendar-week">
+                        {% for day_info in week %}
+                            {% if day_info.day %}
+                                {% if day_info.has_exercise %}
+                                    <div class="calendar-day exercise" title="{{ day_info.weekday_name }} {{ day_info.day }} - Ejercicio completado">
+                                        <div class="day-number">{{ day_info.day }}</div>
+                                        <div class="day-name">{{ day_info.weekday_name|slice:":3" }}</div>
+                                    </div>
+                                {% else %}
+                                    <div class="calendar-day no-exercise" title="{{ day_info.weekday_name }} {{ day_info.day }} - Sin ejercicio">
+                                        <div class="day-number">{{ day_info.day }}</div>
+                                        <div class="day-name">{{ day_info.weekday_name|slice:":3" }}</div>
+                                    </div>
+                                {% endif %}
                             {% else %}
-                                <div class="calendar-day no-exercise" title="Sin ejercicio el día {{ day_num }}">
-                                    {{ day_num }}
-                                </div>
+                                <div class="calendar-day other-month"></div>
                             {% endif %}
-                        {% endwith %}
-                    {% endif %}
+                        {% endfor %}
+                    </div>
                 {% endfor %}
             </div>
+            
             <div class="mt-3">
                 <small class="text-muted">
                     <span class="badge bg-success me-2">●</span> Ejercicio completado

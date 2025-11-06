@@ -1228,6 +1228,39 @@ def user_detail_modal(request, user_id):
     month_exercises = ExerciseLog.get_month_exercises(user, year, month)
     exercise_dates = [ex.exercise_date.day for ex in month_exercises]  # Solo los días del mes
     
+    # Generar calendario tradicional con semanas en filas
+    import calendar
+    cal = calendar.monthcalendar(year, month)
+    day_names = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    
+    # Crear estructura de calendario tradicional: semanas en filas
+    calendar_weeks = []
+    for week in cal:
+        week_days = []
+        for day in week:
+            if day != 0:  # Día del mes actual
+                day_date = date(year, month, day)
+                weekday = day_date.weekday()  # 0=Lunes, 6=Domingo
+                has_exercise = day in exercise_dates
+                week_days.append({
+                    'day': day,
+                    'weekday': weekday,
+                    'weekday_name': day_names[weekday],
+                    'has_exercise': has_exercise,
+                    'is_current_month': True
+                })
+            else:  # Día de otro mes (para completar la semana)
+                week_days.append({
+                    'day': None,
+                    'weekday': None,
+                    'weekday_name': '',
+                    'has_exercise': False,
+                    'is_current_month': False
+                })
+        calendar_weeks.append(week_days)
+    
+    reordered_day_names = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    
     # Debug: imprimir información para verificar (solo en desarrollo)
     # print(f"Debug - User: {user.username}, Year: {year}, Month: {month}")
     # print(f"Debug - Exercise dates found: {exercise_dates}")
@@ -1329,6 +1362,8 @@ def user_detail_modal(request, user_id):
         'month': month,
         'month_date': month_date,  # Objeto de fecha para el template
         'exercise_dates': exercise_dates,
+        'calendar_weeks': calendar_weeks,  # Calendario tradicional con semanas en filas
+        'day_names': reordered_day_names,  # Nombres de días
         'total_exercises': total_exercises,
         'exercise_percentage': round(exercise_percentage, 1),
         'current_streak': current_streak,
