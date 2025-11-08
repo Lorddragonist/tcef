@@ -87,46 +87,50 @@
     <div class="col-md-3">
         <div class="stats-card">
             <h5><i class="fas fa-weight me-2"></i>Medidas</h5>
-            {% if month_measurements %}
-                {% with latest=month_measurements.first %}
+            {% if latest_measurement %}
                 <div class="stat-item">
                     <span class="stat-label">Peso:</span>
-                    <span class="stat-value">{{ latest.weight }} kg</span>
+                    <span class="stat-value">{{ latest_measurement.weight }} kg</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">IMC:</span>
-                    <span class="stat-value">{{ latest.bmi }}</span>
+                    <span class="stat-value">{{ latest_measurement.bmi }}</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Altura:</span>
-                    <span class="stat-value">{{ latest.height }} cm</span>
+                    <span class="stat-value">{{ latest_measurement.height }} cm</span>
                 </div>
-                {% endwith %}
+                <div class="stat-item">
+                    <span class="stat-label"><small>Última medida:</small></span>
+                    <span class="stat-value"><small>{{ latest_measurement.measurement_date|date:"d/m/Y" }}</small></span>
+                </div>
             {% else %}
-                <div class="text-muted">Sin medidas este mes</div>
+                <div class="text-muted">Sin medidas registradas</div>
             {% endif %}
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card">
             <h5><i class="fas fa-chart-pie me-2"></i>Composición</h5>
-            {% if month_composition %}
-                {% with latest=month_composition.first %}
+            {% if latest_composition %}
                 <div class="stat-item">
                     <span class="stat-label">% Grasa:</span>
-                    <span class="stat-value">{{ latest.body_fat_percentage|default:"-" }}%</span>
+                    <span class="stat-value">{{ latest_composition.body_fat_percentage|default:"-" }}%</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Músculo:</span>
-                    <span class="stat-value">{{ latest.muscle_mass|default:"-" }} kg</span>
+                    <span class="stat-value">{{ latest_composition.muscle_mass|default:"-" }} kg</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">ICA:</span>
-                    <span class="stat-value">{{ latest.ica|default:"-" }}</span>
+                    <span class="stat-value">{{ latest_composition.ica|default:"-" }}</span>
                 </div>
-                {% endwith %}
+                <div class="stat-item">
+                    <span class="stat-label"><small>Última medida:</small></span>
+                    <span class="stat-value"><small>{{ latest_composition.measurement_date|date:"d/m/Y" }}</small></span>
+                </div>
             {% else %}
-                <div class="text-muted">Sin datos este mes</div>
+                <div class="text-muted">Sin datos de composición</div>
             {% endif %}
         </div>
     </div>
@@ -301,6 +305,93 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Diario de Alimentación - Últimas Semanas -->
+{% if food_by_week %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="stats-card">
+            <h5><i class="fas fa-utensils me-2"></i>Diario de Alimentación - Últimas Semanas</h5>
+            <p class="text-muted mb-3">
+                <small>Mostrando las últimas {{ food_by_week|length }} semanas ({{ total_food_entries }} entradas totales)</small>
+            </p>
+            
+            <div class="accordion" id="foodDiaryAccordion">
+                {% for week_data in food_by_week %}
+                <div class="accordion-item mb-2">
+                    <h2 class="accordion-header" id="headingWeek{{ week_data.week_num }}">
+                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWeek{{ week_data.week_num }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseWeek{{ week_data.week_num }}">
+                            <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                <div>
+                                    <strong>Semana {{ week_data.week_num }} - {{ week_data.year }}</strong>
+                                    <span class="badge bg-secondary ms-2">{{ week_data.entries|length }} comidas</span>
+                                </div>
+                                <small class="text-muted">
+                                    {{ week_data.week_start|date:"d/m" }} - {{ week_data.week_end|date:"d/m/Y" }}
+                                </small>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapseWeek{{ week_data.week_num }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="headingWeek{{ week_data.week_num }}" data-bs-parent="#foodDiaryAccordion">
+                        <div class="accordion-body">
+                            <div class="row">
+                                {% regroup week_data.entries by meal_date as entries_by_date %}
+                                {% for date_group in entries_by_date %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-left-primary" style="border-left: 4px solid #6c757d;">
+                                        <div class="card-body">
+                                            <h6 class="card-title mb-3">
+                                                <i class="fas fa-calendar-day me-2"></i>
+                                                {{ date_group.grouper|date:"l, d/m/Y"|title }}
+                                            </h6>
+                                            <div class="food-entries">
+                                                {% for entry in date_group.list %}
+                                                <div class="food-entry-item mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %}">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div class="flex-grow-1">
+                                                            <span class="badge bg-secondary me-2">
+                                                                {{ entry.get_meal_type_display }}
+                                                            </span>
+                                                            <small class="text-muted">
+                                                                <i class="fas fa-clock me-1"></i>
+                                                                {{ entry.meal_time|time:"H:i" }}
+                                                            </small>
+                                                            {% if entry.description %}
+                                                            <p class="mb-0 mt-1 small">{{ entry.description|truncatewords:15 }}</p>
+                                                            {% else %}
+                                                            <p class="mb-0 mt-1 small text-muted"><em>Sin descripción</em></p>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="stats-card">
+            <h5><i class="fas fa-utensils me-2"></i>Diario de Alimentación</h5>
+            <div class="text-center py-4">
+                <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                <p class="text-muted mb-0">No hay registros de alimentación en las últimas semanas</p>
             </div>
         </div>
     </div>

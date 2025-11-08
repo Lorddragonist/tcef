@@ -6,6 +6,7 @@ from .user import UserProfile, PasswordResetRequest
 from .exercise import ExerciseLog
 from .routine import WeeklyRoutine
 from .body_measurements import BodyMeasurements, BodyCompositionHistory
+from .food_diary import FoodDiary
 
 __all__ = [
     'UserProfile',
@@ -14,5 +15,6 @@ __all__ = [
     'WeeklyRoutine',
     'BodyMeasurements',
     'BodyCompositionHistory',
+    'FoodDiary',
 ]
 

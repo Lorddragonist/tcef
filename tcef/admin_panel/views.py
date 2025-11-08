@@ -13,7 +13,7 @@ import json
 from datetime import datetime, timedelta
 
 from .models import UserGroup, UserGroupMembership, CustomRoutine, AdminActivity, VideoUploadSession, Video, RoutineVideo
-from app.models import UserProfile, ExerciseLog, BodyMeasurements, BodyCompositionHistory
+from app.models import UserProfile, ExerciseLog, BodyMeasurements, BodyCompositionHistory, FoodDiary
 
 import boto3
 from botocore.exceptions import ClientError
@@ -1275,21 +1275,31 @@ def user_detail_modal(request, user_id):
     current_streak = ExerciseLog.get_current_week_streak(user)
     best_streak = ExerciseLog.get_longest_week_streak(user)
     
-    # Medidas corporales del mes
+    # Medidas corporales del mes (para la tabla detallada)
     month_measurements = BodyMeasurements.objects.filter(
         user=user,
         measurement_date__year=year,
         measurement_date__month=month
     ).order_by('measurement_date')
     
-    # Composición corporal del mes
+    # Composición corporal del mes (para la tabla detallada)
     month_composition = BodyCompositionHistory.objects.filter(
         user=user,
         measurement_date__year=year,
         measurement_date__month=month
     ).order_by('measurement_date')
     
-    # Si no hay datos del mes, obtener los más recientes disponibles
+    # Obtener el ÚLTIMO registro de medidas (independiente del mes seleccionado)
+    latest_measurement = BodyMeasurements.objects.filter(
+        user=user
+    ).order_by('-measurement_date').first()
+    
+    # Obtener el ÚLTIMO registro de composición (independiente del mes seleccionado)
+    latest_composition = BodyCompositionHistory.objects.filter(
+        user=user
+    ).order_by('-measurement_date').first()
+    
+    # Si no hay datos del mes, obtener los más recientes disponibles para la tabla
     if not month_measurements.exists():
         month_measurements = BodyMeasurements.objects.filter(user=user).order_by('-measurement_date')[:10]
     
@@ -1344,6 +1354,33 @@ def user_detail_modal(request, user_id):
     # Fecha de hoy
     today_date = date.today()
     
+    # Obtener alimentos registrados en las últimas semanas (últimas 4 semanas)
+    weeks_back = 4
+    start_date = today_date - timedelta(weeks=weeks_back)
+    recent_food_entries = FoodDiary.objects.filter(
+        user=user,
+        meal_date__gte=start_date
+    ).order_by('-meal_date', '-meal_time')[:50]  # Limitar a 50 entradas más recientes
+    
+    # Agrupar alimentos por semana
+    food_by_week = {}
+    for entry in recent_food_entries:
+        week_num = FoodDiary.get_current_week_number(entry.meal_date)
+        week_key = f"{entry.meal_date.year}-W{week_num}"
+        if week_key not in food_by_week:
+            week_start, week_end = FoodDiary.get_week_dates(entry.meal_date.year, week_num)
+            food_by_week[week_key] = {
+                'week_start': week_start,
+                'week_end': week_end,
+                'week_num': week_num,
+                'year': entry.meal_date.year,
+                'entries': []
+            }
+        food_by_week[week_key]['entries'].append(entry)
+    
+    # Ordenar semanas por fecha (más reciente primero)
+    food_by_week_list = sorted(food_by_week.values(), key=lambda x: (x['year'], x['week_num']), reverse=True)
+    
     # Debug: imprimir información de datos
     print(f"Debug - Usuario: {user.username}")
     print(f"Debug - Medidas encontradas: {month_measurements.count()}")
@@ -1352,6 +1389,7 @@ def user_detail_modal(request, user_id):
     print(f"Debug - body_fat_data: {len(body_fat_data)} registros")
     print(f"Debug - muscle_data: {len(muscle_data)} registros")
     print(f"Debug - ica_data: {len(ica_data)} registros")
+    print(f"Debug - Entradas de alimentos: {recent_food_entries.count()}")
     
     # Serializar datos para JavaScript
     import json
@@ -1370,6 +1408,8 @@ def user_detail_modal(request, user_id):
         'best_streak': best_streak,
         'month_measurements': month_measurements,
         'month_composition': month_composition,
+        'latest_measurement': latest_measurement,
+        'latest_composition': latest_composition,
         'weight_data': json.dumps(weight_data),
         'body_fat_data': json.dumps(body_fat_data),
         'muscle_data': json.dumps(muscle_data),
@@ -1378,6 +1418,8 @@ def user_detail_modal(request, user_id):
         'days_since_start': days_since_start,
         'first_measurement_date': first_measurement_date,
         'today_date': today_date,
+        'food_by_week': food_by_week_list,
+        'total_food_entries': recent_food_entries.count(),
     }
     
     return render(request, 'admin_panel/user_detail_modal.html', context)

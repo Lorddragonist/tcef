@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import UserProfile, ExerciseLog, WeeklyRoutine, BodyMeasurements, BodyCompositionHistory
+from .models import UserProfile, ExerciseLog, WeeklyRoutine, BodyMeasurements, BodyCompositionHistory, FoodDiary
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
@@ -166,3 +166,30 @@ admin.site.register(ExerciseLog, ExerciseLogAdmin)
 admin.site.register(WeeklyRoutine, WeeklyRoutineAdmin)
 admin.site.register(BodyMeasurements, BodyMeasurementsAdmin)
 admin.site.register(BodyCompositionHistory, BodyCompositionHistoryAdmin)
+
+class FoodDiaryAdmin(admin.ModelAdmin):
+    list_display = ('user', 'meal_date', 'meal_time', 'meal_type', 'description', 'created_at')
+    list_filter = ('meal_type', 'meal_date', 'created_at')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'description')
+    date_hierarchy = 'meal_date'
+    ordering = ('-meal_date', '-meal_time')
+    
+    fieldsets = (
+        ('Usuario y Fecha', {
+            'fields': ('user', 'meal_date', 'meal_time')
+        }),
+        ('Información de la Comida', {
+            'fields': ('meal_type', 'description')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    readonly_fields = ('created_at', 'updated_at')
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
+
+admin.site.register(FoodDiary, FoodDiaryAdmin)

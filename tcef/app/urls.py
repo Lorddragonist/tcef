@@ -26,4 +26,11 @@ urlpatterns = [
     
     # Medidas físicas
     path('add-measurements/', views.add_body_measurements, name='add_measurements'),
+    
+    # Diario de alimentación
+    path('food-diary/', views.food_diary, name='food_diary'),
+    path('food-diary/<int:year>/<int:week>/', views.food_diary, name='food_diary_week'),
+    path('food-diary/add/', views.add_food_entry, name='add_food_entry'),
+    path('food-diary/<int:entry_id>/edit/', views.edit_food_entry, name='edit_food_entry'),
+    path('food-diary/<int:entry_id>/delete/', views.delete_food_entry, name='delete_food_entry'),
 ] 

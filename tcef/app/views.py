@@ -14,8 +14,8 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, date, timedelta
 import calendar
 import math  # Agregar esta importación
-from .forms import UserRegistrationForm, CustomLoginForm
-from .models import UserProfile, ExerciseLog, WeeklyRoutine, PasswordResetRequest
+from .forms import UserRegistrationForm, CustomLoginForm, FoodDiaryForm
+from .models import UserProfile, ExerciseLog, WeeklyRoutine, PasswordResetRequest, FoodDiary
 from admin_panel.models import CustomRoutine, UserGroupMembership
 from .forms import BodyMeasurementsForm
 from .models import BodyMeasurements
@@ -768,23 +768,171 @@ def calculate_body_fat_us_navy(weight, height, waist, hip, neck, age, gender):
     except (ValueError, ZeroDivisionError):
         return 0
 
-# Probar con tus medidas
-result = calculate_body_fat_us_navy(105, 176, 107, 111, 44, 30, 'M')
-print(f"Resultado con fórmula correcta: {result:.1f}%")
 
-# Probar la nueva fórmula de masa muscular
-print("=== NUEVA FÓRMULA DE MASA MUSCULAR ===")
+@login_required
+def food_diary(request, year=None, week=None):
+    """Vista de agenda semanal del diario de alimentación"""
+    from datetime import date, timedelta
+    
+    # Obtener año y semana actual si no se especifican
+    today = date.today()
+    current_year = today.year
+    current_week = FoodDiary.get_current_week_number(today)
+    
+    # Usar parámetros o valores por defecto
+    selected_year = int(year) if year else current_year
+    selected_week = int(week) if week else current_week
+    
+    # Validar que solo se puedan ver semanas anteriores o la actual
+    if selected_year > current_year or (selected_year == current_year and selected_week > current_week):
+        selected_year = current_year
+        selected_week = current_week
+    
+    # Validar que solo se puedan ver máximo 5 semanas hacia atrás
+    min_week = max(1, current_week - 4)  # Máximo 5 semanas (4 anteriores + 1 actual)
+    if selected_year == current_year and selected_week < min_week:
+        selected_week = min_week
+    
+    # Obtener fechas de inicio y fin de la semana
+    week_start, week_end = FoodDiary.get_week_dates(selected_year, selected_week)
+    
+    # Obtener todas las entradas de la semana
+    week_entries = FoodDiary.objects.filter(
+        user=request.user,
+        meal_date__gte=week_start,
+        meal_date__lte=week_end
+    ).order_by('meal_date', 'meal_time')
+    
+    # Organizar entradas por día
+    entries_by_day = {}
+    for entry in week_entries:
+        day_key = entry.meal_date
+        if day_key not in entries_by_day:
+            entries_by_day[day_key] = []
+        entries_by_day[day_key].append(entry)
+    
+    # Generar lista de días de la semana
+    day_names_es = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    week_days = []
+    current_date = week_start
+    while current_date <= week_end:
+        weekday_num = current_date.weekday()  # 0=Lunes, 6=Domingo
+        week_days.append({
+            'date': current_date,
+            'entries': entries_by_day.get(current_date, []),
+            'is_today': current_date == today,
+            'day_name': day_names_es[weekday_num]
+        })
+        current_date += timedelta(days=1)
+    
+    # Obtener lista de semanas disponibles (máximo 5 semanas hacia atrás, incluyendo la actual)
+    available_weeks = []
+    start_week = max(1, current_week - 4)  # Máximo 5 semanas (4 anteriores + 1 actual)
+    for w in range(start_week, current_week + 1):
+        ws, we = FoodDiary.get_week_dates(current_year, w)
+        available_weeks.append({
+            'week': w,
+            'year': current_year,
+            'start': ws,
+            'end': we,
+            'label': f"Semana {w} ({ws.strftime('%d/%m')} - {we.strftime('%d/%m/%Y')})"
+        })
+    
+    context = {
+        'week_days': week_days,
+        'selected_year': selected_year,
+        'selected_week': selected_week,
+        'current_year': current_year,
+        'current_week': current_week,
+        'week_start': week_start,
+        'week_end': week_end,
+        'available_weeks': available_weeks,
+        'is_current_week': selected_week == current_week and selected_year == current_year,
+    }
+    
+    return render(request, 'app/food_diary.html', context)
 
-# Tus medidas
-weight_kg = 105
-body_fat_percentage = 25.0  # Ejemplo: 25% de grasa corporal
 
-# Fórmula anterior (aproximada)
-old_muscle_mass = weight_kg * 0.4 + (176 - 100) * 0.1
-print(f"Fórmula anterior: {old_muscle_mass:.1f} kg")
+@login_required
+def add_food_entry(request):
+    """Vista para agregar una nueva entrada al diario"""
+    # Obtener fecha de la URL si se proporciona (antes de crear el formulario)
+    meal_date = None
+    if request.method == 'GET':
+        date_param = request.GET.get('date')
+        if date_param:
+            try:
+                meal_date = datetime.strptime(date_param, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+    
+    if request.method == 'POST':
+        form = FoodDiaryForm(request.POST, user=request.user)
+        if form.is_valid():
+            entry = form.save(commit=False)
+            entry.user = request.user
+            try:
+                entry.full_clean()  # Validar con el usuario asignado
+                entry.save()
+                messages.success(request, 'Comida registrada exitosamente.')
+                # Redirigir a la semana correspondiente
+                week_num = FoodDiary.get_current_week_number(entry.meal_date)
+                return redirect('app:food_diary_week', year=entry.meal_date.year, week=week_num)
+            except ValidationError as e:
+                for field, errors in e.error_dict.items():
+                    for error in errors:
+                        messages.error(request, str(error))
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
+    else:
+        # Crear formulario con fecha inicial si se proporcionó
+        initial_data = {}
+        if meal_date:
+            initial_data['meal_date'] = meal_date
+        form = FoodDiaryForm(user=request.user, initial=initial_data)
+    
+    # Pasar la fecha al contexto para asegurar que se muestre en el template
+    context = {
+        'form': form,
+        'preselected_date': meal_date.strftime('%Y-%m-%d') if meal_date else None
+    }
+    return render(request, 'app/add_food_entry.html', context)
 
-# Nueva fórmula (más precisa)
-new_muscle_mass = weight_kg * (100 - body_fat_percentage) / 100
-print(f"Nueva fórmula: {new_muscle_mass:.1f} kg")
 
-print(f"\nDiferencia: {new_muscle_mass - old_muscle_mass:.1f} kg")
+@login_required
+def edit_food_entry(request, entry_id):
+    """Vista para editar una entrada del diario"""
+    entry = get_object_or_404(FoodDiary, id=entry_id, user=request.user)
+    
+    if request.method == 'POST':
+        form = FoodDiaryForm(request.POST, instance=entry, user=request.user)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, 'Comida actualizada exitosamente.')
+                week_num = FoodDiary.get_current_week_number(entry.meal_date)
+                return redirect('app:food_diary_week', year=entry.meal_date.year, week=week_num)
+            except ValidationError as e:
+                for field, errors in e.error_dict.items():
+                    for error in errors:
+                        messages.error(request, str(error))
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
+    else:
+        form = FoodDiaryForm(instance=entry, user=request.user)
+    
+    return render(request, 'app/edit_food_entry.html', {'form': form, 'entry': entry})
+
+
+@login_required
+@require_POST
+def delete_food_entry(request, entry_id):
+    """Vista para eliminar una entrada del diario"""
+    entry = get_object_or_404(FoodDiary, id=entry_id, user=request.user)
+    meal_date = entry.meal_date
+    week_num = FoodDiary.get_current_week_number(meal_date)
+    
+    entry.delete()
+    messages.success(request, 'Comida eliminada exitosamente.')
+    
+    return redirect('app:food_diary_week', year=meal_date.year, week=week_num)

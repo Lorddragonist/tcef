@@ -1,0 +1,79 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Agregar Comida - TCEF{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-utensils me-2"></i>Agregar Comida al Diario</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.meal_date.id_for_label }}" class="form-label">
+                                    {{ form.meal_date.label }}
+                                </label>
+                                <input type="date" 
+                                       name="{{ form.meal_date.name }}" 
+                                       id="{{ form.meal_date.id_for_label }}" 
+                                       class="form-control"
+                                       {% if preselected_date %}value="{{ preselected_date }}"{% elif form.meal_date.value %}value="{{ form.meal_date.value|date:'Y-m-d' }}"{% elif form.meal_date.initial %}value="{{ form.meal_date.initial|date:'Y-m-d' }}"{% endif %}>
+                                {% if form.meal_date.errors %}
+                                    <div class="text-danger small">{{ form.meal_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.meal_time.id_for_label }}" class="form-label">
+                                    {{ form.meal_time.label }}
+                                </label>
+                                {{ form.meal_time }}
+                                {% if form.meal_time.errors %}
+                                    <div class="text-danger small">{{ form.meal_time.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.meal_type.id_for_label }}" class="form-label">
+                                {{ form.meal_type.label }}
+                            </label>
+                            {{ form.meal_type }}
+                            {% if form.meal_type.errors %}
+                                <div class="text-danger small">{{ form.meal_type.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">
+                                Nota: Solo puedes registrar 1 de cada tipo por día (excepto snack que permite máximo 2).
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                {{ form.description.label }}
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'app:food_diary' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Guardar Comida
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

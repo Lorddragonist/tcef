@@ -1,0 +1,298 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Diario de Alimentación - TCEF{% endblock %}
+
+{% block extra_css %}
+<style>
+    .diary-header {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .week-selector {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .week-selector select {
+        min-width: 250px;
+    }
+    
+    .current-week-badge {
+        background: #28a745;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .diary-week {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .diary-day {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        min-height: 400px;
+    }
+    
+    .diary-day.today {
+        border: 2px solid #6c757d;
+        box-shadow: 0 4px 15px rgba(108,117,125,0.3);
+    }
+    
+    .day-header {
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .day-date {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .day-name {
+        font-size: 0.9rem;
+        color: #6c757d;
+        text-transform: capitalize;
+    }
+    
+    .day-entries {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .entry-item {
+        background: #f8f9fa;
+        border-left: 4px solid #6c757d;
+        border-radius: 5px;
+        padding: 12px;
+        transition: all 0.2s;
+    }
+    
+    .entry-item:hover {
+        background: #e9ecef;
+        transform: translateX(3px);
+    }
+    
+    .entry-time {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .entry-type {
+        display: inline-block;
+        background: #6c757d;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    
+    .entry-description {
+        font-size: 0.9rem;
+        color: #495057;
+        line-height: 1.4;
+    }
+    
+    .entry-actions {
+        margin-top: 8px;
+        display: flex;
+        gap: 8px;
+    }
+    
+    .entry-actions a {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+    
+    .add-entry-btn {
+        width: 100%;
+        margin-top: 10px;
+        border: 2px dashed #6c757d;
+        background: transparent;
+        color: #6c757d;
+        transition: all 0.2s;
+    }
+    
+    .add-entry-btn:hover {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .empty-day {
+        text-align: center;
+        color: #adb5bd;
+        padding: 40px 20px;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header con selector de semana -->
+    <div class="diary-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h3 class="mb-2">
+                    <i class="fas fa-utensils me-2"></i>
+                    Diario de Alimentación
+                </h3>
+                <p class="text-muted mb-0">
+                    Semana del {{ week_start|date:"d/m" }} al {{ week_end|date:"d/m/Y" }}
+                </p>
+            </div>
+            <div class="week-selector">
+                {% if is_current_week %}
+                <span class="current-week-badge">
+                    <i class="fas fa-calendar-check me-1"></i>
+                    Semana Actual
+                </span>
+                {% endif %}
+                <select class="form-select" id="weekSelector" onchange="changeWeek()">
+                    {% for week_option in available_weeks %}
+                    <option value="{{ week_option.year }}/{{ week_option.week }}" 
+                            {% if week_option.week == selected_week and week_option.year == selected_year %}selected{% endif %}>
+                        {{ week_option.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <a href="{% url 'app:add_food_entry' %}" class="btn btn-secondary">
+                    <i class="fas fa-plus me-1"></i>
+                    Agregar Comida
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Agenda semanal -->
+    <div class="diary-week">
+        {% for day_info in week_days %}
+        <div class="diary-day {% if day_info.is_today %}today{% endif %}">
+            <div class="day-header">
+                <div class="day-date">
+                    {{ day_info.date|date:"d" }}
+                </div>
+                <div class="day-name">
+                    {{ day_info.day_name }}
+                </div>
+            </div>
+            
+            <div class="day-entries">
+                {% if day_info.entries %}
+                    {% for entry in day_info.entries %}
+                    <div class="entry-item">
+                        <div class="entry-time">
+                            <i class="fas fa-clock me-1"></i>
+                            {{ entry.meal_time|time:"H:i" }}
+                        </div>
+                        <div class="entry-type">
+                            {{ entry.get_meal_type_display }}
+                        </div>
+                        <div class="entry-description">
+                            {{ entry.description }}
+                        </div>
+                        <div class="entry-actions">
+                            <a href="{% url 'app:edit_food_entry' entry.id %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    onclick="openDeleteModal({{ entry.id }}, '{{ entry.meal_date|date:"d/m/Y" }}', '{{ entry.meal_time|time:"H:i" }}', '{% url 'app:delete_food_entry' entry.id %}')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-day">
+                        <i class="fas fa-utensils fa-2x mb-2"></i>
+                        <p>No hay comidas registradas</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <a href="{% url 'app:add_food_entry' %}?date={{ day_info.date|date:'Y-m-d' }}" class="btn add-entry-btn">
+                <i class="fas fa-plus me-1"></i>
+                Agregar Comida
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal de confirmación de eliminación (único para todas las entradas) -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center px-4 pb-4">
+                <div class="mb-3">
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="modal-title mb-3" id="deleteModalLabel">¿Eliminar esta comida?</h5>
+                <p class="text-muted mb-0" id="deleteModalInfo">
+                    <!-- Se llenará dinámicamente -->
+                </p>
+                <p class="text-muted mt-2 mb-0">
+                    <small>Esta acción no se puede deshacer.</small>
+                </p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <form method="post" id="deleteForm" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Sí, eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function changeWeek() {
+    const selector = document.getElementById('weekSelector');
+    const [year, week] = selector.value.split('/');
+    window.location.href = `/food-diary/${year}/${week}/`;
+}
+
+function openDeleteModal(entryId, mealDate, mealTime, deleteUrl) {
+    // Actualizar la información del modal
+    document.getElementById('deleteModalInfo').innerHTML = 
+        `Estás a punto de eliminar la comida del <strong>${mealDate}</strong> a las <strong>${mealTime}</strong>.`;
+    
+    // Actualizar la acción del formulario
+    document.getElementById('deleteForm').action = deleteUrl;
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
+

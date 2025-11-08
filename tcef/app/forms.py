@@ -136,7 +136,7 @@ class CustomLoginForm(forms.Form):
         return password 
     
 
-from .models import BodyMeasurements
+from .models import BodyMeasurements, FoodDiary
 
 class BodyMeasurementsForm(forms.ModelForm):
     class Meta:
@@ -241,3 +241,52 @@ class BodyMeasurementsForm(forms.ModelForm):
         if chest is not None and chest > 100:
             raise forms.ValidationError('El cuello debe ser menor a 100 cm.')
         return chest
+
+
+class FoodDiaryForm(forms.ModelForm):
+    class Meta:
+        model = FoodDiary
+        fields = ['meal_date', 'meal_time', 'meal_type', 'description']
+        widgets = {
+            'meal_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'meal_time': forms.TimeInput(attrs={
+                'type': 'time',
+                'class': 'form-control'
+            }),
+            'meal_type': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Describe tu comida...'
+            }),
+        }
+        labels = {
+            'meal_date': 'Fecha',
+            'meal_time': 'Hora',
+            'meal_type': 'Tipo de Comida',
+            'description': 'Descripción',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        initial = kwargs.pop('initial', {})
+        
+        # Establecer valores por defecto si es un nuevo registro y no hay fecha inicial
+        if not kwargs.get('instance') and 'meal_date' not in initial:
+            from datetime import date, datetime
+            initial['meal_date'] = date.today()
+            if 'meal_time' not in initial:
+                initial['meal_time'] = datetime.now().strftime('%H:%M')
+        
+        # Pasar initial al super
+        kwargs['initial'] = initial
+        super().__init__(*args, **kwargs)
+        
+        # Asegurar que el valor inicial se establezca en el campo después de la inicialización
+        if 'meal_date' in initial:
+            self.fields['meal_date'].initial = initial['meal_date']
