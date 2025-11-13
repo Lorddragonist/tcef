@@ -139,6 +139,21 @@ class CustomLoginForm(forms.Form):
 from .models import BodyMeasurements, FoodDiary
 
 class BodyMeasurementsForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # Obtener género del usuario
+        user_gender = None
+        if user and hasattr(user, 'userprofile'):
+            user_gender = getattr(user.userprofile, 'gender', None)
+        
+        # Si es hombre, hacer el campo hip opcional
+        if user_gender == 'M':
+            self.fields['hip'].required = False
+            # Actualizar el placeholder para indicar que es opcional
+            self.fields['hip'].widget.attrs['placeholder'] = 'Ej: 95.0 (Opcional para hombres)'
+    
     class Meta:
         model = BodyMeasurements
         fields = ['measurement_date', 'weight', 'height', 'age', 'waist', 'hip', 'chest']
@@ -228,6 +243,9 @@ class BodyMeasurementsForm(forms.ModelForm):
     
     def clean_hip(self):
         hip = self.cleaned_data.get('hip')
+        # Si el campo está vacío, permitir None (será validado por required en __init__)
+        if hip is None:
+            return None
         if hip is not None and hip <= 0:
             raise forms.ValidationError('La cadera debe ser mayor a 0.')
         if hip is not None and hip > 200:

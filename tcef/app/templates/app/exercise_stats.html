@@ -6,6 +6,12 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'app/css/exercise_calendar.css' %}">
 <style>
+
+    .btn-success {
+        background: #4654A6;
+    }
+
+
     .stats-container {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         min-height: 100vh;
@@ -168,8 +174,12 @@
         box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
     }
 
+    .bg-success {
+        background: #4654A6 !important;
+    }
+
     .progress-bar.bg-success {
-        background: linear-gradient(135deg, #28a745, #20c997) !important;
+        background: #4654A6;
         border-radius: 20px;
         display: flex;
         align-items: center;
@@ -189,7 +199,7 @@
     }
 
     .progress-info h5 {
-        color: #28a745;
+        color: #4653A6;
         font-weight: bold;
         margin-bottom: 0.25rem;
     }
@@ -325,7 +335,7 @@
         <div class="row align-items-center">
             <div class="col-md-8">
                 <h2 class="stats-title">
-                    <i class="fas fa-chart-bar me-2"></i>Estadísticas de Ejercicios
+                    <i class="fas fa-chart-bar me-2"></i>Seguimiento de mi progreso
                 </h2>
                 <p class="text-muted">Análisis detallado de tu progreso y rendimiento</p>
             </div>

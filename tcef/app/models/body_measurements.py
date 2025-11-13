@@ -9,7 +9,7 @@ class BodyMeasurements(models.Model):
     height = models.DecimalField(max_digits=5, decimal_places=2, help_text="Altura en cm")
     age = models.PositiveIntegerField(help_text="Edad en años")
     waist = models.DecimalField(max_digits=5, decimal_places=2, help_text="Cintura en cm")
-    hip = models.DecimalField(max_digits=5, decimal_places=2, help_text="Cadera en cm")
+    hip = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Cadera en cm")
     chest = models.DecimalField(max_digits=5, decimal_places=2, help_text="Cuello en cm")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

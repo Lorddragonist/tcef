@@ -635,7 +635,7 @@ def test_404(request):
 @login_required
 def add_body_measurements(request):
     if request.method == 'POST':
-        form = BodyMeasurementsForm(request.POST)
+        form = BodyMeasurementsForm(request.POST, user=request.user)
         if form.is_valid():
             measurement = form.save(commit=False)
             measurement.user = request.user
@@ -678,9 +678,11 @@ def add_body_measurements(request):
             
             # Calcular % de grasa corporal usando fórmula US Navy
             try:
+                # Para hombres, hip puede ser None, usar 0 como valor por defecto para el cálculo
+                hip_value = float(measurement.hip) if measurement.hip is not None else 0
                 body_fat_percentage = calculate_body_fat_us_navy(
                     float(measurement.weight), float(measurement.height), float(measurement.waist), 
-                    float(measurement.hip), float(measurement.chest), int(measurement.age), user_gender
+                    hip_value, float(measurement.chest), int(measurement.age), user_gender
                 )
             except (ValueError, ZeroDivisionError, TypeError):
                 body_fat_percentage = 0
@@ -741,7 +743,7 @@ def add_body_measurements(request):
                 'chest': last_measurement.chest,
             })
         
-        form = BodyMeasurementsForm(initial=initial_data)
+        form = BodyMeasurementsForm(initial=initial_data, user=request.user)
     
     return render(request, 'app/add_measurements.html', {'form': form})
 

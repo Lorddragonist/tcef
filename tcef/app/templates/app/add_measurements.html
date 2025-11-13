@@ -87,6 +87,9 @@
                             <div class="col-md-4 mb-3">
                                 <label for="{{ form.hip.id_for_label }}" class="form-label">
                                     {{ form.hip.label }}
+                                    {% if not form.hip.field.required %}
+                                    <span class="text-muted small">(Opcional para hombres)</span>
+                                    {% endif %}
                                 </label>
                                 {{ form.hip }}
                                 {% if form.initial.hip %}
