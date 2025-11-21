@@ -12,8 +12,8 @@ class UserProfileInline(admin.StackedInline):
 
 class UserAdmin(BaseUserAdmin):
     inlines = (UserProfileInline,)
-    list_display = ('username', 'email', 'first_name', 'last_name', 'get_gender', 'is_staff', 'get_is_approved', 'get_terms_accepted')
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'userprofile__gender', 'userprofile__is_approved', 'userprofile__terms_accepted')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'get_gender', 'get_hipopresivos', 'is_staff', 'get_is_approved', 'get_terms_accepted')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'userprofile__gender', 'userprofile__hipopresivos', 'userprofile__is_approved', 'userprofile__terms_accepted')
     search_fields = ('username', 'first_name', 'last_name', 'email')
     
     def get_gender(self, obj):
@@ -38,6 +38,14 @@ class UserAdmin(BaseUserAdmin):
             return False
     get_terms_accepted.boolean = True
     get_terms_accepted.short_description = 'Términos Aceptados'
+    
+    def get_hipopresivos(self, obj):
+        try:
+            return obj.userprofile.hipopresivos
+        except UserProfile.DoesNotExist:
+            return False
+    get_hipopresivos.boolean = True
+    get_hipopresivos.short_description = 'Hipopresivos'
 
 class ExerciseLogAdmin(admin.ModelAdmin):
     list_display = ('user', 'exercise_date', 'difficulty', 'completed_at', 'created_at')
