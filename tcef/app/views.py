@@ -25,6 +25,12 @@ def home(request):
     """Vista principal de la landing page tipo blog"""
     return render(request, 'app/home.html')
 
+def canva_page(request):
+    """Vista para mostrar la página de Canva - Solo para usuarios no autenticados"""
+    if request.user.is_authenticated:
+        return redirect('app:profile')
+    return render(request, 'app/canva_page.html')
+
 def custom_login(request):
     """Vista personalizada de login que permite username o email"""
     if request.user.is_authenticated:

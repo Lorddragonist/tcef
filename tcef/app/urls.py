@@ -5,6 +5,7 @@ app_name = 'app'
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('acercadelreto/', views.canva_page, name='canva_page'),
     path('register/', views.register, name='register'),
     path('request-password-reset/', views.request_password_reset, name='request_password_reset'),
     path('reset-password/<str:token>/', views.reset_password_with_token, name='reset_password_with_token'),
