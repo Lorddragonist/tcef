@@ -156,13 +156,17 @@ def create_user(request):
                     is_active=True
                 )
                 
+                # Obtener el valor de hipopresivos del formulario
+                hipopresivos = request.POST.get('hipopresivos') == 'on'
+                
                 # Crear perfil de usuario
                 profile = UserProfile.objects.create(
                     user=user,
                     is_approved=True,  # Los usuarios creados por admin están aprobados
                     terms_accepted=True,
                     terms_accepted_date=timezone.now(),
-                    gender=gender  # Asignar el género seleccionado
+                    gender=gender,  # Asignar el género seleccionado
+                    hipopresivos=hipopresivos  # Asignar el valor de hipopresivos
                 )
                 
                 # Asignar grupo si se especificó
@@ -221,6 +225,8 @@ def edit_user(request, user_id):
         profile.is_approved = request.POST.get('is_approved') == 'on'
         # Agregar el campo de género
         profile.gender = request.POST.get('gender', '')
+        # Agregar el campo de hipopresivos
+        profile.hipopresivos = request.POST.get('hipopresivos') == 'on'
         profile.save()
         
         # Actualizar grupo

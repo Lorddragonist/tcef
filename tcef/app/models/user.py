@@ -23,6 +23,11 @@ class UserProfile(models.Model):
         verbose_name="Sexo",
         help_text="Sexo del usuario"
     )
+    hipopresivos = models.BooleanField(
+        default=False,
+        verbose_name="Hipopresivos",
+        help_text="Indica si el usuario está inscrito en hipopresivos"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

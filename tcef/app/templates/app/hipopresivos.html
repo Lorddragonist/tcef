@@ -1,0 +1,177 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Talleres de Hipopresivos - TCEF{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hipopresivos-container {
+        padding: 2rem 1rem;
+        background-color: #f8f9fa;
+        min-height: calc(100vh - 200px);
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 3px solid #e1cfc6;
+    }
+    
+    .page-header h1 {
+        color: #343a40;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .page-header p {
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+    
+    .video-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .video-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .video-card-header {
+        background: linear-gradient(135deg, #e1cfc6 0%, #d4c4b8 100%);
+        padding: 1.5rem;
+        color: #343a40;
+    }
+    
+    .video-card-header h3 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.5rem;
+    }
+    
+    .video-card-body {
+        padding: 1.5rem;
+    }
+    
+    .video-card-body p {
+        color: #6c757d;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .video-wrapper {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        background-color: #000;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .video-wrapper video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    
+    .video-controls {
+        margin-top: 1rem;
+        text-align: center;
+    }
+    
+    @media (max-width: 768px) {
+        .video-card-header h3 {
+            font-size: 1.25rem;
+        }
+        
+        .video-card-body {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hipopresivos-container">
+    <div class="container">
+        <div class="page-header">
+            <h1>
+                <i class="fas fa-dumbbell me-2"></i>
+                Talleres de Hipopresivos
+            </h1>
+            <p>Accede a los talleres completos de ejercicios hipopresivos</p>
+        </div>
+        
+        <div class="row">
+            {% for video in videos %}
+            <div class="col-12 mb-4">
+                <div class="video-card">
+                    <div class="video-card-header">
+                        <h3>
+                            <i class="fas fa-play-circle me-2"></i>
+                            {{ video.title }}
+                        </h3>
+                    </div>
+                    <div class="video-card-body">
+                        <p>{{ video.description }}</p>
+                        <div class="video-wrapper">
+                            <video controls preload="metadata" class="video-player">
+                                <source src="{{ video.url }}" type="video/quicktime">
+                                <source src="{{ video.url }}" type="video/mp4">
+                                Tu navegador no soporta la reproducción de videos.
+                                <a href="{{ video.url }}" download>Descargar video</a>
+                            </video>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Mejorar la experiencia de usuario con los videos
+    document.addEventListener('DOMContentLoaded', function() {
+        const videos = document.querySelectorAll('.video-player');
+        
+        videos.forEach((video, index) => {
+            // Agregar evento para cuando el video se carga
+            video.addEventListener('loadedmetadata', function() {
+                console.log(`Video ${index + 1} cargado: ${this.duration} segundos`);
+            });
+            
+            // Manejar errores de carga
+            video.addEventListener('error', function(e) {
+                console.error(`Error al cargar video ${index + 1}:`, e);
+                const wrapper = this.closest('.video-wrapper');
+                if (wrapper) {
+                    wrapper.innerHTML = `
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white;">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <p>Error al cargar el video</p>
+                            <a href="${this.src}" class="btn btn-primary" download>
+                                <i class="fas fa-download me-2"></i>
+                                Descargar video
+                            </a>
+                        </div>
+                    `;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+

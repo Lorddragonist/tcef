@@ -256,7 +256,7 @@
                     </div>
                 </div>
                 
-                <!-- Campo de Género -->
+                <!-- Campo de Género e Hipopresivos -->
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
@@ -267,6 +267,20 @@
                                 <option value="F" {% if user.userprofile.gender == 'F' %}selected{% endif %}>Femenino</option>
                             </select>
                             <small class="text-muted">Selecciona el sexo del usuario</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="hipopresivos" name="hipopresivos" 
+                                       {% if user.userprofile.hipopresivos %}checked{% endif %}>
+                                <label class="form-check-label" for="hipopresivos">
+                                    Hipopresivos
+                                </label>
+                                <small class="form-text text-muted d-block">
+                                    Marcar si el usuario está inscrito en hipopresivos
+                                </small>
+                            </div>
                         </div>
                     </div>
                 </div>

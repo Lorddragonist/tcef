@@ -10,6 +10,7 @@ urlpatterns = [
     path('request-password-reset/', views.request_password_reset, name='request_password_reset'),
     path('reset-password/<str:token>/', views.reset_password_with_token, name='reset_password_with_token'),
     path('profile/', views.profile, name='profile'),
+    path('hipopresivos/', views.hipopresivos, name='hipopresivos'),
     
     # URLs del calendario de ejercicios
     path('calendar/', views.exercise_calendar, name='exercise_calendar'),

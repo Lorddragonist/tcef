@@ -190,6 +190,49 @@ def profile(request):
     return render(request, 'app/profile.html', context)
 
 @login_required
+def hipopresivos(request):
+    """Vista de talleres de hipopresivos - Solo para usuarios con hipopresivos activado"""
+    try:
+        profile = request.user.userprofile
+    except UserProfile.DoesNotExist:
+        profile = UserProfile.objects.create(user=request.user)
+    
+    # Verificar si el usuario tiene acceso a hipopresivos
+    if not profile.hipopresivos:
+        messages.error(request, 'No tienes acceso a esta sección. Contacta al administrador si crees que esto es un error.')
+        return redirect('app:profile')
+    
+    # Datos de los videos
+    videos = [
+        {
+            'title': 'Parte 1: Introducción',
+            'url': 'https://tcefbucket.s3.us-east-2.amazonaws.com/Hipopresivos/Hipopresivos+parte+1.MOV',
+            'description': 'Conoce de qué se tratan los ejercicios hipopresivos y reconoce qué músculos son los que se fortalecen.'
+        },
+        {
+            'title': 'Parte 2: Valoración',
+            'url': 'https://tcefbucket.s3.us-east-2.amazonaws.com/Hipopresivos/Hipopresivos+parte+2.MOV',
+            'description': 'Aprende cómo valorar la diastasis abdominal, las cúpulas diafragmáticas, entre otras, para hacer un seguimiento de los resultados de la aplicación de la técnica.'
+        },
+        {
+            'title': 'Parte 3: Principios técnicos',
+            'url': 'https://tcefbucket.s3.us-east-2.amazonaws.com/Hipopresivos/Hipopresivos+parte+3.MOV',
+            'description': 'La base principal de los ejercicios hipopresivos está en el correcto aprendizaje de los principios posturales y principios respiratorios.'
+        },
+        {
+            'title': 'Parte 4: Posturas',
+            'url': 'https://tcefbucket.s3.us-east-2.amazonaws.com/Hipopresivos/Hipopresivos+parte+4.MOV',
+            'description': 'Aprende las 11 posturas estáticas de los ejercicios hipopresivos.'
+        }
+    ]
+    
+    context = {
+        'videos': videos,
+        'profile': profile
+    }
+    return render(request, 'app/hipopresivos.html', context)
+
+@login_required
 def exercise_calendar(request, year=None, month=None):
     """Vista principal del calendario de ejercicios"""
     # Obtener año y mes actuales si no se especifican

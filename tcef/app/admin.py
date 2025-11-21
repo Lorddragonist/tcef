@@ -8,7 +8,7 @@ class UserProfileInline(admin.StackedInline):
     can_delete = False
     verbose_name_plural = 'Perfil de Usuario'
     fk_name = 'user'  # Especificar cuál ForeignKey usar
-    fields = ('gender', 'is_approved', 'approval_date', 'approved_by', 'terms_accepted', 'terms_accepted_date')
+    fields = ('gender', 'hipopresivos', 'is_approved', 'approval_date', 'approved_by', 'terms_accepted', 'terms_accepted_date')
 
 class UserAdmin(BaseUserAdmin):
     inlines = (UserProfileInline,)
