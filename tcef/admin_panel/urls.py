@@ -24,9 +24,11 @@ urlpatterns = [
     path('routines/<int:routine_id>/details/', views.routine_details, name='routine_details'),
     path('routines/<int:routine_id>/replicate/', views.replicate_routine, name='replicate_routine'),
     
-    # Subida de videos
+    # Subida y gestión de videos
+    path('videos/', views.video_management, name='video_management'),
     path('videos/upload/', views.video_upload, name='video_upload'),
-    path('videos/delete/<int:video_id>/', views.delete_video, name='delete_video'),
+    path('videos/<int:video_id>/edit/', views.edit_video, name='edit_video'),
+    path('videos/<int:video_id>/delete/', views.delete_video, name='delete_video'),
     
     # Monitoreo de usuarios
     path('monitoring/', views.user_monitoring, name='user_monitoring'),

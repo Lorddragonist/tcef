@@ -59,11 +59,15 @@
                             <li><a class="dropdown-item" href="{% url 'admin_panel:create_routine' %}">Crear Rutina</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'admin_panel:video_upload' %}" style="display: flex; flex-direction: row; gap: 10px; align-items: center;">
-                            <i class="fas fa-upload me-1"></i>
-                            <span>Subir Videos</span>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" style="display: flex; flex-direction: row; gap: 10px; align-items: center;">
+                            <i class="fas fa-video me-1"></i>
+                            <span>Videos</span>
                         </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'admin_panel:video_management' %}">Gestionar Videos</a></li>
+                            <li><a class="dropdown-item" href="{% url 'admin_panel:video_upload' %}">Subir Video</a></li>
+                        </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'admin_panel:user_monitoring' %}" style="display: flex; flex-direction: row; gap: 10px; align-items: center;">

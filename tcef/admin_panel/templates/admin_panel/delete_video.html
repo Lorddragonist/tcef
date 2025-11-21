@@ -1,0 +1,263 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Eliminar Video - {{ video.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-confirmation {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .warning-icon {
+        font-size: 4rem;
+        color: #dc3545;
+        margin-bottom: 1.5rem;
+    }
+    
+    .video-info-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+    
+    .danger-zone {
+        background: #fff5f5;
+        border: 2px solid #fed7d7;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .danger-zone h4 {
+        color: #c53030;
+        margin-bottom: 1rem;
+    }
+    
+    .consequences-list {
+        text-align: left;
+        margin-bottom: 1.5rem;
+    }
+    
+    .consequences-list li {
+        margin-bottom: 0.5rem;
+        color: #2d3748;
+    }
+    
+    .consequences-list i {
+        color: #e53e3e;
+        margin-right: 0.5rem;
+    }
+    
+    .usage-warning {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .usage-warning h5 {
+        color: #856404;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-trash-alt me-2"></i>
+            Eliminar Video
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'admin_panel:video_management' %}">Gestión de Videos</a></li>
+                <li class="breadcrumb-item active">Eliminar {{ video.title|truncatechars:30 }}</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Información del Video a Eliminar -->
+    <div class="video-info-card">
+        <div class="row">
+            <div class="col-md-8">
+                <h5 class="mb-3">
+                    <i class="fas fa-video me-2"></i>
+                    {{ video.title }}
+                </h5>
+                {% if video.description %}
+                <p class="text-muted mb-2">{{ video.description }}</p>
+                {% endif %}
+                <p class="mb-2">
+                    <i class="fas fa-file-video me-2"></i>
+                    <strong>Archivo:</strong> {{ video.filename }}
+                </p>
+                <p class="mb-2">
+                    <i class="fas fa-clock me-2"></i>
+                    <strong>Duración:</strong> {{ video.get_duration_formatted }}
+                </p>
+                <p class="mb-2">
+                    <i class="fas fa-hdd me-2"></i>
+                    <strong>Tamaño:</strong> {{ video.get_file_size_formatted }}
+                </p>
+                <p class="mb-2">
+                    <i class="fas fa-user me-2"></i>
+                    <strong>Subido por:</strong> {{ video.created_by.username }}
+                </p>
+                <p class="mb-0">
+                    <i class="fas fa-calendar me-2"></i>
+                    <strong>Fecha:</strong> {{ video.created_at|date:"d/m/Y H:i" }}
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="mb-2">
+                    {% if video.is_active %}
+                        <span class="status-badge status-active">
+                            <i class="fas fa-check-circle me-1"></i>Activo
+                        </span>
+                    {% else %}
+                        <span class="status-badge status-inactive">
+                            <i class="fas fa-times-circle me-1"></i>Inactivo
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advertencia si el video está en uso -->
+    {% if is_used %}
+    <div class="usage-warning">
+        <h5>
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Advertencia: Video en Uso
+        </h5>
+        <p class="mb-2">
+            Este video está siendo utilizado en las siguientes rutinas:
+        </p>
+        <ul class="list-unstyled">
+            {% for routine_video in routine_videos %}
+            <li>
+                <i class="fas fa-dumbbell me-2"></i>
+                <strong>{{ routine_video.routine.title }}</strong>
+                ({{ routine_video.routine.assigned_date|date:"d/m/Y" }})
+            </li>
+            {% endfor %}
+        </ul>
+        <p class="mb-0 text-warning">
+            <strong>Nota:</strong> Si eliminas este video, las rutinas que lo usan quedarán sin este video.
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Zona de Peligro -->
+    <div class="danger-zone">
+        <h4>
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Zona de Peligro
+        </h4>
+        <p class="text-danger mb-3">
+            <strong>¡ATENCIÓN!</strong> Esta acción es irreversible y eliminará permanentemente el video y el archivo de S3.
+        </p>
+        
+        <div class="consequences-list">
+            <h6 class="text-danger mb-2">Consecuencias de la eliminación:</h6>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-times-circle"></i>El video será eliminado de la base de datos</li>
+                <li><i class="fas fa-times-circle"></i>El archivo será eliminado de S3</li>
+                <li><i class="fas fa-times-circle"></i>No se podrá recuperar el video</li>
+                {% if is_used %}
+                <li><i class="fas fa-times-circle"></i>Las rutinas que usan este video quedarán afectadas</li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Confirmación de Eliminación -->
+    <div class="delete-confirmation">
+        <div class="warning-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <h3 class="text-danger mb-3">¿Estás seguro de que quieres eliminar este video?</h3>
+        
+        <p class="lead mb-4">
+            Estás a punto de eliminar permanentemente el video <strong>"{{ video.title }}"</strong>.
+        </p>
+        
+        <p class="text-muted mb-4">
+            Esta acción no se puede deshacer. Si solo quieres desactivar temporalmente el video, 
+            considera editarlo en su lugar.
+        </p>
+        
+        <form method="post" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger me-3">
+                <i class="fas fa-trash-alt me-2"></i>
+                Sí, Eliminar Video
+            </button>
+        </form>
+        
+        <a href="{% url 'admin_panel:video_management' %}" class="btn btn-secondary">
+            <i class="fas fa-times me-2"></i>
+            Cancelar
+        </a>
+    </div>
+</div>
+{% endblock %}
+

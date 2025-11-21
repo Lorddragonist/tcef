@@ -752,6 +752,129 @@ def video_upload(request):
 
 
 @user_passes_test(is_staff_user, login_url='/login/')
+def video_management(request):
+    """Gestión de videos - Listar, editar y eliminar videos"""
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    
+    videos = Video.objects.select_related('created_by', 'upload_session').all()
+    
+    # Filtros
+    if search_query:
+        videos = videos.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(filename__icontains=search_query)
+        )
+    
+    if status_filter == 'active':
+        videos = videos.filter(is_active=True)
+    elif status_filter == 'inactive':
+        videos = videos.filter(is_active=False)
+    
+    # Paginación
+    paginator = Paginator(videos, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'status_filter': status_filter,
+    }
+    
+    return render(request, 'admin_panel/video_management.html', context)
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def edit_video(request, video_id):
+    """Editar video - Solo título y descripción"""
+    video = get_object_or_404(Video, id=video_id)
+    
+    if request.method == 'POST':
+        video.title = request.POST.get('title', '')
+        video.description = request.POST.get('description', '')
+        video.is_active = request.POST.get('is_active') == 'on'
+        video.save()
+        
+        # Registrar actividad
+        AdminActivity.objects.create(
+            admin_user=request.user,
+            action='video_updated',
+            target_model='Video',
+            target_id=video.id,
+            details=f'Video actualizado: {video.title}'
+        )
+        
+        messages.success(request, f'Video "{video.title}" actualizado exitosamente.')
+        return redirect('admin_panel:video_management')
+    
+    context = {
+        'video': video,
+    }
+    
+    return render(request, 'admin_panel/edit_video.html', context)
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def delete_video(request, video_id):
+    """Eliminar video"""
+    video = get_object_or_404(Video, id=video_id)
+    
+    if request.method == 'POST':
+        video_title = video.title
+        
+        # Intentar eliminar el archivo de S3
+        try:
+            s3_client = boto3.client(
+                's3',
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_S3_REGION_NAME
+            )
+            
+            # Eliminar el archivo de S3
+            if video.s3_key:
+                try:
+                    s3_client.delete_object(
+                        Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                        Key=video.s3_key
+                    )
+                except ClientError as e:
+                    # Si falla la eliminación de S3, continuar con la eliminación del registro
+                    messages.warning(request, f'No se pudo eliminar el archivo de S3: {str(e)}')
+        except Exception as e:
+            messages.warning(request, f'Error al conectar con S3: {str(e)}')
+        
+        # Eliminar el registro de la base de datos
+        video.delete()
+        
+        # Registrar actividad
+        AdminActivity.objects.create(
+            admin_user=request.user,
+            action='video_deleted',
+            target_model='Video',
+            target_id=video_id,
+            details=f'Video eliminado: {video_title}'
+        )
+        
+        messages.success(request, f'Video "{video_title}" eliminado exitosamente.')
+        return redirect('admin_panel:video_management')
+    
+    # Verificar si el video está siendo usado en alguna rutina
+    routine_videos = RoutineVideo.objects.filter(video=video)
+    is_used = routine_videos.exists()
+    
+    context = {
+        'video': video,
+        'is_used': is_used,
+        'routine_videos': routine_videos.select_related('routine') if is_used else [],
+    }
+    
+    return render(request, 'admin_panel/delete_video.html', context)
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
 def user_monitoring(request):
     """Monitoreo de actividad de usuarios"""
     user_id = request.GET.get('user_id')
