@@ -356,8 +356,14 @@ def exercise_calendar(request, year=None, month=None):
     
     # Verificar si el usuario tiene hipopresivos activado
     try:
-        has_hipopresivos = request.user.userprofile.hipopresivos
-    except:
+        profile = request.user.userprofile
+        has_hipopresivos = bool(profile.hipopresivos) if profile.hipopresivos is not None else False
+    except UserProfile.DoesNotExist:
+        # Si no existe el perfil, crear uno (no debería pasar, pero por seguridad)
+        profile = UserProfile.objects.create(user=request.user)
+        has_hipopresivos = False
+    except AttributeError:
+        # Si hay algún problema con el atributo
         has_hipopresivos = False
     
     context = {

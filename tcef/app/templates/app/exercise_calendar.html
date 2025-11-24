@@ -41,8 +41,7 @@
     </div>
 
     <!-- Banner de Publicidad - Solo para usuarios sin hipopresivos -->
-    {% if not has_hipopresivos %}
-    <div id="hipopresivosBanner" class="ad-banner mb-4" style="display: none;">
+    <div id="hipopresivosBanner" class="ad-banner mb-4" style="display: none;" data-has-hipopresivos="{{ has_hipopresivos|yesno:'true,false' }}">
         <div class="ad-banner-content">
             <button type="button" class="ad-banner-close" onclick="closeAdBanner()" aria-label="Cerrar">
                 <i class="fas fa-times"></i>
@@ -58,7 +57,6 @@
             </a>
         </div>
     </div>
-    {% endif %}
 
     <!-- Estadísticas rápidas -->
     <div class="stats-summary mb-4">
@@ -886,34 +884,41 @@
     // Función para mostrar el banner de publicidad
     function showAdBanner() {
         const banner = document.getElementById('hipopresivosBanner');
-        if (banner) {
-            // Verificar si el usuario tiene hipopresivos activado (desde el template)
-            const hasHipopresivos = {{ has_hipopresivos|yesno:"true,false" }};
-            
-            // Solo mostrar si no tiene hipopresivos y no lo cerró en esta sesión
-            if (!hasHipopresivos) {
-                const bannerClosed = sessionStorage.getItem('hipopresivosBannerClosed');
-                if (!bannerClosed) {
-                    banner.style.display = 'block';
-                }
-            }
+        
+        if (!banner) {
+            return;
         }
+        
+        // Verificar si el usuario tiene hipopresivos activado (desde el atributo data)
+        const hasHipopresivosAttr = banner.getAttribute('data-has-hipopresivos');
+        const hasHipopresivos = hasHipopresivosAttr === 'true';
+        
+        // Si el usuario tiene hipopresivos, no mostrar el banner
+        if (hasHipopresivos) {
+            banner.style.display = 'none';
+            return;
+        }
+        
+        // Mostrar el banner siempre que el usuario no tenga hipopresivos
+        banner.style.display = 'block';
+        banner.style.visibility = 'visible';
     }
     
-    // Función para cerrar el banner
+    // Función para cerrar el banner (solo oculta, no guarda preferencia)
     function closeAdBanner() {
         const banner = document.getElementById('hipopresivosBanner');
         if (banner) {
             banner.style.display = 'none';
-            // Guardar en sessionStorage que el usuario cerró el banner
-            sessionStorage.setItem('hipopresivosBannerClosed', 'true');
         }
     }
 
     // Event listeners para clicks en días con ejercicios
     document.addEventListener('DOMContentLoaded', function() {
-        // Mostrar banner de publicidad al cargar la página
-        showAdBanner();
+        // Esperar un poco para asegurar que el DOM esté completamente cargado
+        setTimeout(function() {
+            // Mostrar banner de publicidad al cargar la página
+            showAdBanner();
+        }, 100);
         
         // Agregar click a días con ejercicios para mostrar opciones
         document.querySelectorAll('.exercise-indicator').forEach(indicator => {
