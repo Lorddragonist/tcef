@@ -153,8 +153,19 @@ function showSuccess(message) {
     if (uploadStatus) {
         uploadStatus.textContent = message;
         uploadStatus.classList.add('text-success');
-        uploadStatus.classList.remove('text-danger');
+        uploadStatus.classList.remove('text-danger', 'text-warning');
     }
+}
+
+function showWarning(message) {
+    const uploadStatus = document.getElementById('uploadStatus');
+    if (uploadStatus) {
+        uploadStatus.textContent = message;
+        uploadStatus.classList.add('text-warning');
+        uploadStatus.classList.remove('text-success', 'text-danger');
+    }
+    // También mostrar en consola para debugging
+    console.warn('Advertencia:', message);
 }
 
 function showVideoPreview(videoUrl, filename) {
@@ -210,11 +221,18 @@ async function deleteVideo(videoId, s3Key) {
         confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Eliminando...';
         confirmBtn.disabled = true;
         
+        // Obtener token CSRF
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (!csrfToken) {
+            throw new Error('Token CSRF no encontrado');
+        }
+        
         // Enviar solicitud de eliminación
         const response = await fetch(`/admin-panel/videos/delete/${videoId}/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-CSRFToken': csrfToken.value,
+                'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -222,20 +240,33 @@ async function deleteVideo(videoId, s3Key) {
             })
         });
         
-        const result = await response.json();
+        // Verificar si la respuesta es JSON
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            throw new Error('Error al procesar la respuesta del servidor');
+        }
         
         if (result.success) {
-            // Cerrar modal y mostrar mensaje de éxito
+            // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('deleteVideoModal'));
-            modal.hide();
+            if (modal) {
+                modal.hide();
+            }
             
-            // Mostrar mensaje de éxito
-            showSuccess('Video eliminado exitosamente');
+            // Mostrar mensaje de éxito o advertencia
+            if (result.warning) {
+                // Si hay una advertencia (problema con S3 pero eliminado de BD)
+                showWarning(result.message || 'Video eliminado con advertencias');
+            } else {
+                showSuccess(result.message || 'Video eliminado exitosamente');
+            }
             
-            // Recargar página después de 1 segundo
+            // Recargar página después de 1.5 segundos
             setTimeout(() => {
                 window.location.reload();
-            }, 1000);
+            }, 1500);
         } else {
             throw new Error(result.error || 'Error al eliminar el video');
         }
@@ -245,8 +276,10 @@ async function deleteVideo(videoId, s3Key) {
         
         // Restaurar botón
         const confirmBtn = document.getElementById('confirmDeleteBtn');
-        confirmBtn.innerHTML = originalText;
-        confirmBtn.disabled = false;
+        if (confirmBtn) {
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.disabled = false;
+        }
         
         // Mostrar error
         showError('Error al eliminar el video: ' + error.message);

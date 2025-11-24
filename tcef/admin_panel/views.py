@@ -818,13 +818,29 @@ def edit_video(request, video_id):
 
 @user_passes_test(is_staff_user, login_url='/login/')
 def delete_video(request, video_id):
-    """Eliminar video"""
-    video = get_object_or_404(Video, id=video_id)
+    """Eliminar video de S3 y de la base de datos"""
+    if request.method != 'POST':
+        # Si es una solicitud AJAX, devolver JSON
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+            return JsonResponse({'success': False, 'error': 'Método no permitido'})
+        # Si no es AJAX, mostrar página de confirmación
+        video = get_object_or_404(Video, id=video_id)
+        routine_videos = RoutineVideo.objects.filter(video=video)
+        is_used = routine_videos.exists()
+        context = {
+            'video': video,
+            'is_used': is_used,
+            'routine_videos': routine_videos.select_related('routine') if is_used else [],
+        }
+        return render(request, 'admin_panel/delete_video.html', context)
     
-    if request.method == 'POST':
-        video_title = video.title
-        
-        # Intentar eliminar el archivo de S3
+    # Método POST - Eliminar video
+    video = get_object_or_404(Video, id=video_id)
+    video_title = video.title
+    s3_error = None
+    
+    # Intentar eliminar el archivo de S3
+    if video.s3_key:
         try:
             s3_client = boto3.client(
                 's3',
@@ -833,33 +849,59 @@ def delete_video(request, video_id):
                 region_name=settings.AWS_S3_REGION_NAME
             )
             
-            # Eliminar el archivo de S3
-            if video.s3_key:
-                try:
-                    s3_client.delete_object(
-                        Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                        Key=video.s3_key
-                    )
-                except ClientError as e:
-                    # Si falla la eliminación de S3, continuar con la eliminación del registro
-                    messages.warning(request, f'No se pudo eliminar el archivo de S3: {str(e)}')
+            try:
+                s3_client.delete_object(
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                    Key=video.s3_key
+                )
+            except ClientError as e:
+                error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+                error_message = e.response.get('Error', {}).get('Message', str(e))
+                
+                # Manejar diferentes tipos de errores de AWS
+                if error_code == 'AccessDenied':
+                    s3_error = f'Permisos insuficientes en AWS S3. No se puede eliminar el archivo. Error: {error_message}'
+                elif error_code == 'NoSuchKey':
+                    s3_error = f'El archivo no existe en S3. Puede que ya haya sido eliminado. Error: {error_message}'
+                else:
+                    s3_error = f'Error al eliminar archivo de S3 ({error_code}): {error_message}'
+                
+                print(f"Error eliminando de S3: {error_code} - {error_message}")
         except Exception as e:
-            messages.warning(request, f'Error al conectar con S3: {str(e)}')
-        
-        # Eliminar el registro de la base de datos
-        video.delete()
-        
-        # Registrar actividad
-        AdminActivity.objects.create(
-            admin_user=request.user,
-            action='video_deleted',
-            target_model='Video',
-            target_id=video_id,
-            details=f'Video eliminado: {video_title}'
-        )
-        
+            s3_error = f'Error al conectar con AWS S3: {str(e)}'
+            print(f"Error de conexión con S3: {e}")
+    
+    # Eliminar el registro de la base de datos (incluso si falló S3)
+    video.delete()
+    
+    # Registrar actividad
+    AdminActivity.objects.create(
+        admin_user=request.user,
+        action='video_deleted',
+        target_model='Video',
+        target_id=video_id,
+        details=f'Video eliminado: {video_title}'
+    )
+    
+    # Si es una solicitud AJAX, devolver JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+        if s3_error:
+            return JsonResponse({
+                'success': True,
+                'message': f'Video "{video_title}" eliminado de la base de datos, pero hubo un problema al eliminar de S3: {s3_error}',
+                'warning': s3_error
+            })
+        return JsonResponse({
+            'success': True,
+            'message': f'Video "{video_title}" eliminado exitosamente'
+        })
+    
+    # Si no es AJAX, usar mensajes de Django y redirigir
+    if s3_error:
+        messages.warning(request, f'Video eliminado, pero hubo un problema con S3: {s3_error}')
+    else:
         messages.success(request, f'Video "{video_title}" eliminado exitosamente.')
-        return redirect('admin_panel:video_management')
+    return redirect('admin_panel:video_management')
     
     # Verificar si el video está siendo usado en alguna rutina
     routine_videos = RoutineVideo.objects.filter(video=video)
@@ -992,63 +1034,6 @@ def admin_activity_log(request):
     }
     
     return render(request, 'admin_panel/activity_log.html', context)
-
-
-@user_passes_test(is_staff_user, login_url='/login/')
-def delete_video(request, video_id):
-    """Eliminar video de S3 y de la base de datos"""
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Método no permitido'})
-    
-    try:
-        # Obtener la sesión de video - Permitir a cualquier admin eliminar cualquier video
-        upload_session = get_object_or_404(VideoUploadSession, id=video_id)
-        
-        # Verificar que el video esté completado
-        if upload_session.status != 'completed':
-            return JsonResponse({'success': False, 'error': 'Solo se pueden eliminar videos completados'})
-        
-        # Eliminar archivo de S3
-        try:
-            s3_client = boto3.client(
-                's3',
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                region_name=settings.AWS_S3_REGION_NAME
-            )
-            
-            # Eliminar archivo de S3
-            s3_client.delete_object(
-                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                Key=upload_session.s3_key
-            )
-            
-        except ClientError as e:
-            # Si falla la eliminación de S3, continuar con la eliminación de la BD
-            print(f"Error eliminando de S3: {e}")
-        
-        # Eliminar registro de la base de datos
-        filename = upload_session.filename
-        upload_session.delete()
-        
-        # Registrar actividad
-        AdminActivity.objects.create(
-            admin_user=request.user,
-            action='video_deleted',
-            target_model='VideoUploadSession',
-            target_id=video_id,
-            details=f'Video eliminado: {filename}'
-        )
-        
-        return JsonResponse({
-            'success': True,
-            'message': f'Video {filename} eliminado exitosamente'
-        })
-        
-    except VideoUploadSession.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Video no encontrado'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
 
 
 @user_passes_test(is_staff_user, login_url='/login/')
