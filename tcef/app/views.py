@@ -354,6 +354,12 @@ def exercise_calendar(request, year=None, month=None):
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ]
     
+    # Verificar si el usuario tiene hipopresivos activado
+    try:
+        has_hipopresivos = request.user.userprofile.hipopresivos
+    except:
+        has_hipopresivos = False
+    
     context = {
         'calendar': extended_calendar,
         'year': year,
@@ -367,6 +373,7 @@ def exercise_calendar(request, year=None, month=None):
         'next_month': next_month,
         'next_year': next_year,
         'today': date.today(),
+        'has_hipopresivos': has_hipopresivos,  # Para controlar la visibilidad del banner
     }
     
     return render(request, 'app/exercise_calendar.html', context)

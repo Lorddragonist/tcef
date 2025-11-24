@@ -40,7 +40,8 @@
         </div>
     </div>
 
-    <!-- Banner de Publicidad -->
+    <!-- Banner de Publicidad - Solo para usuarios sin hipopresivos -->
+    {% if not has_hipopresivos %}
     <div id="hipopresivosBanner" class="ad-banner mb-4" style="display: none;">
         <div class="ad-banner-content">
             <button type="button" class="ad-banner-close" onclick="closeAdBanner()" aria-label="Cerrar">
@@ -57,6 +58,7 @@
             </a>
         </div>
     </div>
+    {% endif %}
 
     <!-- Estadísticas rápidas -->
     <div class="stats-summary mb-4">
@@ -459,6 +461,7 @@
         justify-content: center;
         transition: all 0.3s ease;
         font-size: 16px;
+        z-index: 10;
     }
     
     .ad-banner-close:hover {
@@ -470,6 +473,10 @@
         flex: 1;
         font-size: 16px;
         line-height: 1.6;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+        padding-right: 40px; /* Espacio para el botón de cerrar */
     }
     
     .ad-banner-link {
@@ -483,6 +490,7 @@
         white-space: nowrap;
         display: flex;
         align-items: center;
+        flex-shrink: 0;
     }
     
     .ad-banner-link:hover {
@@ -493,18 +501,55 @@
     }
     
     @media (max-width: 768px) {
+        .ad-banner {
+            padding: 15px;
+        }
+        
         .ad-banner-content {
             flex-direction: column;
             text-align: center;
+            gap: 15px;
         }
         
         .ad-banner-text {
             font-size: 14px;
+            line-height: 1.5;
+            padding-right: 0;
+            width: 100%;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         
         .ad-banner-link {
             width: 100%;
             justify-content: center;
+            white-space: normal;
+            padding: 10px 16px;
+            text-align: center;
+        }
+        
+        .ad-banner-close {
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            font-size: 14px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .ad-banner {
+            padding: 12px;
+        }
+        
+        .ad-banner-text {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .ad-banner-link {
+            font-size: 14px;
+            padding: 10px 14px;
         }
     }
 </style>
@@ -842,10 +887,15 @@
     function showAdBanner() {
         const banner = document.getElementById('hipopresivosBanner');
         if (banner) {
-            // Verificar si el usuario ya cerró el banner en esta sesión
-            const bannerClosed = sessionStorage.getItem('hipopresivosBannerClosed');
-            if (!bannerClosed) {
-                banner.style.display = 'block';
+            // Verificar si el usuario tiene hipopresivos activado (desde el template)
+            const hasHipopresivos = {{ has_hipopresivos|yesno:"true,false" }};
+            
+            // Solo mostrar si no tiene hipopresivos y no lo cerró en esta sesión
+            if (!hasHipopresivos) {
+                const bannerClosed = sessionStorage.getItem('hipopresivosBannerClosed');
+                if (!bannerClosed) {
+                    banner.style.display = 'block';
+                }
             }
         }
     }
