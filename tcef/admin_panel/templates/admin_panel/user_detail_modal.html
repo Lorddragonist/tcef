@@ -230,6 +230,14 @@
                 <canvas id="mainChart"></canvas>
             </div>
             
+            <!-- Mensaje de rango de datos -->
+            <div class="text-center mt-3 mb-2">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Datos desde: <strong>{{ first_measurement_date|date:"d/m/Y" }}</strong>
+                </small>
+            </div>
+            
             <!-- Estadísticas rápidas -->
             <div class="row mt-4">
                 <div class="col-md-3 text-center">
@@ -805,9 +813,20 @@ window.resetChart = function() {
         return;
     }
     
+    // Restaurar los datos completos del gráfico
     mainChart.data.labels = measurementsData.labels;
     mainChart.data.datasets[0].data = getCurrentMetricData();
     mainChart.update();
+    
+    // Restaurar los campos de fecha a sus valores originales
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    if (startDate) {
+        startDate.value = '{{ first_measurement_date|date:"Y-m-d" }}';
+    }
+    if (endDate) {
+        endDate.value = '{{ today_date|date:"Y-m-d" }}';
+    }
 }
 
 // Función para setup de datos de prueba (si es necesaria)

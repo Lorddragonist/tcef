@@ -1435,21 +1435,31 @@ def user_detail_modal(request, user_id):
     if not month_composition.exists():
         month_composition = BodyCompositionHistory.objects.filter(user=user).order_by('-measurement_date')[:10]
     
-    # Datos para gráficos
+    # Datos para gráficos - OBTENER TODAS LAS MEDIDAS DESDE EL ORIGEN (no solo del mes)
+    # Esto permite ver el progreso completo del usuario desde su primera medida
+    all_measurements = BodyMeasurements.objects.filter(
+        user=user
+    ).order_by('measurement_date')  # Ordenar por fecha ascendente para ver el progreso
+    
+    all_composition = BodyCompositionHistory.objects.filter(
+        user=user
+    ).order_by('measurement_date')  # Ordenar por fecha ascendente para ver el progreso
+    
+    # Construir datos para gráficos con TODAS las medidas históricas
     weight_data = []
     bmi_data = []
     body_fat_data = []
     muscle_data = []
     ica_data = []
     
-    for measurement in month_measurements:
+    for measurement in all_measurements:
         weight_data.append({
             'date': measurement.measurement_date.strftime('%Y-%m-%d'),
             'weight': float(measurement.weight),
             'bmi': float(measurement.bmi)
         })
     
-    for composition in month_composition:
+    for composition in all_composition:
         if composition.body_fat_percentage:
             body_fat_data.append({
                 'date': composition.measurement_date.strftime('%Y-%m-%d'),
@@ -1512,12 +1522,14 @@ def user_detail_modal(request, user_id):
     
     # Debug: imprimir información de datos
     print(f"Debug - Usuario: {user.username}")
-    print(f"Debug - Medidas encontradas: {month_measurements.count()}")
-    print(f"Debug - Composición encontrada: {month_composition.count()}")
-    print(f"Debug - weight_data: {len(weight_data)} registros")
-    print(f"Debug - body_fat_data: {len(body_fat_data)} registros")
-    print(f"Debug - muscle_data: {len(muscle_data)} registros")
-    print(f"Debug - ica_data: {len(ica_data)} registros")
+    print(f"Debug - Medidas del mes: {month_measurements.count()}")
+    print(f"Debug - Composición del mes: {month_composition.count()}")
+    print(f"Debug - TOTAL medidas históricas para gráficos: {all_measurements.count()}")
+    print(f"Debug - TOTAL composición histórica para gráficos: {all_composition.count()}")
+    print(f"Debug - weight_data (histórico completo): {len(weight_data)} registros")
+    print(f"Debug - body_fat_data (histórico completo): {len(body_fat_data)} registros")
+    print(f"Debug - muscle_data (histórico completo): {len(muscle_data)} registros")
+    print(f"Debug - ica_data (histórico completo): {len(ica_data)} registros")
     print(f"Debug - Entradas de alimentos: {recent_food_entries.count()}")
     
     # Serializar datos para JavaScript
