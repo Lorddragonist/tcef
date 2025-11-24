@@ -40,6 +40,24 @@
         </div>
     </div>
 
+    <!-- Banner de Publicidad -->
+    <div id="hipopresivosBanner" class="ad-banner mb-4" style="display: none;">
+        <div class="ad-banner-content">
+            <button type="button" class="ad-banner-close" onclick="closeAdBanner()" aria-label="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="ad-banner-text">
+                <strong>Ya está disponible mi Curso de Ejercicio Hipopresivo.</strong>
+                <br>
+                Un método suave, profundo y complementario para mejorar tu bienestar, fortalecer tu faja abdominal y conectar con tu cuerpo desde la respiración. 🌸
+            </div>
+            <a href="https://wa.me/+573208532390" target="_blank" rel="noopener noreferrer" class="ad-banner-link">
+                Haz click aquí para más información
+                <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+
     <!-- Estadísticas rápidas -->
     <div class="stats-summary mb-4">
         <div class="row">
@@ -396,6 +414,99 @@
     #videoPreviewModal .modal-backdrop {
         z-index: 1059 !important;
     }
+    
+    /* Estilos para el banner de publicidad */
+    .ad-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        animation: slideDown 0.5s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .ad-banner-content {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        color: white;
+    }
+    
+    .ad-banner-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        font-size: 16px;
+    }
+    
+    .ad-banner-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+    }
+    
+    .ad-banner-text {
+        flex: 1;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    
+    .ad-banner-link {
+        background: white;
+        color: #667eea;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+    }
+    
+    .ad-banner-link:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        color: #764ba2;
+    }
+    
+    @media (max-width: 768px) {
+        .ad-banner-content {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .ad-banner-text {
+            font-size: 14px;
+        }
+        
+        .ad-banner-link {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 </style>
 
 <script>
@@ -727,8 +838,33 @@
         }
     }
 
+    // Función para mostrar el banner de publicidad
+    function showAdBanner() {
+        const banner = document.getElementById('hipopresivosBanner');
+        if (banner) {
+            // Verificar si el usuario ya cerró el banner en esta sesión
+            const bannerClosed = sessionStorage.getItem('hipopresivosBannerClosed');
+            if (!bannerClosed) {
+                banner.style.display = 'block';
+            }
+        }
+    }
+    
+    // Función para cerrar el banner
+    function closeAdBanner() {
+        const banner = document.getElementById('hipopresivosBanner');
+        if (banner) {
+            banner.style.display = 'none';
+            // Guardar en sessionStorage que el usuario cerró el banner
+            sessionStorage.setItem('hipopresivosBannerClosed', 'true');
+        }
+    }
+
     // Event listeners para clicks en días con ejercicios
     document.addEventListener('DOMContentLoaded', function() {
+        // Mostrar banner de publicidad al cargar la página
+        showAdBanner();
+        
         // Agregar click a días con ejercicios para mostrar opciones
         document.querySelectorAll('.exercise-indicator').forEach(indicator => {
             indicator.addEventListener('click', function() {
