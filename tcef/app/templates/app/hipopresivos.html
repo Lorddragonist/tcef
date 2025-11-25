@@ -98,6 +98,8 @@
         border-radius: 8px;
         overflow: hidden;
         background-color: #f8f9fa;
+        touch-action: pan-x pan-y pinch-zoom;
+        -webkit-overflow-scrolling: touch;
     }
     
     .pdf-viewer {
@@ -125,13 +127,35 @@
         }
         
         .pdf-viewer-wrapper {
-            height: 600px;
+            height: 65vh;
+            min-height: 450px;
+            max-height: 550px;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x pan-y pinch-zoom;
+            overscroll-behavior: contain;
+        }
+        
+        .pdf-viewer {
+            width: 100%;
+            height: 100%;
+            min-height: 100vh;
         }
     }
     
     @media (max-width: 480px) {
         .pdf-viewer-wrapper {
-            height: 500px;
+            height: 60vh;
+            min-height: 400px;
+            max-height: 480px;
+        }
+    }
+    
+    @media (max-width: 360px) {
+        .pdf-viewer-wrapper {
+            height: 55vh;
+            min-height: 350px;
+            max-height: 450px;
         }
     }
 </style>
@@ -189,9 +213,10 @@
                         <div class="pdf-viewer-wrapper">
                             <iframe 
                                 id="pdfViewer"
-                                src="https://tcefbucket.s3.us-east-2.amazonaws.com/Hipopresivos/EBOOK+EJERCICIO+HIPOPRESIVO.pdf#toolbar=0&navpanes=0&scrollbar=1"
+                                src="https://tcefbucket.s3.us-east-2.amazonaws.com/Hipopresivos/EBOOK+EJERCICIO+HIPOPRESIVO.pdf#toolbar=0&navpanes=0&scrollbar=1&zoom=page-width"
                                 type="application/pdf"
-                                class="pdf-viewer">
+                                class="pdf-viewer"
+                                allowfullscreen>
                                 Tu navegador no soporta la visualización de PDFs. 
                             </iframe>
                         </div>
@@ -239,6 +264,32 @@
         const pdfWrapper = document.querySelector('.pdf-viewer-wrapper');
         
         if (pdfViewer && pdfWrapper) {
+            // Ajustar zoom del PDF según el tamaño de pantalla
+            function adjustPdfZoom() {
+                const isMobile = window.innerWidth <= 768;
+                const isSmallMobile = window.innerWidth <= 480;
+                const isVerySmallMobile = window.innerWidth <= 360;
+                
+                if (isMobile) {
+                    // En móvil, usar zoom reducido para mejor visualización
+                    const baseUrl = 'https://tcefbucket.s3.us-east-2.amazonaws.com/Hipopresivos/EBOOK+EJERCICIO+HIPOPRESIVO.pdf';
+                    if (isVerySmallMobile) {
+                        // Pantallas muy pequeñas: zoom 40%
+                        pdfViewer.src = baseUrl + '#toolbar=0&navpanes=0&scrollbar=1&zoom=40';
+                    } else if (isSmallMobile) {
+                        // Pantallas pequeñas: zoom 45%
+                        pdfViewer.src = baseUrl + '#toolbar=0&navpanes=0&scrollbar=1&zoom=45';
+                    } else {
+                        // Tablets y móviles grandes: zoom 60%
+                        pdfViewer.src = baseUrl + '#toolbar=0&navpanes=0&scrollbar=1&zoom=60';
+                    }
+                }
+            }
+            
+            // Ajustar zoom al cargar y al redimensionar
+            adjustPdfZoom();
+            window.addEventListener('resize', adjustPdfZoom);
+            
             // Deshabilitar clic derecho en el visor de PDF
             pdfWrapper.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
@@ -262,11 +313,12 @@
                 return false;
             });
             
-            // Prevenir selección de texto
-            pdfWrapper.addEventListener('selectstart', function(e) {
-                e.preventDefault();
-                return false;
-            });
+            // En móvil, permitir mejor interacción táctil
+            if (window.innerWidth <= 768) {
+                // Permitir scroll táctil natural
+                pdfWrapper.style.touchAction = 'pan-x pan-y pinch-zoom';
+                pdfWrapper.style.webkitOverflowScrolling = 'touch';
+            }
             
             // Intentar ocultar la barra de herramientas del PDF después de cargar
             pdfViewer.addEventListener('load', function() {
