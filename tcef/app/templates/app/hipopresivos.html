@@ -89,32 +89,15 @@
         text-align: center;
     }
     
-    /* Estilos para el visor de PDF */
-    .pdf-viewer-wrapper {
-        position: relative;
-        width: 100%;
-        height: 800px;
-        border: 2px solid #e1cfc6;
-        border-radius: 8px;
-        overflow: hidden;
-        background-color: #f8f9fa;
-        touch-action: pan-x pan-y pinch-zoom;
-        -webkit-overflow-scrolling: touch;
+    /* Estilos para el botón de descarga del eBook */
+    .video-card-body .btn-primary {
+        background-color: #4654A6;
+        border-color: #4654A6;
     }
     
-    .pdf-viewer {
-        width: 100%;
-        height: 100%;
-        border: none;
-        pointer-events: auto;
-    }
-    
-    /* Prevenir selección de texto en el PDF */
-    .pdf-viewer-wrapper {
-        user-select: none;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
+    .video-card-body .btn-primary:hover {
+        background-color: #3a4688;
+        border-color: #3a4688;
     }
     
     @media (max-width: 768px) {
@@ -124,38 +107,6 @@
         
         .video-card-body {
             padding: 1rem;
-        }
-        
-        .pdf-viewer-wrapper {
-            height: 65vh;
-            min-height: 450px;
-            max-height: 550px;
-            overflow: auto;
-            -webkit-overflow-scrolling: touch;
-            touch-action: pan-x pan-y pinch-zoom;
-            overscroll-behavior: contain;
-        }
-        
-        .pdf-viewer {
-            width: 100%;
-            height: 100%;
-            min-height: 100vh;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .pdf-viewer-wrapper {
-            height: 60vh;
-            min-height: 400px;
-            max-height: 480px;
-        }
-    }
-    
-    @media (max-width: 360px) {
-        .pdf-viewer-wrapper {
-            height: 55vh;
-            min-height: 350px;
-            max-height: 450px;
         }
     }
 </style>
@@ -208,18 +159,14 @@
                             eBook: Ejercicio Hipopresivo
                         </h3>
                     </div>
-                    <div class="video-card-body">
-                        <p class="mb-4">Consulta el eBook completo sobre ejercicios hipopresivos para complementar tu aprendizaje.</p>
-                        <div class="pdf-viewer-wrapper">
-                            <iframe 
-                                id="pdfViewer"
-                                src="https://tcefbucket.s3.us-east-2.amazonaws.com/Hipopresivos/EBOOK+EJERCICIO+HIPOPRESIVO.pdf#toolbar=0&navpanes=0&scrollbar=1&zoom=page-width"
-                                type="application/pdf"
-                                class="pdf-viewer"
-                                allowfullscreen>
-                                Tu navegador no soporta la visualización de PDFs. 
-                            </iframe>
-                        </div>
+                    <div class="video-card-body text-center">
+                        <p class="mb-4">Descarga el eBook completo sobre ejercicios hipopresivos para complementar tu aprendizaje.</p>
+                        <a href="https://tcefbucket.s3.us-east-2.amazonaws.com/Hipopresivos/EBOOK+EJERCICIO+HIPOPRESIVO.pdf" 
+                           download 
+                           class="btn btn-primary btn-lg">
+                            <i class="fas fa-download me-2"></i>
+                            Descargar eBook
+                        </a>
                     </div>
                 </div>
             </div>
@@ -259,86 +206,6 @@
             });
         });
         
-        // Protección del visor de PDF - Prevenir descarga
-        const pdfViewer = document.getElementById('pdfViewer');
-        const pdfWrapper = document.querySelector('.pdf-viewer-wrapper');
-        
-        if (pdfViewer && pdfWrapper) {
-            // Ajustar zoom del PDF según el tamaño de pantalla
-            function adjustPdfZoom() {
-                const isMobile = window.innerWidth <= 768;
-                const isSmallMobile = window.innerWidth <= 480;
-                const isVerySmallMobile = window.innerWidth <= 360;
-                
-                if (isMobile) {
-                    // En móvil, usar zoom reducido para mejor visualización
-                    const baseUrl = 'https://tcefbucket.s3.us-east-2.amazonaws.com/Hipopresivos/EBOOK+EJERCICIO+HIPOPRESIVO.pdf';
-                    if (isVerySmallMobile) {
-                        // Pantallas muy pequeñas: zoom 40%
-                        pdfViewer.src = baseUrl + '#toolbar=0&navpanes=0&scrollbar=1&zoom=40';
-                    } else if (isSmallMobile) {
-                        // Pantallas pequeñas: zoom 45%
-                        pdfViewer.src = baseUrl + '#toolbar=0&navpanes=0&scrollbar=1&zoom=45';
-                    } else {
-                        // Tablets y móviles grandes: zoom 60%
-                        pdfViewer.src = baseUrl + '#toolbar=0&navpanes=0&scrollbar=1&zoom=60';
-                    }
-                }
-            }
-            
-            // Ajustar zoom al cargar y al redimensionar
-            adjustPdfZoom();
-            window.addEventListener('resize', adjustPdfZoom);
-            
-            // Deshabilitar clic derecho en el visor de PDF
-            pdfWrapper.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-            // Prevenir atajos de teclado para descargar
-            pdfWrapper.addEventListener('keydown', function(e) {
-                // Prevenir Ctrl+S, Ctrl+P, F12, etc.
-                if ((e.ctrlKey && (e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) ||
-                    e.key === 'F12' ||
-                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i'))) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-            
-            // Prevenir drag and drop del PDF
-            pdfWrapper.addEventListener('dragstart', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-            // En móvil, permitir mejor interacción táctil
-            if (window.innerWidth <= 768) {
-                // Permitir scroll táctil natural
-                pdfWrapper.style.touchAction = 'pan-x pan-y pinch-zoom';
-                pdfWrapper.style.webkitOverflowScrolling = 'touch';
-            }
-            
-            // Intentar ocultar la barra de herramientas del PDF después de cargar
-            pdfViewer.addEventListener('load', function() {
-                try {
-                    // Intentar acceder al documento del iframe para ocultar controles
-                    // Nota: Esto puede no funcionar debido a políticas CORS
-                    const iframeDoc = pdfViewer.contentDocument || pdfViewer.contentWindow.document;
-                    if (iframeDoc) {
-                        // Ocultar elementos de descarga si es posible
-                        const downloadElements = iframeDoc.querySelectorAll('[download], a[href*="download"]');
-                        downloadElements.forEach(el => {
-                            el.style.display = 'none';
-                        });
-                    }
-                } catch (e) {
-                    // Error esperado debido a políticas CORS - el PDF está en otro dominio
-                    console.log('No se puede acceder al contenido del iframe debido a políticas CORS');
-                }
-            });
-        }
     });
 </script>
 {% endblock %}
