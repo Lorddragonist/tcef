@@ -89,6 +89,32 @@
         text-align: center;
     }
     
+    /* Estilos para el visor de PDF */
+    .pdf-viewer-wrapper {
+        position: relative;
+        width: 100%;
+        height: 800px;
+        border: 2px solid #e1cfc6;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: #f8f9fa;
+    }
+    
+    .pdf-viewer {
+        width: 100%;
+        height: 100%;
+        border: none;
+        pointer-events: auto;
+    }
+    
+    /* Prevenir selección de texto en el PDF */
+    .pdf-viewer-wrapper {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
+    
     @media (max-width: 768px) {
         .video-card-header h3 {
             font-size: 1.25rem;
@@ -96,6 +122,16 @@
         
         .video-card-body {
             padding: 1rem;
+        }
+        
+        .pdf-viewer-wrapper {
+            height: 600px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .pdf-viewer-wrapper {
+            height: 500px;
         }
     }
 </style>
@@ -137,6 +173,32 @@
             </div>
             {% endfor %}
         </div>
+        
+        <!-- Sección del eBook PDF -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="video-card">
+                    <div class="video-card-header">
+                        <h3>
+                            <i class="fas fa-book me-2"></i>
+                            eBook: Ejercicio Hipopresivo
+                        </h3>
+                    </div>
+                    <div class="video-card-body">
+                        <p class="mb-4">Consulta el eBook completo sobre ejercicios hipopresivos para complementar tu aprendizaje.</p>
+                        <div class="pdf-viewer-wrapper">
+                            <iframe 
+                                id="pdfViewer"
+                                src="https://tcefbucket.s3.us-east-2.amazonaws.com/Hipopresivos/EBOOK+EJERCICIO+HIPOPRESIVO.pdf#toolbar=0&navpanes=0&scrollbar=1"
+                                type="application/pdf"
+                                class="pdf-viewer">
+                                Tu navegador no soporta la visualización de PDFs. 
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -171,6 +233,60 @@
                 }
             });
         });
+        
+        // Protección del visor de PDF - Prevenir descarga
+        const pdfViewer = document.getElementById('pdfViewer');
+        const pdfWrapper = document.querySelector('.pdf-viewer-wrapper');
+        
+        if (pdfViewer && pdfWrapper) {
+            // Deshabilitar clic derecho en el visor de PDF
+            pdfWrapper.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // Prevenir atajos de teclado para descargar
+            pdfWrapper.addEventListener('keydown', function(e) {
+                // Prevenir Ctrl+S, Ctrl+P, F12, etc.
+                if ((e.ctrlKey && (e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) ||
+                    e.key === 'F12' ||
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i'))) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            // Prevenir drag and drop del PDF
+            pdfWrapper.addEventListener('dragstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // Prevenir selección de texto
+            pdfWrapper.addEventListener('selectstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // Intentar ocultar la barra de herramientas del PDF después de cargar
+            pdfViewer.addEventListener('load', function() {
+                try {
+                    // Intentar acceder al documento del iframe para ocultar controles
+                    // Nota: Esto puede no funcionar debido a políticas CORS
+                    const iframeDoc = pdfViewer.contentDocument || pdfViewer.contentWindow.document;
+                    if (iframeDoc) {
+                        // Ocultar elementos de descarga si es posible
+                        const downloadElements = iframeDoc.querySelectorAll('[download], a[href*="download"]');
+                        downloadElements.forEach(el => {
+                            el.style.display = 'none';
+                        });
+                    }
+                } catch (e) {
+                    // Error esperado debido a políticas CORS - el PDF está en otro dominio
+                    console.log('No se puede acceder al contenido del iframe debido a políticas CORS');
+                }
+            });
+        }
     });
 </script>
 {% endblock %}
