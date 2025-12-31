@@ -69,7 +69,85 @@ function handleFile(file) {
     
     // Ocultar área de drop
     dropZone.style.display = 'none';
+    
+    // Detectar duración automáticamente
+    detectVideoDuration(file);
 }
+
+function detectVideoDuration(file) {
+    const videoPreview = document.getElementById('videoPreview');
+    const durationInput = document.getElementById('duration');
+    const durationDisplay = document.getElementById('durationDisplay');
+    const detectBtn = document.getElementById('detectDurationBtn');
+    
+    if (!videoPreview || !durationInput) return;
+    
+    // Mostrar estado de carga
+    if (detectBtn) {
+        detectBtn.disabled = true;
+        detectBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Detectando...';
+    }
+    durationDisplay.textContent = 'Detectando duración del video...';
+    
+    // Crear URL del objeto para el video
+    const videoURL = URL.createObjectURL(file);
+    videoPreview.src = videoURL;
+    
+    // Cuando el video se cargue, obtener su duración
+    videoPreview.addEventListener('loadedmetadata', function() {
+        const duration = Math.round(videoPreview.duration);
+        
+        if (duration && duration > 0) {
+            durationInput.value = duration;
+            const minutes = Math.floor(duration / 60);
+            const seconds = duration % 60;
+            durationDisplay.textContent = `Duración detectada: ${minutes}:${seconds.toString().padStart(2, '0')} (${duration} segundos)`;
+            durationDisplay.classList.remove('text-danger');
+            durationDisplay.classList.add('text-success');
+        } else {
+            durationDisplay.textContent = 'No se pudo detectar la duración. Por favor, ingrésala manualmente.';
+            durationDisplay.classList.remove('text-success');
+            durationDisplay.classList.add('text-danger');
+        }
+        
+        // Restaurar botón
+        if (detectBtn) {
+            detectBtn.disabled = false;
+            detectBtn.innerHTML = '<i class="fas fa-magic me-1"></i>Detectar';
+        }
+        
+        // Limpiar URL del objeto
+        URL.revokeObjectURL(videoURL);
+    }, { once: true });
+    
+    // Manejar errores
+    videoPreview.addEventListener('error', function() {
+        durationDisplay.textContent = 'Error al leer el video. Por favor, ingresa la duración manualmente.';
+        durationDisplay.classList.remove('text-success');
+        durationDisplay.classList.add('text-danger');
+        
+        if (detectBtn) {
+            detectBtn.disabled = false;
+            detectBtn.innerHTML = '<i class="fas fa-magic me-1"></i>Detectar';
+        }
+        
+        URL.revokeObjectURL(videoURL);
+    }, { once: true });
+}
+
+// Agregar event listener al botón de detectar duración
+document.addEventListener('DOMContentLoaded', function() {
+    const detectBtn = document.getElementById('detectDurationBtn');
+    if (detectBtn) {
+        detectBtn.addEventListener('click', function() {
+            if (currentFile) {
+                detectVideoDuration(currentFile);
+            } else {
+                alert('Por favor selecciona un video primero.');
+            }
+        });
+    }
+});
 
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';

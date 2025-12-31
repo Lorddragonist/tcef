@@ -88,12 +88,20 @@
                             </div>
                             <div class="mb-3">
                                 <label for="duration" class="form-label">Duración (segundos) *</label>
-                                <input type="number" class="form-control" id="duration" name="duration" 
-                                       min="1" value="300" required>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="duration" name="duration" 
+                                           min="1" value="300" required>
+                                    <button type="button" class="btn btn-outline-secondary" id="detectDurationBtn" 
+                                            title="Detectar duración automáticamente">
+                                        <i class="fas fa-magic me-1"></i>Detectar
+                                    </button>
+                                </div>
                                 <small class="form-text text-muted">
-                                    Duración del video en segundos. Ejemplo: 300 = 5 minutos, 600 = 10 minutos
+                                    <span id="durationDisplay">Duración del video en segundos. Se detectará automáticamente al seleccionar el archivo.</span>
                                 </small>
                             </div>
+                            <!-- Video oculto para detectar duración -->
+                            <video id="videoPreview" style="display: none;"></video>
                             <div class="mb-3">
                                 <label for="bucketName" class="form-label">Bucket de S3</label>
                                 <input type="text" class="form-control" id="bucketName" value="tcefbucket" readonly>
