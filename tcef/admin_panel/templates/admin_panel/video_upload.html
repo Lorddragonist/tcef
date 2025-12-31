@@ -87,6 +87,14 @@
                                 <textarea class="form-control" id="description" name="description" rows="2"></textarea>
                             </div>
                             <div class="mb-3">
+                                <label for="duration" class="form-label">Duración (segundos) *</label>
+                                <input type="number" class="form-control" id="duration" name="duration" 
+                                       min="1" value="300" required>
+                                <small class="form-text text-muted">
+                                    Duración del video en segundos. Ejemplo: 300 = 5 minutos, 600 = 10 minutos
+                                </small>
+                            </div>
+                            <div class="mb-3">
                                 <label for="bucketName" class="form-label">Bucket de S3</label>
                                 <input type="text" class="form-control" id="bucketName" value="tcefbucket" readonly>
                             </div>

@@ -106,6 +106,12 @@ document.getElementById('startUpload').addEventListener('click', async () => {
         formData.append('title', document.getElementById('title').value);
         formData.append('description', document.getElementById('description').value);
         
+        // Agregar duración del video
+        const durationInput = document.getElementById('duration');
+        if (durationInput) {
+            formData.append('duration', durationInput.value);
+        }
+        
         // Obtener token CSRF
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
         if (!csrfToken) {

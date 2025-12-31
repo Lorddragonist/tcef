@@ -701,8 +701,14 @@ def video_upload(request):
                 # Crear registro Video
                 s3_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{s3_key}"
                 
-                # Calcular duración del video (por ahora usaremos un valor por defecto)
-                duration = 300  # 5 minutos por defecto
+                # Obtener duración del video (en segundos)
+                duration_str = request.POST.get('duration', '300')  # Por defecto 5 minutos
+                try:
+                    duration = int(duration_str)
+                    if duration <= 0:
+                        duration = 300  # Si es inválido, usar 5 minutos por defecto
+                except (ValueError, TypeError):
+                    duration = 300  # Si no se puede convertir, usar 5 minutos por defecto
                 
                 video = Video.objects.create(
                     title=title or video_file.name,
@@ -825,6 +831,17 @@ def edit_video(request, video_id):
         video.title = request.POST.get('title', '')
         video.description = request.POST.get('description', '')
         video.is_active = request.POST.get('is_active') == 'on'
+        
+        # Actualizar duración si se proporciona
+        duration_str = request.POST.get('duration', '')
+        if duration_str:
+            try:
+                duration = int(duration_str)
+                if duration > 0:
+                    video.duration = duration
+            except (ValueError, TypeError):
+                pass  # Si no es válido, mantener la duración actual
+        
         video.save()
         
         # Registrar actividad
