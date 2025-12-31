@@ -16,6 +16,8 @@ class AdminActivity(models.Model):
         ('routine_deleted', 'Rutina Eliminada'),
         ('video_uploaded', 'Video Subido'),
         ('video_deleted', 'Video Eliminado'),
+        ('pwd_reset_approved', 'Reseteo Aprobado'),
+        ('pwd_reset_rejected', 'Reseteo Rechazado'),
     ]
 
     admin_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_activities')

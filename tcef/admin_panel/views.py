@@ -1663,12 +1663,15 @@ def approve_password_reset(request, approval_id):
         notes = request.POST.get('notes', '')
         approval.approve(request.user, notes)
         
-        # Enviar email con el enlace de reseteo
+        # Generar URL de reseteo
         reset_request = approval.reset_request
         reset_url = request.build_absolute_uri(
             reverse('app:reset_password_with_token', args=[reset_request.reset_token])
         )
         
+        # Enviar email con el enlace de reseteo
+        email_sent = False
+        email_error = None
         try:
             send_mail(
                 subject='Reseteo de Contraseña Aprobado - TCEF',
@@ -1690,20 +1693,27 @@ Equipo TCEF
                 recipient_list=[reset_request.user.email],
                 fail_silently=False,
             )
+            email_sent = True
         except Exception as e:
-            messages.warning(request, f'Reseteo aprobado, pero hubo un error al enviar el email: {str(e)}. El enlace de reseteo es: {reset_url}')
+            email_error = str(e)
         
         # Registrar actividad
         AdminActivity.objects.create(
             admin_user=request.user,
-            action='password_reset_approved',
+            action='pwd_reset_approved',
             target_model='PasswordResetApproval',
             target_id=approval.id,
             details=f'Reseteo de contraseña aprobado para {approval.reset_request.user.username}'
         )
         
-        messages.success(request, f'Reseteo de contraseña aprobado para {approval.reset_request.user.username}. Se ha enviado el enlace de reseteo por email.')
-        return redirect('admin_panel:notifications')
+        # Mostrar página de confirmación con la URL
+        context = {
+            'approval': approval,
+            'reset_url': reset_url,
+            'email_sent': email_sent,
+            'email_error': email_error,
+        }
+        return render(request, 'admin_panel/password_reset_approved.html', context)
     
     context = {
         'approval': approval,
@@ -1724,7 +1734,7 @@ def reject_password_reset(request, approval_id):
         # Registrar actividad
         AdminActivity.objects.create(
             admin_user=request.user,
-            action='password_reset_rejected',
+            action='pwd_reset_rejected',
             target_model='PasswordResetApproval',
             target_id=approval.id,
             details=f'Reseteo de contraseña rechazado para {approval.reset_request.user.username}'
