@@ -10,10 +10,18 @@
                 <i class="fas fa-video me-2"></i>
                 Gestión de Videos
             </h1>
-            <a href="{% url 'admin_panel:video_upload' %}" class="btn btn-primary">
-                <i class="fas fa-upload me-2"></i>
-                Subir Nuevo Video
-            </a>
+            <div class="d-flex gap-2">
+                <a href="?order_by={{ next_order }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                   class="btn btn-outline-primary" 
+                   title="Ordenar por nombre">
+                    <i class="fas {{ order_icon }} me-2"></i>
+                    {{ order_text }}
+                </a>
+                <a href="{% url 'admin_panel:video_upload' %}" class="btn btn-primary">
+                    <i class="fas fa-upload me-2"></i>
+                    Subir Nuevo Video
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -37,8 +45,9 @@
                             <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactivos</option>
                         </select>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
+                    <div class="col-md-2 d-flex align-items-end gap-2">
+                        <input type="hidden" name="order_by" value="{{ order_by }}">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
                             <i class="fas fa-search me-1"></i>
                             Filtrar
                         </button>
@@ -150,12 +159,12 @@
                         <ul class="pagination justify-content-center mt-4">
                             {% if page_obj.has_previous %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}">
                                         <i class="fas fa-angle-double-left"></i>
                                     </a>
                                 </li>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}">
                                         <i class="fas fa-angle-left"></i>
                                     </a>
                                 </li>
@@ -169,12 +178,12 @@
                             
                             {% if page_obj.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}">
                                         <i class="fas fa-angle-right"></i>
                                     </a>
                                 </li>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_by %}&order_by={{ order_by }}{% endif %}">
                                         <i class="fas fa-angle-double-right"></i>
                                     </a>
                                 </li>

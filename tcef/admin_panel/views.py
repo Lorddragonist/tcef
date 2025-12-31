@@ -759,6 +759,7 @@ def video_management(request):
     """Gestión de videos - Listar, editar y eliminar videos"""
     search_query = request.GET.get('search', '')
     status_filter = request.GET.get('status', '')
+    order_by = request.GET.get('order_by', '-created_at')  # Por defecto ordenar por fecha descendente
     
     videos = Video.objects.select_related('created_by', 'upload_session').all()
     
@@ -775,15 +776,41 @@ def video_management(request):
     elif status_filter == 'inactive':
         videos = videos.filter(is_active=False)
     
+    # Ordenamiento
+    # Validar que order_by sea un campo válido
+    valid_orders = ['title', '-title', 'created_at', '-created_at', 'filename', '-filename']
+    if order_by not in valid_orders:
+        order_by = '-created_at'
+    
+    videos = videos.order_by(order_by)
+    
     # Paginación
     paginator = Paginator(videos, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    # Determinar el siguiente orden para el botón
+    if order_by == 'title':
+        next_order = '-title'
+        order_icon = 'fa-sort-alpha-down'
+        order_text = 'A-Z'
+    elif order_by == '-title':
+        next_order = 'title'
+        order_icon = 'fa-sort-alpha-up'
+        order_text = 'Z-A'
+    else:
+        next_order = 'title'
+        order_icon = 'fa-sort-alpha-down'
+        order_text = 'Ordenar A-Z'
+    
     context = {
         'page_obj': page_obj,
         'search_query': search_query,
         'status_filter': status_filter,
+        'order_by': order_by,
+        'next_order': next_order,
+        'order_icon': order_icon,
+        'order_text': order_text,
     }
     
     return render(request, 'admin_panel/video_management.html', context)
