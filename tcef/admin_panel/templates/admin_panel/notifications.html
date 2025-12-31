@@ -1,0 +1,151 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Notificaciones - Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-bell me-2"></i>Notificaciones
+            </h2>
+            <a href="{% url 'admin_panel:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Volver al Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Solicitudes de Reseteo de Contraseña -->
+{% if password_reset_pending %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-key me-2"></i>
+                    Solicitudes de Reseteo de Contraseña Pendientes
+                    <span class="badge bg-dark ms-2">{{ password_reset_pending.count }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Email</th>
+                                <th>Fecha de Solicitud</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for approval in password_reset_pending %}
+                            <tr>
+                                <td>
+                                    <strong>{{ approval.reset_request.user.username }}</strong>
+                                    {% if approval.reset_request.user.get_full_name %}
+                                        <br><small class="text-muted">{{ approval.reset_request.user.get_full_name }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ approval.reset_request.user.email }}</td>
+                                <td>
+                                    {{ approval.reset_request.requested_at|date:"d/m/Y H:i" }}
+                                    <br><small class="text-muted">Hace {{ approval.reset_request.requested_at|timesince }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'admin_panel:approve_password_reset' approval.id %}" 
+                                           class="btn btn-sm btn-success">
+                                            <i class="fas fa-check me-1"></i>Aprobar
+                                        </a>
+                                        <a href="{% url 'admin_panel:reject_password_reset' approval.id %}" 
+                                           class="btn btn-sm btn-danger">
+                                            <i class="fas fa-times me-1"></i>Rechazar
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Solicitudes de Aprobación de Usuarios -->
+{% if user_approval_pending %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Solicitudes de Aprobación de Usuarios Pendientes
+                    <span class="badge bg-light text-dark ms-2">{{ user_approval_pending.count }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Email</th>
+                                <th>Fecha de Registro</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for approval in user_approval_pending %}
+                            <tr>
+                                <td>
+                                    <strong>{{ approval.user.username }}</strong>
+                                    {% if approval.user.get_full_name %}
+                                        <br><small class="text-muted">{{ approval.user.get_full_name }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ approval.user.email }}</td>
+                                <td>
+                                    {{ approval.requested_at|date:"d/m/Y H:i" }}
+                                    <br><small class="text-muted">Hace {{ approval.requested_at|timesince }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'admin_panel:user_management' %}?search={{ approval.user.username }}" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye me-1"></i>Ver Usuario
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Mensaje cuando no hay notificaciones -->
+{% if not password_reset_pending and not user_approval_pending %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h4>No hay notificaciones pendientes</h4>
+                <p class="text-muted">Todas las solicitudes han sido procesadas.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+

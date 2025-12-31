@@ -34,4 +34,10 @@ urlpatterns = [
     path('monitoring/', views.user_monitoring, name='user_monitoring'),
     path('monitoring/user/<int:user_id>/details/', views.user_detail_modal, name='user_detail_modal'),
     
+    # Notificaciones
+    path('notifications/', views.notifications, name='notifications'),
+    path('notifications/password-reset/<int:approval_id>/approve/', views.approve_password_reset, name='approve_password_reset'),
+    path('notifications/password-reset/<int:approval_id>/reject/', views.reject_password_reset, name='reject_password_reset'),
+    path('notifications/count/', views.get_notifications_count, name='notifications_count'),
+    
 ] 

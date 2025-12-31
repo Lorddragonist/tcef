@@ -9,10 +9,13 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.core.mail import send_mail
+from django.conf import settings
+from django.urls import reverse
 import json
 from datetime import datetime, timedelta
 
-from .models import UserGroup, UserGroupMembership, CustomRoutine, AdminActivity, VideoUploadSession, Video, RoutineVideo
+from .models import UserGroup, UserGroupMembership, CustomRoutine, AdminActivity, VideoUploadSession, Video, RoutineVideo, PasswordResetApproval, UserApprovalRequest
 from app.models import UserProfile, ExerciseLog, BodyMeasurements, BodyCompositionHistory, FoodDiary
 
 import boto3
@@ -1627,3 +1630,125 @@ def create_test_data(request):
         
     except Exception as e:
         return JsonResponse({'error': str(e)})
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def notifications(request):
+    """Vista para mostrar todas las notificaciones pendientes"""
+    # Obtener solicitudes de reseteo de contraseña pendientes
+    password_reset_pending = PasswordResetApproval.objects.filter(
+        status='pending'
+    ).select_related('reset_request__user').order_by('-reset_request__requested_at')
+    
+    # Obtener solicitudes de aprobación de usuarios pendientes
+    user_approval_pending = UserApprovalRequest.objects.filter(
+        status='pending'
+    ).select_related('user', 'user__userprofile').order_by('-requested_at')
+    
+    context = {
+        'password_reset_pending': password_reset_pending,
+        'user_approval_pending': user_approval_pending,
+        'total_pending': password_reset_pending.count() + user_approval_pending.count(),
+    }
+    
+    return render(request, 'admin_panel/notifications.html', context)
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def approve_password_reset(request, approval_id):
+    """Aprobar solicitud de reseteo de contraseña"""
+    approval = get_object_or_404(PasswordResetApproval, id=approval_id, status='pending')
+    
+    if request.method == 'POST':
+        notes = request.POST.get('notes', '')
+        approval.approve(request.user, notes)
+        
+        # Enviar email con el enlace de reseteo
+        reset_request = approval.reset_request
+        reset_url = request.build_absolute_uri(
+            reverse('app:reset_password_with_token', args=[reset_request.reset_token])
+        )
+        
+        try:
+            send_mail(
+                subject='Reseteo de Contraseña Aprobado - TCEF',
+                message=f'''
+Hola {reset_request.user.get_full_name() or reset_request.user.username},
+
+Tu solicitud de reseteo de contraseña ha sido aprobada por el administrador.
+
+Para cambiar tu contraseña, haz clic en el siguiente enlace (válido por 24 horas):
+
+{reset_url}
+
+Si no solicitaste este reseteo, puedes ignorar este email.
+
+Saludos,
+Equipo TCEF
+                ''',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[reset_request.user.email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            messages.warning(request, f'Reseteo aprobado, pero hubo un error al enviar el email: {str(e)}. El enlace de reseteo es: {reset_url}')
+        
+        # Registrar actividad
+        AdminActivity.objects.create(
+            admin_user=request.user,
+            action='password_reset_approved',
+            target_model='PasswordResetApproval',
+            target_id=approval.id,
+            details=f'Reseteo de contraseña aprobado para {approval.reset_request.user.username}'
+        )
+        
+        messages.success(request, f'Reseteo de contraseña aprobado para {approval.reset_request.user.username}. Se ha enviado el enlace de reseteo por email.')
+        return redirect('admin_panel:notifications')
+    
+    context = {
+        'approval': approval,
+    }
+    
+    return render(request, 'admin_panel/approve_password_reset.html', context)
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def reject_password_reset(request, approval_id):
+    """Rechazar solicitud de reseteo de contraseña"""
+    approval = get_object_or_404(PasswordResetApproval, id=approval_id, status='pending')
+    
+    if request.method == 'POST':
+        notes = request.POST.get('notes', '')
+        approval.reject(request.user, notes)
+        
+        # Registrar actividad
+        AdminActivity.objects.create(
+            admin_user=request.user,
+            action='password_reset_rejected',
+            target_model='PasswordResetApproval',
+            target_id=approval.id,
+            details=f'Reseteo de contraseña rechazado para {approval.reset_request.user.username}'
+        )
+        
+        messages.success(request, f'Reseteo de contraseña rechazado para {approval.reset_request.user.username}.')
+        return redirect('admin_panel:notifications')
+    
+    context = {
+        'approval': approval,
+    }
+    
+    return render(request, 'admin_panel/reject_password_reset.html', context)
+
+
+@user_passes_test(is_staff_user, login_url='/login/')
+def get_notifications_count(request):
+    """Vista AJAX para obtener el conteo de notificaciones pendientes"""
+    password_reset_count = PasswordResetApproval.objects.filter(status='pending').count()
+    user_approval_count = UserApprovalRequest.objects.filter(status='pending').count()
+    total = password_reset_count + user_approval_count
+    
+    return JsonResponse({
+        'total': total,
+        'password_reset': password_reset_count,
+        'user_approval': user_approval_count,
+    })
