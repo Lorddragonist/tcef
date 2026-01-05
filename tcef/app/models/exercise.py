@@ -98,12 +98,16 @@ class ExerciseLog(models.Model):
     
     @classmethod
     def get_current_week_streak(cls, user):
-        """Calcula la última racha de semanas con 5+ rutinas obtenida"""
+        """Calcula la última racha de semanas con 5+ rutinas obtenida (sin límite de año)"""
         from datetime import date, timedelta
         
         today = date.today()
         streak = 0
         current_week_start = today - timedelta(days=today.weekday())
+        
+        # Límite de seguridad: máximo 10 años hacia atrás
+        min_date = date(today.year - 10, 1, 1)
+        min_week_start = min_date - timedelta(days=min_date.weekday())
         
         # Verificar si la semana actual tiene 5+ rutinas
         week_end = current_week_start + timedelta(days=6)
@@ -118,7 +122,7 @@ class ExerciseLog(models.Model):
             # Retroceder una semana y buscar la última racha completa
             current_week_start -= timedelta(weeks=1)
             
-            while True:
+            while current_week_start >= min_week_start:
                 week_end = current_week_start + timedelta(days=6)
                 week_exercises = cls.objects.filter(
                     user=user,
@@ -132,8 +136,8 @@ class ExerciseLog(models.Model):
                 else:
                     break
         else:
-            # Si la semana actual tiene 5+ rutinas, contar desde ahí
-            while True:
+            # Si la semana actual tiene 5+ rutinas, contar desde ahí hacia atrás
+            while current_week_start >= min_week_start:
                 week_end = current_week_start + timedelta(days=6)
                 week_exercises = cls.objects.filter(
                     user=user,
@@ -161,6 +165,14 @@ class ExerciseLog(models.Model):
         # Obtener el rango completo de fechas con ejercicios
         first_exercise = exercises.first().exercise_date
         last_exercise = exercises.last().exercise_date
+        
+        # Límite de seguridad: máximo 10 años hacia atrás desde hoy
+        today = date.today()
+        min_date = date(today.year - 10, 1, 1)
+        
+        # Asegurar que no vayamos más atrás del límite
+        if first_exercise < min_date:
+            first_exercise = min_date
         
         # Calcular todas las semanas desde la primera hasta la última
         # Empezar desde el lunes de la semana que contiene el primer ejercicio
