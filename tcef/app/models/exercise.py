@@ -151,51 +151,47 @@ class ExerciseLog(models.Model):
     
     @classmethod
     def get_longest_week_streak(cls, user):
-        """Calcula la racha más larga de semanas con 5+ rutinas"""
+        """Calcula la racha más larga de semanas con 5+ rutinas (sin límite de año)"""
         from datetime import date, timedelta
         
         exercises = cls.objects.filter(user=user).order_by('exercise_date')
         if not exercises:
             return 0
         
-        # Obtener todas las semanas únicas con ejercicios
-        week_starts = set()
-        for exercise in exercises:
-            week_start = exercise.exercise_date - timedelta(days=exercise.exercise_date.weekday())
-            week_starts.add(week_start)
+        # Obtener el rango completo de fechas con ejercicios
+        first_exercise = exercises.first().exercise_date
+        last_exercise = exercises.last().exercise_date
         
-        week_starts = sorted(list(week_starts))
+        # Calcular todas las semanas desde la primera hasta la última
+        # Empezar desde el lunes de la semana que contiene el primer ejercicio
+        first_week_start = first_exercise - timedelta(days=first_exercise.weekday())
+        last_week_start = last_exercise - timedelta(days=last_exercise.weekday())
         
-        longest_streak = 1
-        current_streak = 1
+        # Iterar semana por semana desde la primera hasta la última
+        current_week_start = first_week_start
+        longest_streak = 0
+        current_streak = 0
         
-        for i in range(1, len(week_starts)):
-            # Verificar si las semanas son consecutivas
-            expected_week = week_starts[i-1] + timedelta(weeks=1)
-            if week_starts[i] == expected_week:
-                # Verificar si ambas semanas tienen 5+ ejercicios
-                week1_end = week_starts[i-1] + timedelta(days=6)
-                week2_end = week_starts[i] + timedelta(days=6)
-                
-                week1_count = cls.objects.filter(
-                    user=user,
-                    exercise_date__gte=week_starts[i-1],
-                    exercise_date__lte=week1_end
-                ).count()
-                
-                week2_count = cls.objects.filter(
-                    user=user,
-                    exercise_date__gte=week_starts[i],
-                    exercise_date__lte=week2_end
-                ).count()
-                
-                if week1_count >= 5 and week2_count >= 5:
-                    current_streak += 1
-                    longest_streak = max(longest_streak, current_streak)
-                else:
-                    current_streak = 1
+        while current_week_start <= last_week_start:
+            week_end = current_week_start + timedelta(days=6)
+            
+            # Contar ejercicios de esta semana
+            week_count = cls.objects.filter(
+                user=user,
+                exercise_date__gte=current_week_start,
+                exercise_date__lte=week_end
+            ).count()
+            
+            # Si la semana tiene 5+ ejercicios, incrementar la racha
+            if week_count >= 5:
+                current_streak += 1
+                longest_streak = max(longest_streak, current_streak)
             else:
-                current_streak = 1
+                # Si no tiene 5+ ejercicios, reiniciar la racha
+                current_streak = 0
+            
+            # Avanzar a la siguiente semana
+            current_week_start += timedelta(weeks=1)
         
         return longest_streak
     
