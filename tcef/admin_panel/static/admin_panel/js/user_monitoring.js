@@ -286,6 +286,22 @@ function openUserModal(userId) {
 function changeMonth(userId, year, month) {
     const content = document.getElementById('userDetailContent');
     
+    // Validar y normalizar mes y año
+    let normalizedYear = parseInt(year);
+    let normalizedMonth = parseInt(month);
+    
+    // Normalizar si el mes está fuera de rango
+    if (normalizedMonth < 1) {
+        normalizedMonth = 12;
+        normalizedYear -= 1;
+    } else if (normalizedMonth > 12) {
+        normalizedMonth = 1;
+        normalizedYear += 1;
+    }
+    
+    // Asegurar que el mes esté en el rango válido (1-12)
+    normalizedMonth = Math.max(1, Math.min(12, normalizedMonth));
+    
     // Mostrar loading
     content.innerHTML = `
         <div class="text-center py-4">
@@ -296,17 +312,40 @@ function changeMonth(userId, year, month) {
         </div>
     `;
     
-    // Cargar nuevo contenido
-    fetch(`/admin-panel/monitoring/user/${userId}/details/?year=${year}&month=${month}`)
-        .then(response => response.text())
+    // Cargar nuevo contenido con valores normalizados
+    fetch(`/admin-panel/monitoring/user/${userId}/details/?year=${normalizedYear}&month=${normalizedMonth}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al cargar los datos');
+            }
+            return response.text();
+        })
         .then(html => {
             content.innerHTML = html;
+            
+            // Ejecutar scripts del nuevo contenido
+            const scripts = content.querySelectorAll('script');
+            scripts.forEach(script => {
+                try {
+                    eval(script.textContent);
+                } catch (e) {
+                    console.error('Error ejecutando script:', e);
+                }
+            });
+            
+            // Inicializar gráfico si existe
+            setTimeout(() => {
+                if (typeof window.initializeUserDetailChart === 'function') {
+                    window.initializeUserDetailChart();
+                }
+            }, 200);
         })
         .catch(error => {
+            console.error('Error en fetch:', error);
             content.innerHTML = `
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    Error al cargar los datos del mes.
+                    Error al cargar los datos del mes: ${error.message}
                 </div>
             `;
         });

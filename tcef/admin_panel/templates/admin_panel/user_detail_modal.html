@@ -15,15 +15,27 @@
     <div class="col-md-4">
         <div class="d-flex justify-content-end">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="changeMonth({{ user.id }}, {{ year }}, {{ month|add:'-1' }})">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
+                {% if month == 1 %}
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="changeMonth({{ user.id }}, {{ year|add:'-1' }}, 12)">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="changeMonth({{ user.id }}, {{ year }}, {{ month|add:'-1' }})">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                {% endif %}
                 <button type="button" class="btn btn-primary btn-sm">
                     {{ month_date|date:"F Y" }}
                 </button>
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="changeMonth({{ user.id }}, {{ year }}, {{ month|add:'1' }})">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+                {% if month == 12 %}
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="changeMonth({{ user.id }}, {{ year|add:'1' }}, 1)">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="changeMonth({{ user.id }}, {{ year }}, {{ month|add:'1' }})">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                {% endif %}
             </div>
         </div>
     </div>

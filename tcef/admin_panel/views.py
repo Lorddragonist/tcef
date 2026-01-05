@@ -1381,9 +1381,21 @@ def user_detail_modal(request, user_id):
     
     user = get_object_or_404(User, id=user_id)
     
-    # Obtener parámetros de fecha
-    year = int(request.GET.get('year', timezone.now().year))
-    month = int(request.GET.get('month', timezone.now().month))
+    # Obtener parámetros de fecha y validar/normalizar
+    current_date = timezone.now().date()
+    year = int(request.GET.get('year', current_date.year))
+    month = int(request.GET.get('month', current_date.month))
+    
+    # Normalizar mes y año si están fuera de rango
+    if month < 1:
+        month = 12
+        year -= 1
+    elif month > 12:
+        month = 1
+        year += 1
+    
+    # Asegurar que el mes esté en el rango válido (1-12)
+    month = max(1, min(12, month))
     
     # Ejercicios del mes seleccionado
     month_exercises = ExerciseLog.get_month_exercises(user, year, month)
